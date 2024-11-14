@@ -27,7 +27,7 @@ module decode(
     output reg [5:0] srcReg1;
     output reg [5:0] srcReg2;
     output reg [31:0] imm; 
-    output reg [1:0] lwSw;
+    output reg [1:0] lwSw; // [0: LW, 1: SW]
     output reg [1:0] aluOp; 
     output reg regWrite;
     output reg aluSrc;
@@ -44,7 +44,19 @@ module decode(
         .aluOp(aluOp),
         .lwSw(lwSw)
     );
+    immGen immMod (
+        .instr(instr),
+        .imm(imm)
+    );
 
+    always @(*) begin
+        regWrite = controlSignals[5];
+        aluSrc = controlSignals[4];
+        branch = controlSignals[3];
+        memRead = controlSignals[2];
+        memWrite = controlSignals[1];
+        memToReg = controlSignals[0];
+    end
 
 endmodule
 
@@ -91,7 +103,29 @@ module controller(
     end
 endmodule
 
+module immGen (
+    instr,
+    imm
+);
+    input [31:0] instr;
+    output reg [31:0] imm;
 
+    reg [6:0] opcode;
+    reg [11:0] nseImm; // without sign-extension
 
-
-
+    always @(*) begin
+        opcode = instr[6:0];
+        if (opcode == 7b'0010011) begin // I-type instruction
+            nseImm = instr[31:20];
+        end else if (opcode == 7b'0000011) begin // Load instruction
+            nseImm = instr[31:20];
+        end else if (opcode == 7b'0100011) begin // Store instruction
+            nseImm = instr[31:25]|instr[11:7];
+        end else if (opcode == 7b'1100011) begin // Branch-type instruction
+            nseImm = instr[31]|instr[7]|instr[30:25]|instr[11:8];
+        end else begin
+            nseImm = 0;
+        end
+        imm = {20{nseImm[11]}, nseImm[11:0]};
+    end
+endmodule
