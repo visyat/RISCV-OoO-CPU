@@ -1,11 +1,15 @@
 module decode(
     //Input
     instr,
+    clk;
     
     //Output: Source registers, destination registers, ALUOP, LW/SW Flag, Control Signals 
     opcode,
+    funct3, 
+    funct7, 
     srcReg1, // Src registers
     srcReg2,
+    destReg, // Destination register
     imm, 
     lwSw, // Lw/sw flags 
     aluOp, // Control signals 
@@ -22,10 +26,14 @@ module decode(
     // 3. Immediate Generator 
 
     input [31:0] instr;
+    input clk;
     
     output reg [6:0] opcode;
-    output reg [5:0] srcReg1;
-    output reg [5:0] srcReg2;
+    output reg [2:0] funct3; 
+    output reg [6:0] funct7;
+    output reg [4:0] srcReg1;
+    output reg [4:0] srcReg2;
+    output reg [4:0] destReg;
     output reg [31:0] imm; 
     output reg [1:0] lwSw; // [0: LW, 1: SW]
     output reg [1:0] aluOp; 
@@ -49,7 +57,14 @@ module decode(
         .imm(imm)
     );
 
-    always @(*) begin
+    always @(posedge clk) begin
+        opcode = instr[6:0];
+        funct3 = instr[14:12];
+        funct7 = instr[31:25];
+        destReg = instr[11:7];
+        srcReg1 = instr[19:15];
+        srcReg2 = instr[24:20];
+        
         regWrite = controlSignals[5];
         aluSrc = controlSignals[4];
         branch = controlSignals[3];
@@ -62,18 +77,20 @@ endmodule
 
 module controller(
     instr,
+    clk,
     controlSignals,
     aluOp,
     lwSw
 );
     input [31:0] instr;
+    input clk;
 
     output reg [5:0] controlSignals;
     output reg [1:0] aluOp;
     output reg [1:0] lwSw;
 
     reg [6:0] opcode;
-    always @(*) begin
+    always @(posedge clk) begin
         opcode = instr[6:0];
         if (opcode == 7b'0110011) begin // R-type instruction
             controlSignals = 6b'100000;
@@ -108,12 +125,13 @@ module immGen (
     imm
 );
     input [31:0] instr;
+    input clk;
     output reg [31:0] imm;
 
     reg [6:0] opcode;
     reg [11:0] nseImm; // without sign-extension
 
-    always @(*) begin
+    always @(posedge clk) begin
         opcode = instr[6:0];
         if (opcode == 7b'0010011) begin // I-type instruction
             nseImm = instr[31:20];
