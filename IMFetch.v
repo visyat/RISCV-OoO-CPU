@@ -7,9 +7,9 @@ module instructionMemory (
     stop
 );
     input clk;
-    input [32:0] PC; 
+    input [31:0] PC; 
 
-    output reg [32:0] instr; 
+    output reg [31:0] instr; 
     output reg stop;
 
     reg [7:0] instrMem [0:1023];
