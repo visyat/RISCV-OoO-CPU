@@ -15,8 +15,10 @@ module instructionMemory (
     reg [7:0] instrMem [0:1023];
 
     initial begin
-        //load instructions to instrMem
-        //can do manually or load from text file
+        for (i=0; i<1024; i++)
+            instrMem[i] = 8'b0;
+        $readmemh ("instructions.txt", mem) 
+        //assumes instructions in hex format; $readmemb for binary
     end
 
     always @(posedge clk) begin
