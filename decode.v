@@ -92,30 +92,30 @@ module controller(
     reg [6:0] opcode;
     always @(posedge clk) begin
         opcode = instr[6:0];
-        if (opcode == 7b'0110011) begin // R-type instruction
-            controlSignals = 6b'100000;
-            aluOp = 2b'10;
-            lwSw = 2b'00;
-        end else if (opcode == 7b'0010011) begin // I-type instruction
-            controlSignals = 6b'110000;
-            aluOp = 2b'10;
-            lwSw = 2b'00;
-        end else if (opcode == 7b'0000011) begin // Load instruction
-            controlSignals = 6b'110101;
-            aluOp = 2b'00;
-            lwSw = 2b'10;
-        end else if (opcode == 7b'0100011) begin // Store instruction
-            controlSignals = 6b'010010;
-            aluOp = 2b'00;
-            lwSw = 2b'01;
-        end else if (opcode == 7b'1100011) begin // Branch-type instruction
-            controlSignals = 6b'001000;
-            aluOp = 2b'01;
-            lwSw = 2b'00;
+        if (opcode == 7'b0110011) begin // R-type instruction
+            controlSignals = 6'b100000;
+            aluOp = 2'b10;
+            lwSw = 2'b00;
+        end else if (opcode == 7'b0010011) begin // I-type instruction
+            controlSignals = 6'b110000;
+            aluOp = 2'b10;
+            lwSw = 2'b00;
+        end else if (opcode == 7'b0000011) begin // Load instruction
+            controlSignals = 6'b110101;
+            aluOp = 2'b00;
+            lwSw = 2'b10;
+        end else if (opcode == 7'b0100011) begin // Store instruction
+            controlSignals = 6'b010010;
+            aluOp = 2'b00;
+            lwSw = 2'b01;
+        end else if (opcode == 7'b1100011) begin // Branch-type instruction
+            controlSignals = 6'b001000;
+            aluOp = 2'b01;
+            lwSw = 2'b00;
         end else begin
-            controlSignals = 6b'000000;
-            aluOp = 2b'00;
-            lwSw = 2b'00;
+            controlSignals = 6'b000000;
+            aluOp = 2'b00;
+            lwSw = 2'b00;
         end
     end
 endmodule
@@ -133,13 +133,13 @@ module immGen (
 
     always @(posedge clk) begin
         opcode = instr[6:0];
-        if (opcode == 7b'0010011) begin // I-type instruction
+        if (opcode == 7'b0010011) begin // I-type instruction
             nseImm = instr[31:20];
-        end else if (opcode == 7b'0000011) begin // Load instruction
+        end else if (opcode == 7'b0000011) begin // Load instruction
             nseImm = instr[31:20];
-        end else if (opcode == 7b'0100011) begin // Store instruction
+        end else if (opcode == 7'b0100011) begin // Store instruction
             nseImm = instr[31:25]|instr[11:7];
-        end else if (opcode == 7b'1100011) begin // Branch-type instruction
+        end else if (opcode == 7'b1100011) begin // Branch-type instruction
             nseImm = instr[31]|instr[7]|instr[30:25]|instr[11:8];
         end else begin
             nseImm = 0;
