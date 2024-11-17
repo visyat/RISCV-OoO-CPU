@@ -1,7 +1,7 @@
 module decode(
     //Input
     instr,
-    clk;
+    clk,
     
     //Output: Source registers, destination registers, ALUOP, LW/SW Flag, Control Signals 
     opcode,
@@ -42,12 +42,12 @@ module decode(
     output reg branch;
     output reg memRead;
     output reg memWrite;
-    output reg memToReg
-
+    output reg memToReg;
 
     reg [5:0] controlSignals;
     controller contMod (
         .instr(instr),
+      	.clk(clk),
         .controlSignals(controlSignals),
         .aluOp(aluOp),
         .lwSw(lwSw)
@@ -144,6 +144,7 @@ module immGen (
         end else begin
             nseImm = 0;
         end
-        imm = {20{nseImm[11]}, nseImm[11:0]};
+      imm[11:0] = nseImm[11:0];
+      imm[31:12] = {20{nseImm[11]}};
     end
 endmodule

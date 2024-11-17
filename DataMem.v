@@ -12,17 +12,20 @@ module dataMemory(
     input memWrite;
     input [31:0] writeData;
 
-    output [31:0] readData;
+    output reg [31:0] readData;
 
     reg [7:0] dataMem [0:1023];
+    integer i;
 
     initial begin
-        // load initial data memory if needed
+        for (i=0; i<1024; i++) begin
+            dataMem[i] = 8'b0;
+        end
     end
 
     always @(posedge clk) begin
         if (memRead == 1) begin
-            readData = {dataMem[address],dataMem[address+1],dataMem[address+2],dataMem[address+3]};
+          	readData[31:0] = {dataMem[address],dataMem[address+1],dataMem[address+2],dataMem[address+3]};
         end else begin
             readData = 32'b0;
         end
@@ -33,7 +36,5 @@ module dataMemory(
             dataMem[address+2] = writeData[15:8];
             dataMem[address+3] = writeData[7:0];
         end
-
     end
-
 endmodule
