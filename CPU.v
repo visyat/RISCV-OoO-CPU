@@ -48,6 +48,22 @@ module CPU(
         .memWrite(memWrite),
         .memToReg(memToReg)
     );
+    rename uut (
+        .sr1(sr1),
+        .sr2(sr2),
+        .dr(dr),
+        .aluOp(aluOp),
+        .imm(imm),
+        .sr1_p(sr1_p),
+        .sr2_p(sr2_p),
+        .dr_p(dr_p),
+        .aluOp_out(aluOp_out),
+        .s1_ready(s1_ready),
+        .s2_ready(s2_ready),
+        .imm_out(imm_out),
+        .FU(FU),
+        .ROB_num(ROB_num)
+    );
     initial begin
         PC = 32'b0;
     end
