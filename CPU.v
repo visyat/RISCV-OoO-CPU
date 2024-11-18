@@ -5,7 +5,8 @@ module CPU(
     reg [31:0] PC;
 
     reg [31:0] instr;
-    reg stop;
+    reg stopReg;
+    wire stop;
 
     reg [6:0] opcode;
     reg [2:0] funct3; 
@@ -27,8 +28,10 @@ module CPU(
         .clk(clk),
         .PC(PC),
         .instr(instr),
-        .stop(stop)
+        .stop(stopReg)
     );
+    assign stop = stopReg;
+
     decode decode_mod(
         .instr(instr),
         .clk(clk),
@@ -66,6 +69,16 @@ module CPU(
     );
     initial begin
         PC = 32'b0;
+    end
+
+    always @(posedge clk and negedge stop) begin
+        $display("Fetching ...");
+        $display("Instruction: %0h", instr);
+        
+        $display("Decoding ...");
+        $display("Opcode: %0b, Funct3: %0b, Funct7: %0b, Rs1: %0b, Rs2: %0b, Rd: %0b, Imm: %0b", opcode, funct3, funct7, srcReg1, srcReg2, destReg);
+
+        $display("Renaming ...");
     end
 
 endmodule
