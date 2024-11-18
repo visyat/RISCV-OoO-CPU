@@ -13,6 +13,7 @@ module instructionMemory (
     output reg stop;
 
     reg [7:0] instrMem [0:1023];
+    reg [31:0] temp;
   	integer i;
 
     initial begin
@@ -24,12 +25,15 @@ module instructionMemory (
     end
 
     always @(posedge clk) begin
-        if (PC+4 < 1024) begin
-          instr[31:0] = {instrMem[PC],instrMem[PC+1],instrMem[PC+2],instrMem[PC+3]};
-            stop = 0;
-        end else begin
+        if (PC < 1024) begin
+          temp[31:0] = {instrMem[PC+3], instrMem[PC+2], instrMem[PC+1],instrMem[PC]};
+          if (temp == 32'b0) begin 
             instr = 32'b0;
             stop = 1;
+          end else begin 
+            instr[31:0] = temp[31:0];
+            stop = 0;
+          end
         end
     end
 endmodule
