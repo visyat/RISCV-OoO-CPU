@@ -1,3 +1,6 @@
+//sr1 and sr2 take a place in rat
+//dr takes a space from the free pool but also the rat
+
 
 module rename(
     //inputs: sr1, sr2, dr
@@ -21,9 +24,9 @@ module rename(
     
     output reg [31:0] imm;
     output reg [15:0] ROB_num;
-    output reg [4:0] sr1_p;
-    output reg [4:0] sr2_p;
-    output reg [4:0] dr_p; 
+    output reg [5:0] sr1_p;
+    output reg [5:0] sr2_p;
+    output reg [5:0] dr_p; 
     output reg [1:0] aluOp; 
     output reg [1:0] FU;
     output reg s1_ready;
@@ -46,20 +49,25 @@ module rename(
    
    
     // Free pool for physical registers: Each entry has [0] for reg number and [1] for availability (1 = available, 0 = in use)
-    reg [4:0] free_pool [31:0][1:0];
+    //first is p-reg, second is availability
+    reg [5:0] free_pool [31:0][1:0];
 
     // Register Alias Table (RAT) for mapping physical registers to logical registers
-    reg [4:0] RAT [63:0];
+    
+    reg [5:0] RAT [31:0][1:0];
 
     // Initialize free pool and RAT at the start
     integer i;
     initial begin
         for (i = 0; i < 32; i = i + 1) begin
-            free_pool[i][0] = i;    // Physical register ID
-            free_pool[i][1] = 1'b1; // Mark as available
+        //col0 is if avail, col1 is p-reg 32-63
+            free_pool[i][1] =(i+32);    // Physical register ID
+            free_pool[i][0] = 1'b0; // Mark as available
         end
-        for (i = 0; i < 64; i = i + 1) begin
-            RAT[i] = 5'd0; // Initialize all logical registers to physical register 0
+        for (i = 0; i < 32; i = i + 1) begin
+        //col0 is a-reg 0-31, col1 is p-reg 0-31
+            RAT[i][0] = i; // Initialize all logical registers to physical register 0
+            RAT[i][1] = 6'd63;
         end
     end
 
@@ -69,21 +77,8 @@ module rename(
     reg found_free;  // Control variable to stop loop early
     always @(*) begin
 
-        // Default outputs to avoid latches
-        
-        if(RAT[sr1]==0)begin
-            sr1_p = free_pool[sr1][0];     // Assign free physical register
-            free_pool[sr1][1] = 1'b0;     // Mark as used
-            RAT[sr1_p] = sr1_p;             // Update RAT with the new mapping for `dr`;  
-        end
-     
-        
-    
-        if(RAT[sr2]==0)begin
-            sr2_p = free_pool[sr2][0];     // Assign free physical register
-            free_pool[sr2][1] = 1'b0;     // Mark as used
-            RAT[sr2_p] = sr2_p;             // Update RAT with the new mapping for `dr`;  
-        end
+        sr1_p=6'd0;
+        sr2_p=6'd0;
         dr_p = 5'd0;
         s1_ready = 1'b1; // Assume ready 
         s2_ready = 1'b1;
@@ -92,13 +87,33 @@ module rename(
         FU = 2'b00;      // Default functional unit type
         ROB_num = 16'd0; // Default ROB number
 
+        //if RAT at sr1 is not already taken, take it
+        if(RAT[sr1][1]==6'd63)begin
+            RAT[sr1][1] = RAT[sr1][0];             // Update RAT with the new mapping for sr1`;  
+            sr1_p =RAT[sr1][1] ;                  // Assign sr1 to newly assigned physical register
+        end 
+        //if another, dont set, take from that space
+        else begin
+            sr1_p=RAT[sr1][1];
+        end
+
+        //if RAT at sr2 is not already taken, take it
+        if(RAT[sr2][1]==6'd63)begin
+            RAT[sr2][1] = RAT[sr2][0];             // Update RAT with the new mapping for sr1`;  
+            sr2_p =RAT[sr2][1] ;                  // Assign sr1 to newly assigned physical register
+        end 
+        //if another, dont set, take from that space
+        else begin
+            sr2_p=RAT[sr2][1];
+        end
+        
         // Find a free physical register for the destination
         found_free = 1'b0;
         for (j = 0; j < 32 && !found_free; j = j + 1) begin
-            if (free_pool[j][1] == 1'b1) begin
-                dr_p = free_pool[j][0];     // Assign free physical register
-                free_pool[j][1] = 1'b0;     // Mark as used
-                RAT[dr] = dr_p;             // Update RAT with the new mapping for `dr`
+            if (free_pool[j][0] == 1'b0) begin
+                dr_p = free_pool[j][1];     // Assign free physical register
+                free_pool[j][0] = 1'b1;     // Mark as used
+                RAT[dr][1] = dr_p;          // find line in rat with a-reg=dr, set p-reg to dr_p 
                 found_free = 1'b1;          // Stop further looping
             end
         end
