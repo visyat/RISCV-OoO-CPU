@@ -1,3 +1,4 @@
+// Code your design here
 module decode(
     //Input
     instr,
@@ -54,6 +55,7 @@ module decode(
     );
     immGen immMod (
         .instr(instr),
+      	.clk(clk),
         .imm(imm)
     );
 
@@ -122,6 +124,7 @@ endmodule
 
 module immGen (
     instr,
+  	clk,
     imm
 );
     input [31:0] instr;
@@ -130,19 +133,24 @@ module immGen (
 
     reg [6:0] opcode;
     reg [11:0] nseImm; // without sign-extension
+  
+  	initial begin
+      nseImm = 12'b0;
+      imm = 32'b0;
+    end
 
     always @(posedge clk) begin
         opcode = instr[6:0];
         if (opcode == 7'b0010011) begin // I-type instruction
-            nseImm = instr[31:20];
+          	nseImm[11:0] = instr[31:20];
         end else if (opcode == 7'b0000011) begin // Load instruction
-            nseImm = instr[31:20];
+          	nseImm[11:0] = instr[31:20];
         end else if (opcode == 7'b0100011) begin // Store instruction
-            nseImm = instr[31:25]|instr[11:7];
+          	nseImm[11:0] = {instr[31:25],instr[11:7]};
         end else if (opcode == 7'b1100011) begin // Branch-type instruction
-            nseImm = instr[31]|instr[7]|instr[30:25]|instr[11:8];
+          	nseImm[11:0] = {instr[31],instr[7],instr[30:25],instr[11:8]};
         end else begin
-            nseImm = 0;
+            nseImm = 12'b0;
         end
       imm[11:0] = nseImm[11:0];
       imm[31:12] = {20{nseImm[11]}};
