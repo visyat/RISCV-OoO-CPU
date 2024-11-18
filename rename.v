@@ -1,7 +1,6 @@
-
 module rename(
     //inputs: sr1, sr2, dr
-    sr1, sr2, dr,
+    sr1, sr2, dr, aluOp, imm, 
     
     //Output: Source registers, destination registers, ALUOP, LW/SW Flag, Control Signals 
     sr1_p, // Src registers
@@ -20,7 +19,6 @@ module rename(
     input [5:0] dr;
     
     output reg [31:0] imm;
-    output reg [15:0] ROB_num;
     output reg [5:0] sr1_p;
     output reg [5:0] sr2_p;
     output reg [5:0] dr_p; 
@@ -48,7 +46,7 @@ module rename(
     // Free pool for physical registers: Each entry has [0] for reg number and [1] for availability (1 = available, 0 = in use)
     reg [5:0] free_pool [15:0][1:0];
 
-    // Register Alias Table (RAT) for mapping physical registers to logical registers
+    // Register Alias Table for mapping physical registers to logical registers
     reg [5:0] RAT [63:0];
 
     // Initialize free pool and RAT at the start
@@ -63,7 +61,7 @@ module rename(
         end
     end
 
-    // Always block to handle renaming logic
+    //renaming logic
     integer j;
     reg found_free;  // Control variable to stop loop early
     always @(*) begin
@@ -72,12 +70,11 @@ module rename(
         sr1_p = RAT[sr1];
         sr2_p = RAT[sr2];
         dr_p = 6'd0;
-        s1_ready = 1'b1; // Assume ready (can modify as needed for specific logic)
+        s1_ready = 1'b1; // Assume ready
         s2_ready = 1'b1;
-        aluOp = 2'b00;   // Default ALU operation
-        imm = 32'd0;     // Default immediate value
-        FU = 2'b00;      // Default functional unit type
-        ROB_num = 16'd0; // Default ROB number
+        aluOp = aluOp;   // input ALU operation
+        imm_out = imm;     // input immediate value
+        FU = 2'b00;      // Default functional unit type WILL CHANGE WHEN PUT IN RS
 
         // Find a free physical register for the destination
         found_free = 1'b0;
