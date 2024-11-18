@@ -1,6 +1,7 @@
+
 module rename(
     //inputs: sr1, sr2, dr
-    sr1, sr2, dr, aluOp, imm, 
+    sr1, sr2, dr,
     
     //Output: Source registers, destination registers, ALUOP, LW/SW Flag, Control Signals 
     sr1_p, // Src registers
@@ -19,9 +20,10 @@ module rename(
     input [5:0] dr;
     
     output reg [31:0] imm;
-    output reg [5:0] sr1_p;
-    output reg [5:0] sr2_p;
-    output reg [5:0] dr_p; 
+    output reg [15:0] ROB_num;
+    output reg [4:0] sr1_p;
+    output reg [4:0] sr2_p;
+    output reg [4:0] dr_p; 
     output reg [1:0] aluOp; 
     output reg [1:0] FU;
     output reg s1_ready;
@@ -44,41 +46,55 @@ module rename(
    
    
     // Free pool for physical registers: Each entry has [0] for reg number and [1] for availability (1 = available, 0 = in use)
-    reg [5:0] free_pool [15:0][1:0];
+    reg [4:0] free_pool [31:0][1:0];
 
-    // Register Alias Table for mapping physical registers to logical registers
-    reg [5:0] RAT [63:0];
+    // Register Alias Table (RAT) for mapping physical registers to logical registers
+    reg [4:0] RAT [63:0];
 
     // Initialize free pool and RAT at the start
     integer i;
     initial begin
-        for (i = 0; i < 16; i = i + 1) begin
+        for (i = 0; i < 32; i = i + 1) begin
             free_pool[i][0] = i;    // Physical register ID
             free_pool[i][1] = 1'b1; // Mark as available
         end
         for (i = 0; i < 64; i = i + 1) begin
-            RAT[i] = 6'd0; // Initialize all logical registers to physical register 0 (or another default if desired)
+            RAT[i] = 5'd0; // Initialize all logical registers to physical register 0
         end
     end
 
-    //renaming logic
+    // Always block to handle renaming logic
     integer j;
+
     reg found_free;  // Control variable to stop loop early
     always @(*) begin
 
         // Default outputs to avoid latches
-        sr1_p = RAT[sr1];
-        sr2_p = RAT[sr2];
-        dr_p = 6'd0;
-        s1_ready = 1'b1; // Assume ready
+        
+        if(RAT[sr1]==0)begin
+            sr1_p = free_pool[sr1][0];     // Assign free physical register
+            free_pool[sr1][1] = 1'b0;     // Mark as used
+            RAT[sr1_p] = sr1_p;             // Update RAT with the new mapping for `dr`;  
+        end
+     
+        
+    
+        if(RAT[sr2]==0)begin
+            sr2_p = free_pool[sr2][0];     // Assign free physical register
+            free_pool[sr2][1] = 1'b0;     // Mark as used
+            RAT[sr2_p] = sr2_p;             // Update RAT with the new mapping for `dr`;  
+        end
+        dr_p = 5'd0;
+        s1_ready = 1'b1; // Assume ready 
         s2_ready = 1'b1;
-        aluOp = aluOp;   // input ALU operation
-        imm_out = imm;     // input immediate value
-        FU = 2'b00;      // Default functional unit type WILL CHANGE WHEN PUT IN RS
+        aluOp = 2'b00;   // Default ALU operation
+        imm = 32'd0;     // Default immediate value
+        FU = 2'b00;      // Default functional unit type
+        ROB_num = 16'd0; // Default ROB number
 
         // Find a free physical register for the destination
         found_free = 1'b0;
-        for (j = 0; j < 16 && !found_free; j = j + 1) begin
+        for (j = 0; j < 32 && !found_free; j = j + 1) begin
             if (free_pool[j][1] == 1'b1) begin
                 dr_p = free_pool[j][0];     // Assign free physical register
                 free_pool[j][1] = 1'b0;     // Mark as used
