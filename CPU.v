@@ -2,35 +2,50 @@ module CPU(
     clk
 );
     input clk;
-    reg [31:0] PC;
-
-    reg [31:0] instr;
-    reg stopReg;
+    //inputs
+    wire [31:0] PC;
+    wire [31:0] instr;
+    wire stopReg;
     wire stop;
 
-    reg [6:0] opcode;
-    reg [2:0] funct3; 
-    reg [6:0] funct7;
-    reg [4:0] srcReg1;
-    reg [4:0] srcReg2;
-    reg [4:0] destReg;
-    reg [31:0] imm; 
-    reg [1:0] lwSw;
-    reg [1:0] aluOp; 
-    reg regWrite;
-    reg aluSrc;
-    reg branch;
-    reg memRead;
-    reg memWrite;
-    reg memToReg;
+    //outputs
+    wire [6:0] opcode;
+    wire [2:0] funct3; 
+    wire [6:0] funct7;
+    wire [4:0] srcReg1;
+    wire [4:0] srcReg2;
+    wire [4:0] destReg;
+    wire [31:0] imm; 
+    wire [1:0] lwSw;
+    wire [1:0] aluOp; 
+    wire regWrite;
+    wire aluSrc;
+    wire branch;
+    wire memRead;
+    wire memWrite;
+    wire memToReg;
+    
+    reg [5:0] sr1; // Source register 1
+    reg [5:0] sr2; // Source register 2
+    reg [5:0] dr;  // Destination register
+    
+    // Testbench outputs
+    wire [5:0] sr1_p; // Mapped source register 1
+    wire [5:0] sr2_p; // Mapped source register 2
+    wire [5:0] dr_p;  // Mapped destination register
+    wire s1_ready;    // Ready status for source 1
+    wire s2_ready;    // Ready status for source 2
 
-    instructionMemory instrMem_mod (
+    reg [31:0] PC_reg;
+    assign PC = PC_reg;
+    
+    instructionMemory instr_mem (
         .clk(clk),
         .PC(PC),
         .instr(instr),
         .stop(stopReg)
     );
-    assign stop = stopReg;
+    
 
     decode decode_mod(
         .instr(instr),
@@ -60,25 +75,33 @@ module CPU(
         .sr1_p(sr1_p),
         .sr2_p(sr2_p),
         .dr_p(dr_p),
-        .aluOp_out(aluOp_out),
         .s1_ready(s1_ready),
-        .s2_ready(s2_ready),
-        .imm_out(imm_out),
-        .FU(FU),
-        .ROB_num(ROB_num)
+        .s2_ready(s2_ready)
+        
+        
     );
+    
     initial begin
-        PC = 32'b0;
+        PC_reg = 32'b0;
     end
 
-    always @(posedge clk and negedge stop) begin
-        $display("Fetching ...");
-        $display("Instruction: %0h", instr);
-        
-        $display("Decoding ...");
-        $display("Opcode: %0b, Funct3: %0b, Funct7: %0b, Rs1: %0b, Rs2: %0b, Rd: %0b, Imm: %0b", opcode, funct3, funct7, srcReg1, srcReg2, destReg);
+    always @(posedge clk) begin
+        if (!stop) begin
+            // Fetching stage
+            $display("Fetching ...");
+            $display("Instruction: %0h", instr);
 
-        $display("Renaming ...");
+            // Decoding stage
+            $display("Decoding ...");
+            $display("Opcode: %0b, Funct3: %0b, Funct7: %0b, Rs1: %0b, Rs2: %0b, Rd: %0b ", opcode, funct3, funct7, srcReg1, srcReg2, destReg);
+
+            // Renaming stage
+            $display("Renaming ...");
+
+            // Increment Program Counter
+            PC_reg <= PC_reg + 4;
+        end
     end
 
 endmodule
+
