@@ -18,7 +18,7 @@ module dataMemory(
     integer i;
 
     initial begin
-        for (i=0; i<1024; i++) begin
+        for (i=0; i<1024; i=i+1) begin
             dataMem[i] = 8'b0;
         end
     end

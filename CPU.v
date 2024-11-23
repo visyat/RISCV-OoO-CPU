@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module CPU(
     clk
 );
@@ -5,7 +7,7 @@ module CPU(
     //inputs
     wire [31:0] PC;
     wire [31:0] instr;
-    wire stopReg;
+    //wire stopReg;
     wire stop;
 
     //outputs
@@ -37,13 +39,13 @@ module CPU(
     wire s2_ready;    // Ready status for source 2
 
     reg [31:0] PC_reg;
-    assign PC = PC_reg;
     
+    assign PC=PC_reg;
     instructionMemory instr_mem (
         .clk(clk),
         .PC(PC),
         .instr(instr),
-        .stop(stopReg)
+        .stop(stop)
     );
     
 
@@ -83,6 +85,7 @@ module CPU(
     
     initial begin
         PC_reg = 32'b0;
+        //assign PC = PC_reg;
     end
 
     always @(posedge clk) begin
@@ -93,15 +96,14 @@ module CPU(
 
             // Decoding stage
             $display("Decoding ...");
-            $display("Opcode: %0b, Funct3: %0b, Funct7: %0b, Rs1: %0b, Rs2: %0b, Rd: %0b ", opcode, funct3, funct7, srcReg1, srcReg2, destReg);
+            $display("Opcode: %0b, Funct3: %0b, Funct7: %0b, Rs1: %0b, Rs2: %0b, Rd: %0b, imm: %0d  ", opcode, funct3, funct7, srcReg1, srcReg2, destReg,imm);
 
             // Renaming stage
             $display("Renaming ...");
 
             // Increment Program Counter
-            PC_reg <= PC_reg + 4;
+            //PC_reg <= PC_reg + 4;
         end
     end
 
 endmodule
-

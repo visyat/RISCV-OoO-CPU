@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 // Code your design here
 module decode(
     //Input
@@ -45,21 +47,32 @@ module decode(
     output reg memWrite;
     output reg memToReg;
 
-    reg [5:0] controlSignals;
+    wire [5:0] controlSignals;
+    wire [1:0] aluOp_wire;
+    wire [1:0] lwsw_wire;
+    wire [31:0] imm_wire;
+    
     controller contMod (
         .instr(instr),
       	.clk(clk),
         .controlSignals(controlSignals),
-        .aluOp(aluOp),
-        .lwSw(lwSw)
+        .aluOp(aluOp_wire),
+        .lwSw(lwsw_wire)
     );
+    
     immGen immMod (
         .instr(instr),
       	.clk(clk),
-        .imm(imm)
+        .imm(imm_wire)
     );
-
+    
+    
     always @(posedge clk) begin
+        
+        lwSw=lwsw_wire;
+        aluOp=aluOp_wire;
+        imm=imm_wire;
+        
         opcode = instr[6:0];
         funct3 = instr[14:12];
         funct7 = instr[31:25];
@@ -73,6 +86,7 @@ module decode(
         memRead = controlSignals[2];
         memWrite = controlSignals[1];
         memToReg = controlSignals[0];
+        
     end
 
 endmodule
