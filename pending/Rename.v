@@ -16,6 +16,7 @@ module rename(
     output reg [5 : 0]      sr1_p,
     output reg [5 : 0]      sr2_p,
     output reg [5 : 0]      dr_p,
+    output reg [5:0]        old_dr,
     output reg              stall
 
     
@@ -135,7 +136,7 @@ module rename(
                     // old_regnum: 0 is the oldest, ->4 is the most recent
                     // ***need to pay attention in the RETIRE STAGE*** (add a pointer to the oldest one??)
                     // LET'S HOPE NONE OF THE OLD REGISTERS NUMBER WOULD EXTEND OUR SPACES (WHICH IS 5 NOW)
-
+                    old_dr=RAT[dr][1];
                     RAT[dr][1] = dr_p;          // find line in rat with a-reg=dr, set p-reg to dr_p 
                     j=32;          // Stop further looping
                 end
