@@ -8,18 +8,19 @@ module rename(
     input [4 : 0]   sr2,
     input [4 : 0]   dr,
     input           rstn,
+    input imm,
     
-    //Output: Source registers, destination registers, ALUOP, LW/SW Flag, Control Signals 
+    //Output: Source registers, destination registers
     //output reg [31 : 0]     imm,
     output reg [15 : 0]     ROB_num,
     output reg [5 : 0]      sr1_p,
     output reg [5 : 0]      sr2_p,
     output reg [5 : 0]      dr_p,
     output reg              stall
-    //output reg [1 : 0]      aluOp,
-    //output reg [1 : 0]      FU,
-    //output reg              s1_ready,
-    //output reg              s2_ready
+
+    
+    
+    
 );
 
     // TODO: 
@@ -45,23 +46,33 @@ module rename(
     reg [5:0] RAT [31:0][1:0];
 
     // register array for store the old number of the physical register, reserve 5 places for each logical register
-    reg [5:0] old_regnum [31:0][4:0];
+    reg [6:0] old_regnum [31:0][4:0];
 
     // Initialize free pool and RAT at the start
     integer i;
-    always @(*) begin
-        if (~rstn)begin
+    //always @(*) begin
+    initial begin
             for (i = 0; i < 32; i = i + 1) begin
                 //col0 is if avail, col1 is p-reg 0-31
-                free_pool[i][1] = i + 32;   // Physical register ID
+                free_pool[i][1] = i + 32;   // REGISTER ID (Physical register ID)
                 free_pool[i][0] = 1'b0;     // Mark as available
             end
             for (i = 0; i < 32; i = i + 1) begin
                 //col0 is a-reg 0-31, col1 is p-reg 0-31
-                RAT[i][0] = i;              // Initialize all logical registers to physical register 0
-                RAT[i][1] = 6'd63;
+                RAT[i][0] = i;    //ARTIFICIAL REGISTER ID
+                RAT[i][1] = i;    //PHYSICAL REGISTER ID
             end
-        end
+            for (i = 0; i < 32; i = i + 1) begin
+                //col0 is a-reg 0-31, col1 is p-reg 0-31
+                old_regnum[i][0] = 64;    //init as 64 for empty, since p-reg are 0-63
+                old_regnum[i][1] = 64;    //init as 64 for empty, since p-reg are 0-63
+                old_regnum[i][2] = 64;    //init as 64 for empty, since p-reg are 0-63
+                old_regnum[i][3] = 64;    //init as 64 for empty, since p-reg are 0-63
+                old_regnum[i][4] = 64;    //init as 64 for empty, since p-reg are 0-63
+                
+            end
+            
+         
     end
 
     // Always block to handle renaming logic
@@ -69,59 +80,72 @@ module rename(
     integer k;
     integer old_index;
 
-    reg found_free;  // Control variable to stop loop early
     always @(*) begin
         if(~rstn) begin
             sr1_p       = 6'd0;
             sr2_p       = 6'd0;
             dr_p        = 5'd0;
-            //s1_ready    = 1'b1;  // Assume ready 
-            //s2_ready    = 1'b1;
-            //aluOp       = 2'b00; // Default ALU operation
-            //imm         = 32'd0; // Default immediate value
-            //FU          = 2'b00; // Default functional unit type
             ROB_num     = 16'd0;   // Default ROB number
             stall       = 1'b0;    // Default no stall
-
-            for (k = 0; k < 32; k = k + 1) begin
-                RAT[k][1] = RAT[k][0];
+            
+            for (i = 0; i < 32; i = i + 1) begin
+                //col0 is if avail, col1 is p-reg 0-31
+                free_pool[i][1] = i + 32;   // REGISTER ID (Physical register ID)
+                free_pool[i][0] = 1'b0;     // Mark as available
             end
+            for (i = 0; i < 32; i = i + 1) begin
+                //col0 is a-reg 0-31, col1 is p-reg 0-31
+                RAT[i][0] = i;    //ARTIFICIAL REGISTER ID
+                RAT[i][1] = i;    //PHYSICAL REGISTER ID
+            end
+            for (i = 0; i < 32; i = i + 1) begin
+                //col0 is a-reg 0-31, col1 is p-reg 0-31
+                old_regnum[i][0] = 64;    //init as 64 for empty, since p-reg are 0-63
+                old_regnum[i][1] = 64;    //init as 64 for empty, since p-reg are 0-63
+                old_regnum[i][2] = 64;    //init as 64 for empty, since p-reg are 0-63
+                old_regnum[i][3] = 64;    //init as 64 for empty, since p-reg are 0-63
+                old_regnum[i][4] = 64;    //init as 64 for empty, since p-reg are 0-63
+                
+            end
+
+           
         end
-        else begin
-            if (sr1 == 5'd0) sr1_p = 6'd0;      // Assign sr1 to newly assigned physical register
-            else             sr1_p = RAT[sr1][1]; 
-            if (sr2 == 5'd0) sr2_p = 6'd0;      // Assign sr2 to newly assigned physical register
-            else             sr2_p = RAT[sr2][1];               
-
-            // Find a free physical register for the destination register
-            if (dr == 5'd0) begin
-                dr_p = 5'd0;                    // Assign 0 to destination register
+        else 
+            begin
+            sr1_p = RAT[sr1][1]; //assign to whatever p-reg is in RAT
+            
+            if(imm == 1'b0)begin          
+            sr2_p = RAT[sr2][1]; //assign to whatever p-reg is in RAT             
             end
-            else begin
-                found_free = 1'b0;
-                for (j = 0; j < 32 && (~found_free); j = j + 1) begin
-                    if (free_pool[j][0] == 1'b0) begin
-                        dr_p = free_pool[j][1];     // Assign free physical register
-                        free_pool[j][0] = 1'b1;     // Mark as used
+            // Find a free physical register for the destination register
 
-                        // set the old number of the physical register
-                        for (old_index = 0; old_index < 5; old_index = old_index + 1) begin
-                            if (~old_regnum[dr][old_index]) begin
-                                old_regnum[dr][old_index] = RAT[dr][1]; 
-                                old_index = 5;      // Stop further looping
-                            end
+           
+            for (j = 0; j < 32; j = j + 1) begin
+                if (free_pool[j][0] == 1'b0) begin
+                    dr_p = free_pool[j][1];     // Assign free physical register
+                    free_pool[j][0] = 1'b1;     // Mark as used
+
+                    // set the old number of the physical register
+                    for (old_index = 0; old_index < 5; old_index = old_index + 1) begin
+                        if (old_regnum[dr][old_index] == 64) begin
+                            old_regnum[dr][old_index] = RAT[dr][1]; 
+                            old_index = 5;      // Stop further looping
                         end
-                        // old_regnum: 0 is the oldest, ->4 is the most recent
-                        // ***need to pay attention in the RETIRE STAGE*** (add a pointer to the oldest one??)
-                        // LET'S HOPE NONE OF THE OLD REGISTERS NUMBER WOULD EXTEND OUR SPACES (WHICH IS 5 NOW)
-
-                        RAT[dr][1] = dr_p;          // find line in rat with a-reg=dr, set p-reg to dr_p 
-                        found_free = 1'b1;          // Stop further looping
                     end
+                    // old_regnum: 0 is the oldest, ->4 is the most recent
+                    // ***need to pay attention in the RETIRE STAGE*** (add a pointer to the oldest one??)
+                    // LET'S HOPE NONE OF THE OLD REGISTERS NUMBER WOULD EXTEND OUR SPACES (WHICH IS 5 NOW)
+
+                    RAT[dr][1] = dr_p;          // find line in rat with a-reg=dr, set p-reg to dr_p 
+                    j=32;          // Stop further looping
                 end
+            end
                 if (j == 32) stall <= 1'b1;         // Stall if no free physical register is found
                 else         stall <= 1'b0;
-            end
+           
+            $display(free_pool);
+            $display(RAT);
+            $display(old_regnum);
         end
     end
 
