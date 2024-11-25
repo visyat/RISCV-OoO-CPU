@@ -1,3 +1,61 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Engineer: Paige Larson
+// 
+// Create Date: 11/25/2024 01:54:11 AM
+// Design Name: 
+// Module Name: reorder_buffer
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module reorder_buffer(
+    input               [5:0] old_dest_reg,
+    input               [5:0] dest_reg,     
+    input               complete,
+    input               clk, 
+    input [31 : 0]      PC,
+    input               rstn,
+    
+    output reg [31:0] ROB [63:0] [4:0]
+    
+    );
+    
+    
+    //to insert into ROB
+    integer i;
+    integer vals;
+    
+    always @(*) begin
+        for (i = 0; i < 64; i = i + 1) begin
+            if (ROB[i][0] == 1'b0) begin
+                ROB[i][0]= 1'b1; //whether or not slot is taken
+                ROB[i][1]= dest_reg; //dest reg
+                ROB[i][1]= old_dest_reg; // old dest reg
+                ROB[i][1]= PC; //pc
+                ROB[i][1]= complete; //complete
+                
+                
+                i=64;          // Stop further looping
+            end
+        end
+    end
+    
+    
+endmodule
+
+
+/*
 module reorder_buffer(
     input clk,
     input reset,
@@ -74,4 +132,5 @@ module reorder_buffer(
             end
         end
     end
-endmodule
+endmodule  
+*/
