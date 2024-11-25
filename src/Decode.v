@@ -14,7 +14,8 @@ module decode(
     output reg [4 : 0]      srcReg1,    // Src registers
     output reg [4 : 0]      srcReg2,
     output reg [4 : 0]      destReg,    // Destination register
-    output reg [31 : 0]     imm, 
+    output reg [31 : 0]     imm,
+    output reg              hasImm; 
     output reg [1 : 0]      lwSw,       // Lw/sw flags: [0: LW, 1: SW]
     output reg [1 : 0]      aluOp,      // Control signals 
     output reg              regWrite,
@@ -29,7 +30,7 @@ module decode(
     // 2. Determine registers and control signals 
     // 3. Immediate Generator 
 
-    wire [5 : 0]    controlSignals;
+    wire [6 : 0]    controlSignals;
     wire [1 : 0]    aluOp_wire;
     wire [1 : 0]    lwsw_wire;
     wire [31 :0]    imm_wire;
@@ -79,6 +80,7 @@ module decode(
             srcReg1     <= instr[19:15];
             srcReg2     <= instr[24:20];
             
+            hasImm      <= controlSignals[6];
             regWrite    <= controlSignals[5];
             aluSrc      <= controlSignals[4];
             branch      <= controlSignals[3];
