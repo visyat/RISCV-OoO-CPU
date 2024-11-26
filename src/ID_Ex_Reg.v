@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////
 // Function: module for pipeline register between ID and EX stage
 //
-// Author: Yudong Zhou
+// Author: Yudong Zhou, tested Paige Larson
 //
 // Create date: 11/16/2024
 ///////////////////////////////////////////////////////////////////
@@ -12,9 +12,9 @@ module ID_EX_Reg (
     input           clk,
     input           rstn,
     
-    input           opcode_in,
-    input           funct3_in,
-    input           funct7_in,
+    input [6:0]     opcode_in,
+    input [2:0]     funct3_in,
+    input [6:0]     funct7_in,
     input [4:0]     srcReg1_in,
     input [4:0]     srcReg2_in,
     input [4:0]     destReg_in,
@@ -28,22 +28,22 @@ module ID_EX_Reg (
     input           memWrite_in,
     input           memToReg_in,
     input           hasImm_in,
-    output          hasImm_out,
-    output          opcode_out,
-    output          funct3_out,
-    output          funct7_out,
-    output [4:0]    srcReg1_out,
-    output [4:0]    srcReg2_out,
-    output [4:0]    destReg_out,
-    output [31:0]   imm_out,
-    output [1:0]    lwSw_out,
+    output reg          hasImm_out,
+    output reg [6:0]    opcode_out,
+    output reg [2:0]    funct3_out,
+    output reg [6:0]    funct7_out,
+    output reg [4:0]    srcReg1_out,
+    output reg [4:0]    srcReg2_out,
+    output reg [4:0]    destReg_out,
+    output reg [31:0]   imm_out,
+    output reg [1:0]    lwSw_out,
     //output [1:0]    aluOp_out,
-    output          regWrite_out,
+    output reg          regWrite_out,
     //output          aluSrc_out,
     //output          branch_out,
-    output          memRead_out,
-    output          memWrite_out,
-    output          memToReg_out    
+    output reg        memRead_out,
+    output reg         memWrite_out,
+    output reg         memToReg_out    
 );
 
     always @(posedge clk or negedge rstn) begin
@@ -63,6 +63,7 @@ module ID_EX_Reg (
             memRead_out     <= 1'b0;
             memWrite_out    <= 1'b0;
             memToReg_out    <= 1'b0;
+            hasImm_out      <= 1'b0;
         end
         else begin
             opcode_out      <= opcode_in;
