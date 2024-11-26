@@ -10,7 +10,7 @@
 //                                |  Data from ARF Reg1   |   Data from ARF Reg2  |
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-`timescale 1ns/1ps
+`timescale 1ns / 1ps
 
 module Unified_Issue_Queue #(
     parameter   RS_SIZE     =   16,     // RS size  = 16 instructions
@@ -30,9 +30,9 @@ module Unified_Issue_Queue #(
 
     // Rename & ARF info
     input [AR_SIZE - 1 : 0]     rs1_in, // register name after rename
-    input [31 : 0]              rs1_value_in,
+    input [31 : 0]              rs1_value_from_ARF_in,
     input [AR_SIZE - 1 : 0]     rs2_in,
-    input [31 : 0]              rs2_value_in,
+    input [31 : 0]              rs2_value_from_ARF_in,
     input [31 : 0]              imm_value_in,
     input [AR_SIZE - 1 : 0]     rd_in,
 
@@ -43,8 +43,15 @@ module Unified_Issue_Queue #(
     // forwarding logic
     input [FU_ARRAY - 1 : 0]    fu_ready_from_FU_in,     
                                 // if FU NO.i is ready, then fu_ready_from_ROB_in[i-1] = 1
-    input [AR_SIZE - 1 : 0]     reg_tag_from_FU_in,   
-    input [31 : 0]              reg_value_from_FU_in,
+    input                       FU0_flag_in, // if FU0 is outputing value, then FU0_flag_in = 1
+    input [AR_SIZE - 1 : 0]     reg_tag_from_FU0_in,   
+    input [31 : 0]              reg_value_from_FU0_in,
+    input                       FU1_flag_in,
+    input [AR_SIZE - 1 : 0]     reg_tag_from_FU1_in,   
+    input [31 : 0]              reg_value_from_FU1_in,
+    input                       FU2_flag_in,
+    input [AR_SIZE - 1 : 0]     reg_tag_from_FU2_in,   
+    input [31 : 0]              reg_value_from_FU2_in,
 
     // whether dispatch
     //input                       en_dispatch_in,
@@ -206,14 +213,14 @@ module Unified_Issue_Queue #(
                     src_reg1[i]     <= rs1_in;
                     if(rs1_ready_from_ROB_in[rs1_in]) begin
                         src1_ready[i]   <= 1'b1;
-                        src1_data[i]    <= rs1_value_in;
+                        src1_data[i]    <= rs1_value_from_ARF_in;
                     end
 
                     // put src2 data into RS
                     src_reg2[i]     <= rs2_in;
                     if(rs2_ready_from_ROB_in[rs2_in]) begin
                         src2_ready[i]   <= 1'b1;
-                        src2_data[i]    <= rs2_value_in;
+                        src2_data[i]    <= rs2_value_from_ARF_in;
                     end
 
                     // put imm into RS
@@ -233,16 +240,33 @@ module Unified_Issue_Queue #(
     end
     
     // update source_ready & source_data signals
-    always @(posedge clk or negedge rstn) begin
+    always @(posedge clk) begin
         for (k = 0; k < RS_SIZE; k = k + 1) begin
             if (valid[k]) begin
-                if (src_reg1[k] == reg_tag_from_FU_in) begin
+                if ((src_reg1[k] == reg_tag_from_FU0_in) && FU0_flag_in) begin
                     src1_ready[k] <= 1'b1;
-                    src1_data[k]  <= reg_value_from_FU_in;
+                    src1_data[k]  <= reg_value_from_FU0_in;
                 end
-                if (src_reg2[k] == reg_tag_from_FU_in) begin
+                else if ((src_reg1[k] == reg_tag_from_FU1_in) && FU1_flag_in) begin
+                    src1_ready[k] <= 1'b1;
+                    src1_data[k]  <= reg_value_from_FU1_in;
+                end
+                else if ((src_reg1[k] == reg_tag_from_FU2_in) && FU2_flag_in) begin
+                    src1_ready[k] <= 1'b1;
+                    src1_data[k]  <= reg_value_from_FU2_in;
+                end
+
+                if ((src_reg2[k] == reg_tag_from_FU0_in) && FU0_flag_in) begin
                     src2_ready[k] <= 1'b1;
                     src2_data[k]  <= reg_value_from_FU_in;
+                end
+                else if ((src_reg2[k] == reg_tag_from_FU1_in) && FU1_flag_in) begin
+                    src2_ready[k] <= 1'b1;
+                    src2_data[k]  <= reg_value_from_FU1_in;
+                end
+                else if ((src_reg2[k] == reg_tag_from_FU2_in) && FU2_flag_in) begin
+                    src2_ready[k] <= 1'b1;
+                    src2_data[k]  <= reg_value_from_FU2_in;
                 end
             end
         end
