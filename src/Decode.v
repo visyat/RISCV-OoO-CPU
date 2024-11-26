@@ -59,6 +59,7 @@ module decode(
             srcReg1     <= 5'b0;
             srcReg2     <= 5'b0;
             imm         <= 32'b0;
+            hasImm      <= 1'b0;
             lwSw        <= 2'b0;
             aluOp       <= 2'b0;
             regWrite    <= 1'b0;
