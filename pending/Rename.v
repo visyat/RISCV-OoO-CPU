@@ -1,6 +1,6 @@
 //sr1 and sr2 take a place in rat
 //dr takes a space from the free pool but also the rat
-
+//Author: Paige Larson
 
 module rename(
     //inputs: sr1, sr2, dr
@@ -8,7 +8,7 @@ module rename(
     input [4 : 0]   sr2,
     input [4 : 0]   dr,
     input           rstn,
-    input imm,
+    input hasImm,
     
     //Output: Source registers, destination registers
     //output reg [31 : 0]     imm,
@@ -115,7 +115,7 @@ module rename(
             begin
             sr1_p = RAT[sr1][1]; //assign to whatever p-reg is in RAT
             
-            if(imm == 1'b0)begin          
+            if(hasImm == 1'b0)begin          
             sr2_p = RAT[sr2][1]; //assign to whatever p-reg is in RAT             
             end
             // Find a free physical register for the destination register
