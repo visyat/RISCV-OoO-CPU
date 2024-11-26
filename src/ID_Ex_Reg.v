@@ -27,7 +27,8 @@ module ID_EX_Reg (
     input           memRead_in,
     input           memWrite_in,
     input           memToReg_in,
-
+    input           hasImm_in,
+    output          hasImm_out,
     output          opcode_out,
     output          funct3_out,
     output          funct7_out,
@@ -79,6 +80,7 @@ module ID_EX_Reg (
             memRead_out     <= memRead_in;
             memWrite_out    <= memWrite_in;
             memToReg_out    <= memToReg_in;
+            hasImm_out      <= hasImm_in;
         end
     end
 
