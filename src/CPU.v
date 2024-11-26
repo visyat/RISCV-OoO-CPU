@@ -1,4 +1,3 @@
-`timescale 1ns / 1ps
 
 module CPU(
     input   clk,
@@ -94,6 +93,7 @@ module CPU(
         .srcReg1        (srcReg1_ID),
         .srcReg2        (srcReg2_ID),
         .destReg        (destReg_ID),
+        .hasImm         (hasImm_ID),
         .imm            (imm_ID), 
         .lwSw           (lwSw_ID),
         .aluOp          (aluOp_ID),
@@ -117,6 +117,7 @@ module CPU(
         .srcReg2_in     (srcReg2_ID),
         .destReg_in     (destReg_ID),
         .imm_in         (imm_ID),
+        .hasImm_in      (hasImm_ID),
         .lwSw_in        (lwSw_ID),
         //.aluOp_in       (aluOp_ID),
         .regWrite_in    (regWrite_ID),
@@ -139,21 +140,25 @@ module CPU(
         //.branch_out     (branch_EX),
         .memRead_out    (memRead_EX),
         .memWrite_out   (memWrite_EX),
-        .memToReg_out   (memToReg_EX)
+        .memToReg_out   (memToReg_EX),
+        .hasImm_out     (hasImm_EX)
     );
 
 ///////////////////////////////////////////////////////////////////////
 //  Execution Stage
     rename rename_inst (
         .rstn           (rstn),
+        .opcode         (opcode_EX),
+        .imm            (imm_EX),
         .sr1            (srcReg1_EX),
         .sr2            (srcReg2_EX),
         .dr             (destReg_EX),
         .sr1_p          (p_srcReg1_EX),
         .sr2_p          (p_srcReg2_EX),
         .dr_p           (p_destReg_EX),
+        .hasImm         (hasImm_EX),
         .ROB_num        (),
         .stall          (stall_Rename_EX)
     );
-
+    
 endmodule
