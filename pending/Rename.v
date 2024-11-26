@@ -8,7 +8,10 @@ module rename(
     input [4 : 0]   sr2,
     input [4 : 0]   dr,
     input           rstn,
-    input hasImm,
+    input [6:0]     opcode,
+    input           hasImm,
+    input [31:0]    imm,
+    input           clk,
     
     //Output: Source registers, destination registers
     //output reg [31 : 0]     imm,
@@ -51,41 +54,16 @@ module rename(
 
     // Initialize free pool and RAT at the start
     integer i;
-    //always @(*) begin
-    initial begin
-            for (i = 0; i < 32; i = i + 1) begin
-                //col0 is if avail, col1 is p-reg 0-31
-                free_pool[i][1] = i + 32;   // REGISTER ID (Physical register ID)
-                free_pool[i][0] = 1'b0;     // Mark as available
-            end
-            for (i = 0; i < 32; i = i + 1) begin
-                //col0 is a-reg 0-31, col1 is p-reg 0-31
-                RAT[i][0] = i;    //ARTIFICIAL REGISTER ID
-                RAT[i][1] = i;    //PHYSICAL REGISTER ID
-            end
-            for (i = 0; i < 32; i = i + 1) begin
-                //col0 is a-reg 0-31, col1 is p-reg 0-31
-                old_regnum[i][0] = 64;    //init as 64 for empty, since p-reg are 0-63
-                old_regnum[i][1] = 64;    //init as 64 for empty, since p-reg are 0-63
-                old_regnum[i][2] = 64;    //init as 64 for empty, since p-reg are 0-63
-                old_regnum[i][3] = 64;    //init as 64 for empty, since p-reg are 0-63
-                old_regnum[i][4] = 64;    //init as 64 for empty, since p-reg are 0-63
-                
-            end
-            
-         
-    end
 
     // Always block to handle renaming logic
     integer j;
-    integer k;
     integer old_index;
 
     always @(*) begin
         if(~rstn) begin
             sr1_p       = 6'd0;
             sr2_p       = 6'd0;
-            dr_p        = 5'd0;
+            dr_p        = 6'd0;
             ROB_num     = 16'd0;   // Default ROB number
             stall       = 1'b0;    // Default no stall
             
@@ -118,36 +96,44 @@ module rename(
             if(hasImm == 1'b0)begin          
             sr2_p = RAT[sr2][1]; //assign to whatever p-reg is in RAT             
             end
+            else begin
+            sr2_p=imm;
+            end
             // Find a free physical register for the destination register
 
-           
-            for (j = 0; j < 32; j = j + 1) begin
-                if (free_pool[j][0] == 1'b0) begin
-                    dr_p = free_pool[j][1];     // Assign free physical register
-                    free_pool[j][0] = 1'b1;     // Mark as used
-
-                    // set the old number of the physical register
-                    for (old_index = 0; old_index < 5; old_index = old_index + 1) begin
-                        if (old_regnum[dr][old_index] == 64) begin
-                            old_regnum[dr][old_index] = RAT[dr][1]; 
-                            old_index = 5;      // Stop further looping
+            if(opcode != 6'b0100011 && opcode!=6'b0000000)begin
+                for (j = 0; j < 32; j = j + 1) begin
+                    if (free_pool[j][0] == 1'b0) begin
+                        dr_p = free_pool[j][1];     // Assign free physical register
+                        free_pool[j][0] = 1'b1;     // Mark as used
+    
+                        // set the old number of the physical register
+                        for (old_index = 0; old_index < 5; old_index = old_index + 1) begin
+                            if (old_regnum[dr][old_index] == 64) begin
+                                old_regnum[dr][old_index] = RAT[dr][1]; 
+                                old_index = 5;      // Stop further looping
+                            end
                         end
+                        // old_regnum: 0 is the oldest, ->4 is the most recent
+                        // ***need to pay attention in the RETIRE STAGE*** (add a pointer to the oldest one??)
+                        // LET'S HOPE NONE OF THE OLD REGISTERS NUMBER WOULD EXTEND OUR SPACES (WHICH IS 5 NOW)
+                        old_dr=RAT[dr][1];
+                        RAT[dr][1] = dr_p;          // find line in rat with a-reg=dr, set p-reg to dr_p 
+                        j=32;          // Stop further looping
                     end
-                    // old_regnum: 0 is the oldest, ->4 is the most recent
-                    // ***need to pay attention in the RETIRE STAGE*** (add a pointer to the oldest one??)
-                    // LET'S HOPE NONE OF THE OLD REGISTERS NUMBER WOULD EXTEND OUR SPACES (WHICH IS 5 NOW)
-                    old_dr=RAT[dr][1];
-                    RAT[dr][1] = dr_p;          // find line in rat with a-reg=dr, set p-reg to dr_p 
-                    j=32;          // Stop further looping
                 end
             end
+            else begin
+                dr_p=RAT[dr][1];
+                old_dr=64;
+            end
+            
                 if (j == 32) stall <= 1'b1;         // Stall if no free physical register is found
                 else         stall <= 1'b0;
-           
-            $display(free_pool);
-            $display(RAT);
-            $display(old_regnum);
+               
         end
+        $display("sr1P: %b, src2P: %b, destP: %b ", sr1_p, sr2_p, dr_p);
+        $display("finish rename");
     end
 
 endmodule
