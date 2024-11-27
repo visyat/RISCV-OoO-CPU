@@ -74,12 +74,21 @@ module decode(
             lwSw        <= lwsw_wire;
             aluOp       <= aluOp_wire;
 
-            opcode      <= instr[6:0];
+            opcode      = instr[6:0];
             funct3      <= instr[14:12];
             funct7      <= instr[31:25];
-            destReg     <= instr[11:7];
+
             srcReg1     <= instr[19:15];
-            srcReg2     <= instr[24:20];
+            if (opcode == 7'b0000011) begin // Load instruction
+                destReg     = instr[11:7];
+                srcReg2     = 5'b0;
+            end else if (opcode == 7'b0100011) begin // Store instruction
+                destReg     = 5'b0;
+                srcReg2     = instr[24:20];
+            end else begin
+                destReg     = instr[11:7];
+                srcReg2     = instr[24:20];
+            end
             
             hasImm      <= controlSignals[6];
             regWrite    <= controlSignals[5];
