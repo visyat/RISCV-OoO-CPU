@@ -10,12 +10,12 @@ module immGen (
     output reg [31:0] imm;
 
     reg [6:0] opcode;
-    reg [11:0] nseImm; // without sign-extension
+    reg [19:0] nseImm; // without sign-extension
 
     always @(*) begin
         if (~rstn)begin
             opcode      <= 7'b0;
-            nseImm      <= 12'b0;
+            nseImm      <= 20'b0;
             imm         <= 32'b0;
         end
         else begin
@@ -28,11 +28,19 @@ module immGen (
                 nseImm[11:0] = {instr[31:25],instr[11:7]};
             end else if (opcode == 7'b1100011) begin // Branch-type instruction
                 nseImm[11:0] = {instr[31],instr[7],instr[30:25],instr[11:8]};
+            end else if (opcode == 7'b0110111) begin
+                nseImm[20:0] = instr[31:12];
             end else begin
-                nseImm = 12'b0;
+                nseImm = 20'b0;
             end
-            imm[11:0] = nseImm[11:0];
-            imm[31:12] = {20{nseImm[11]}};
+            if (opcode == 7'b0110111) begin
+                imm[31:12] = nseImm[19:0];
+                imm[11:0] = 12'b0;
+            end
+            else begin
+                imm[11:0] = nseImm[11:0];
+                imm[31:12] = {20{nseImm[11]}};
+            end
         end
     end
 endmodule
