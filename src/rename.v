@@ -8,10 +8,9 @@ module rename(
     input [4 : 0]   sr2,
     input [4 : 0]   dr,
     input           rstn,
-    input [6:0]     opcode,
+    input [6 : 0]   opcode,
     input           hasImm,
-    input [31:0]    imm,
-    input           clk,
+    input [31 : 0]  imm,
     
     //Output: Source registers, destination registers
     //output reg [31 : 0]     imm,
@@ -19,12 +18,8 @@ module rename(
     output reg [5 : 0]      sr1_p,
     output reg [5 : 0]      sr2_p,
     output reg [5 : 0]      dr_p,
-    output reg [5:0]        old_dr,
-    output reg              stall
-
-    
-    
-    
+    output reg [5 : 0]      old_dr,
+    output reg              stall  
 );
 
     // TODO: 
@@ -101,12 +96,17 @@ module rename(
             end
             // Find a free physical register for the destination register
 
-            if(opcode != 6'b0100011 && opcode!=6'b0000000)begin
+            if(opcode != 7'b0100011 && opcode!=7'b0000000)begin
                 for (j = 0; j < 32; j = j + 1) begin
                     if (free_pool[j][0] == 1'b0) begin
-                        dr_p = free_pool[j][1];     // Assign free physical register
-                        free_pool[j][0] = 1'b1;     // Mark as used
-    
+                        if(dr == 5'd0)begin
+                            dr_p = 6'd0;
+                        end
+                        else begin
+                            dr_p = free_pool[j][1];     // Assign free physical register
+                            free_pool[j][0] = 1'b1;     // Mark as used
+                        end
+                        
                         // set the old number of the physical register
                         for (old_index = 0; old_index < 5; old_index = old_index + 1) begin
                             if (old_regnum[dr][old_index] == 64) begin
@@ -119,11 +119,11 @@ module rename(
                         // LET'S HOPE NONE OF THE OLD REGISTERS NUMBER WOULD EXTEND OUR SPACES (WHICH IS 5 NOW)
                         old_dr=RAT[dr][1];
                         RAT[dr][1] = dr_p;          // find line in rat with a-reg=dr, set p-reg to dr_p 
-                        j=32;          // Stop further looping
+                        j=33;          // Stop further looping
                     end
                 end
             end
-            else begin
+            else begin // S_type or NOP
                 dr_p=RAT[dr][1];
                 old_dr=64;
             end
@@ -132,8 +132,8 @@ module rename(
                 else         stall <= 1'b0;
                
         end
-        $display("sr1P: %b, src2P: %b, destP: %b ", sr1_p, sr2_p, dr_p);
-        $display("finish rename");
+        //$display("sr1P: %b, src2P: %b, destP: %b ", sr1_p, sr2_p, dr_p);
+        //$display("finish rename");
     end
 
 endmodule
