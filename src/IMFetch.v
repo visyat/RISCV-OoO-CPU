@@ -23,10 +23,10 @@ module instructionMemory (
             instr = 32'b0;
         end
         else begin
-            $readmemh ("evaluation-hex.txt", instrMem);
+            $readmemh ("demo.txt", instrMem);
             //assumes instructions in hex format; $readmemb for binary
             if (PC < 1024) begin
-                temp[31:0] = {instrMem[PC], instrMem[PC+1], instrMem[PC+2],instrMem[PC+3]};
+                temp[31:0] = {instrMem[PC+3], instrMem[PC+2], instrMem[PC+1],instrMem[PC]};
                 if (temp == 32'b0) begin 
                     instr = 32'b0;
                     stop  = 1;
