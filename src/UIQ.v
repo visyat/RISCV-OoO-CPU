@@ -13,9 +13,9 @@
 `timescale 1ns / 1ps
 
 module Unified_Issue_Queue #(
-    parameter   RS_SIZE     =   16,     // RS size  = 16 instructions
-    parameter   AR_SIZE     =   7,      // Architectural Register size = 2^7 = 128 registers
-    parameter   AR_ARRAY    =   128,    // AR number = 128
+    parameter   RS_SIZE     =   64,     // RS size  = 16 instructions
+    parameter   AR_SIZE     =   6,      // Architectural Register size = 2^6 = 64 registers
+    parameter   AR_ARRAY    =   64,     // AR number = 64
     parameter   FU_SIZE     =   2,      // FU size  = 2^2 >= 3 units
     parameter   FU_ARRAY    =   3,      // FU number = 3
     parameter   ISSUE_NUM   =   3       // can issue 3 instructions max at the same time
@@ -228,6 +228,12 @@ module Unified_Issue_Queue #(
 
                     // round robin
                     fu_number[i]    <= fu_alu_round;
+
+                    // display
+                    // | valid | Opeartion | Dest Reg | Src Reg1 | Src1 Ready | Src Reg2 | Src2 Ready | imm | FU# | ROB# |
+                    $display("Valid[%d]: %h, Operation[%d]: %h, destP[%d]: %h, Src1[%d]: %h, Src1_r[%d]: %h, Src1_data[%d]: %h, Src2[%d]: %h, Src2_r[%d]: %h, Src2_data[%d]: %h, imm[%d]: %h, FU[%d]: %h", 
+                              i, 1'b1, i, op_type, i, rd_in, i, rs1_in, i, 1'b1, i, rs1_value_from_ARF_in, i, rs2_in, i, 1'b1, i, rs2_value_from_ARF_in, i, imm_value_in, i, fu_alu_round);
+                    
                     fu_alu_round    =  fu_alu_round + 1;
                     if (fu_alu_round == 2'd3)  fu_alu_round = 2'b0;    // stall if no FU is ready
 
@@ -258,7 +264,7 @@ module Unified_Issue_Queue #(
 
                 if ((src_reg2[k] == reg_tag_from_FU0_in) && FU0_flag_in) begin
                     src2_ready[k] <= 1'b1;
-                    src2_data[k]  <= reg_value_from_FU_in;
+                    src2_data[k]  <= reg_value_from_FU0_in;
                 end
                 else if ((src_reg2[k] == reg_tag_from_FU1_in) && FU1_flag_in) begin
                     src2_ready[k] <= 1'b1;
