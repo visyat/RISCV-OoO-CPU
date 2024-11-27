@@ -157,12 +157,12 @@ module Unified_Issue_Queue #(
                 7'b0110011: begin // R-type
                     case (funct3_in)
                         3'b000: op_type = ADD;
+                        3'b100: op_type = XOR;
                     endcase
                 end
                 7'b0010011: begin // I-type
                     case (funct3_in)
                         3'b000: op_type = ADDI;
-                        3'b100: op_type = XOR;
                         3'b101: op_type = SRAI;
                         3'b110: op_type = ORI;
                     endcase
