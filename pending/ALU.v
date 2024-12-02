@@ -21,7 +21,7 @@
 
 
 module ALU #(
-    parameter ALU_NO = 0;
+    parameter ALU_NO = 0
 )(
     // inputs: clk, restart
     // in an array for each instr: data from src1 and src2/imm, aluOp, which FU they go to 
