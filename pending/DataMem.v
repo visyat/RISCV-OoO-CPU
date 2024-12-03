@@ -24,14 +24,14 @@ module dataMemory(
     input storeSize; // 0: Word (16 bit), 1: Byte (8 bit)
     input cacheMiss;
     
-    output [31:0] lwData;
+    output reg [31:0] lwData;
 
     reg [3:0] delay;
     reg [1023:0] DATAMEM [0:7]; 
 
     integer i;
 
-    for @(posedge clk) begin
+    always @(posedge clk) begin
         if (~rstn) begin
             for (i = 0; i < 1024; i++) begin
                 DATAMEM[i] = 8'b0;
@@ -47,10 +47,10 @@ module dataMemory(
                     end
                     if (memWrite) begin
                         if (~storeSize) begin
-                            DATAMEM[address] = swData[15:8];
-                            DATAMEM[address+1] = swData[7:0];
+                            DATAMEM[address] = dataSw[15:8];
+                            DATAMEM[address+1] = dataSw[7:0];
                         end else
-                            DATAMEM[address] = swData[7:0];
+                            DATAMEM[address] = dataSw[7:0];
                     end
                     delay = 0;
                 end

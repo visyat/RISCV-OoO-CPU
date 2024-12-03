@@ -21,7 +21,7 @@ module LSQ(
     input [31:0] pcDis,
     input memRead,
     input memWrite,
-    input swData,
+    input [31:0] swData,
 
     // from LSU ... recieves instruction address (to match) & computed address: rs1+offset
     input [31:0] pcLsu,
@@ -48,7 +48,7 @@ module LSQ(
     reg [15:0] ISSUED;
 
     integer i,j;
-
+    
     always @(posedge clk) begin
         if (~rstn) begin // on reset, set all LSQ entries to 0 ...
             VALID = 16'b0;
@@ -73,7 +73,7 @@ module LSQ(
                         if (memWrite) begin
                             LSQ_DATA[i] = swData;
                         end
-                        break;
+                        i=16;
                     end
                 end
             end
@@ -83,13 +83,13 @@ module LSQ(
                 if (PC[i] == pcLsu) begin
                     ADDRESS[i] = addressLsu;
                     j = i;
-                    break;
+                    i=16;
                 end
             end
             for (i=15; i>=0; i++) begin
                 if (ADDRESS[i] == ADDRESS[j]) begin
                     LSQ_DATA[j] = LSQ_DATA[i]; // populate LW data with the most recent store to the same address
-                    break;
+                    i=-1;
                 end
             end
 
@@ -100,20 +100,20 @@ module LSQ(
                     addressOut = ADDRESS[i];
                     lwData = LSQ_DATA[i];
                     complete = 1;
-                    readWrite = 0;
+                    loadStore = 0;
                     ISSUED[i] = 1;
-                    break;
+                    i=16;
                 end
             end
             for (i=0; i<16; i++) begin
                 if (~complete && ~ISSUED[i]) begin
-                    pcOut = PC[i]
+                    pcOut = PC[i];
                     addressOut = ADDRESS[i];
                     lwData = 32'b0;
                     complete = 0;
-                    readWrite = OP[i];
+                    loadStore = OP[i];
                     ISSUED[i] = 1;
-                    break;
+                    i=16;
                 end
             end
 
@@ -127,7 +127,7 @@ module LSQ(
                         ADDRESS[i] = 32'b0;
                         LSQ_DATA[i] = 32'b0;
                         ISSUED[i] = 0;
-                        break;
+                        i=16;
                     end
                 end
             end
