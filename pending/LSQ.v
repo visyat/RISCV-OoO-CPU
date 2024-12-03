@@ -12,15 +12,6 @@ Load-Store Queue:
 | 0 |     |    |             |      | 0 |
 + ------------------------------------- +
 */
-/*
-Nader OH: 
-    * LSU helps fix RAW data hazards 
-    * LSU is just a functional unit that is responsible for computing the address -> not a separate thing
-    * Reads that read from speculative stores read from the latest read to the same address -> complete but don't retire 
-    * Retire in-order 
-    * Data memory can just be an array, doesn't have to implement more complex memory details
-    * LSQ can use PC to map LSQ entries to addresses computed by the ALU 
-*/
 
 module LSQ(
     input clk, 
@@ -50,14 +41,13 @@ module LSQ(
     
     // LSQ fields ...
     reg [15:0] VALID;
-    reg [15:0] PC [31:0];
+    reg [31:0] PC [15:0];
     reg [15:0] OP; // 0: load, 1: store
-    reg [15:0] ADDRESS [31:0];
-    reg [15:0] LSQ_DATA [31:0];
+    reg [31:0] ADDRESS [15:0];
+    reg [31:0] LSQ_DATA [15:0];
     reg [15:0] ISSUED;
 
-    integer i;
-    integer j;
+    integer i,j;
 
     always @(posedge clk) begin
         if (~rstn) begin // on reset, set all LSQ entries to 0 ...
