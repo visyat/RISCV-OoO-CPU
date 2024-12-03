@@ -6,7 +6,7 @@
 // Create date: 11/9/2024
 //
 // RS implementation:
-// | valid | Opeartion | Dest Reg | Src Reg1 | Src1 Ready | Src Reg2 | Src2 Ready | imm | FU# | ROB# |
+// | valid | Opeartion | Dest Reg | Src Reg1 | Src1 Ready | Src Reg2 | Src2 Ready | imm | FU# | ROB# | PC |
 //                                |  Data from ARF Reg1   |   Data from ARF Reg2  |
 ////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -18,10 +18,12 @@ module Unified_Issue_Queue #(
     parameter   AR_ARRAY    =   64,     // AR number = 64
     parameter   FU_SIZE     =   2,      // FU size  = 2^2 >= 3 units
     parameter   FU_ARRAY    =   3,      // FU number = 3
-    parameter   ISSUE_NUM   =   3       // can issue 3 instructions max at the same time
+    parameter   ISSUE_NUM   =   3,      // can issue 3 instructions max at the same time
+    parameter   ROB_SIZE    =   6       // ROB size = 2^6 = 64 instructions
 )(
     input                       clk,
     input                       rstn,   // negedge reset
+    input [31 : 0]              PC,     // PC value
 
     // decode info
     input [6 : 0]               opcode_in,
@@ -64,7 +66,9 @@ module Unified_Issue_Queue #(
     output reg [31 : 0]                 rs1_value_out0,
     output reg [31 : 0]                 rs2_value_out0,
     output reg [31 : 0]                 imm_value_out0,
-    output reg [FU_SIZE - 1 : 0]        fu_number_out0,  
+    output reg [FU_SIZE - 1 : 0]        fu_number_out0,
+    output reg [ROB_SIZE - 1 : 0]       ROB_no_out0,
+    output reg [31 : 0]                 PC_info_out0,
     // issue NO.2
     output reg [AR_SIZE - 1 : 0]        rs1_out1,
     output reg [AR_SIZE - 1 : 0]        rs2_out1,
@@ -72,7 +76,9 @@ module Unified_Issue_Queue #(
     output reg [31 : 0]                 rs1_value_out1,
     output reg [31 : 0]                 rs2_value_out1,
     output reg [31 : 0]                 imm_value_out1,
-    output reg [FU_SIZE - 1 : 0]        fu_number_out1, 
+    output reg [FU_SIZE - 1 : 0]        fu_number_out1,
+    output reg [ROB_SIZE - 1 : 0]       ROB_no_out1,
+    output reg [31 : 0]                 PC_info_out1,  
     // issue NO.3
     output reg [AR_SIZE - 1 : 0]        rs1_out2,
     output reg [AR_SIZE - 1 : 0]        rs2_out2,
@@ -80,7 +86,9 @@ module Unified_Issue_Queue #(
     output reg [31 : 0]                 rs1_value_out2,
     output reg [31 : 0]                 rs2_value_out2,
     output reg [31 : 0]                 imm_value_out2,
-    output reg [FU_SIZE - 1 : 0]        fu_number_out2, 
+    output reg [FU_SIZE - 1 : 0]        fu_number_out2,
+    output reg [ROB_SIZE - 1 : 0]       ROB_no_out2,
+    output reg [31 : 0]                 PC_info_out2, 
 
     // control signals for next stage
     output reg                          no_issue_out, 
@@ -123,10 +131,17 @@ module Unified_Issue_Queue #(
     // FU info
     reg [FU_SIZE - 1 : 0]       fu_number   [RS_SIZE - 1 : 0];
 
+    // ROB #
+    reg [ROB_SIZE - 1 : 0]      ROB_no      [RS_SIZE - 1 : 0];
+
+    // PC
+    reg [31 : 0]                PC_info     [RS_SIZE - 1 : 0];
+
     // initializations
     integer                     i               = 0;
     reg [1 : 0]                 fu_alu_round    = 0;
-
+    reg [ROB_SIZE : 0]          ROB_no_temp     = 0;
+ 
     // update ready signals
     integer                     k               = 0; 
 
@@ -142,6 +157,8 @@ module Unified_Issue_Queue #(
     reg [31 : 0]                rs2_value_out   [2 : 0];
     reg [31 : 0]                imm_value_out   [2 : 0];
     reg [FU_SIZE - 1 : 0]       fu_number_out   [2 : 0];
+    reg [ROB_SIZE - 1 : 0]      ROB_no_out      [2 : 0];
+    reg [31 : 0]                PC_info_out     [2 : 0];
 
     /////////////////////////////////////////////////////////////////
     
@@ -199,6 +216,8 @@ module Unified_Issue_Queue #(
                 src2_data[i]    <= 'b0;
                 src2_ready[i]   <= 'b0;
                 imm[i]          <= 'b0;
+                ROB_no[i]       <= 'b0;
+                PC_info[i]      <= 'b0;
                 fu_number[i]    <= 'b0;
             end
         end
@@ -226,15 +245,24 @@ module Unified_Issue_Queue #(
                     // put imm into RS
                     imm[i]          <= imm_value_in;
 
+                    // ROB #
+                    ROB_no[i]       <= ROB_no_temp;
+
+                    // PC
+                    PC_info[i]      <= PC;   
+
                     // round robin
                     fu_number[i]    <= fu_alu_round;
 
                     // display
-                    // | valid | Opeartion | Dest Reg | Src Reg1 | Src1 Ready | Src Reg2 | Src2 Ready | imm | FU# | ROB# |
-                    $display("Valid[%d]: %h, Operation[%d]: %h, destP[%d]: %h, Src1[%d]: %h, Src1_r[%d]: %h, Src1_data[%d]: %h, Src2[%d]: %h, Src2_r[%d]: %h, Src2_data[%d]: %h, imm[%d]: %h, FU[%d]: %h", 
-                              i, 1'b1, i, op_type, i, rd_in, i, rs1_in, i, 1'b1, i, rs1_value_from_ARF_in, i, rs2_in, i, 1'b1, i, rs2_value_from_ARF_in, i, imm_value_in, i, fu_alu_round);
+                    // | valid | Opeartion | Dest Reg | Src Reg1 | Src1 Ready | Src Reg2 | Src2 Ready | imm | FU# | ROB# | PC |
+                    $display("Valid[%d]: %h, Operation[%d]: %h, destP[%d]: %h, Src1[%d]: %h, Src1_r[%d]: %h, Src1_data[%d]: %h, Src2[%d]: %h, Src2_r[%d]: %h, Src2_data[%d]: %h, imm[%d]: %h, FU[%d]: %h, ROB[%d]: %h, PC[%d]: %h", 
+                              i, 1'b1, i, op_type, i, rd_in, i, rs1_in, i, 1'b1, i, rs1_value_from_ARF_in, i, rs2_in, i, 1'b1, i, rs2_value_from_ARF_in, i, imm_value_in, i, fu_alu_round, i, ROB_no_temp, i, PC);
                     
-                    fu_alu_round    =  fu_alu_round + 1;
+                    ROB_no_temp = ROB_no_temp + 1;
+                    if (ROB_no_temp == 'd64) ROB_no_temp = 'd0;
+
+                    fu_alu_round = fu_alu_round + 1;
                     if (fu_alu_round == 2'd3)  fu_alu_round = 2'b0;    // stall if no FU is ready
 
                     // if already dispatched an instruction, break
@@ -246,7 +274,7 @@ module Unified_Issue_Queue #(
     end
     
     // update source_ready & source_data signals
-    always @(posedge clk) begin
+    always @(*) begin
         for (k = 0; k < RS_SIZE; k = k + 1) begin
             if (valid[k]) begin
                 if ((src_reg1[k] == reg_tag_from_FU0_in) && FU0_flag_in) begin
@@ -289,6 +317,8 @@ module Unified_Issue_Queue #(
                 rs2_value_out[j]    <= 'b0;
                 imm_value_out[j]    <= 'b0;
                 fu_number_out[j]    <= 'b0;
+                ROB_no_out[j]       <= 'b0;
+                PC_info_out[j]      <= 'b0;
                 tunnel_out[j]       <= 'b0;
             end
         end
@@ -314,6 +344,8 @@ module Unified_Issue_Queue #(
                     rs2_value_out[fu_number[j]]     = src2_data[j];
                     imm_value_out[fu_number[j]]     = imm[j];
                     fu_number_out[fu_number[j]]     = fu_number[j];
+                    ROB_no_out[fu_number[j]]        = ROB_no[j];
+                    PC_info_out[fu_number[j]]       = PC_info[j];
                     // clear RS
                     valid[j]                        <= 1'b0;
                     // select tunnel(FU)
@@ -338,6 +370,8 @@ module Unified_Issue_Queue #(
         rs2_value_out0      <= rs2_value_out[0];
         imm_value_out0      <= imm_value_out[0];
         fu_number_out0      <= fu_number_out[0];
+        ROB_no_out0         <= ROB_no_out[0];
+        PC_info_out0        <= PC_info_out[0];
 
         rs1_out1            <= rs1_out[1];
         rs2_out1            <= rs2_out[1];
@@ -346,6 +380,8 @@ module Unified_Issue_Queue #(
         rs2_value_out1      <= rs2_value_out[1];
         imm_value_out1      <= imm_value_out[1];
         fu_number_out1      <= fu_number_out[1];
+        ROB_no_out1         <= ROB_no_out[1];
+        PC_info_out1        <= PC_info_out[1];
 
         rs1_out2            <= rs1_out[2];
         rs2_out2            <= rs2_out[2];
@@ -354,6 +390,8 @@ module Unified_Issue_Queue #(
         rs2_value_out2      <= rs2_value_out[2];
         imm_value_out2      <= imm_value_out[2];
         fu_number_out2      <= fu_number_out[2];
+        ROB_no_out2         <= ROB_no_out[2];
+        PC_info_out2        <= PC_info_out[2];
     end
 
 endmodule
