@@ -11,13 +11,7 @@ Load-Store Queue:
 | 0 |     |    |             |      |
 | 0 |     |    |             |      |
 + --------------------------------- +
-
-1. After Dispatch, reserve space in LSQ indicating load/store -> wait for address from LSU
-2. At Retirement, deallocate space in LSQ
-3. On Write, write to Store Queue 
-4. On Read, check Store Queue ==> if there, safe to go to read from DataMem
 */
-
 /*
 Nader OH: 
     * LSU helps fix RAW data hazards 
@@ -27,103 +21,65 @@ Nader OH:
     * Data memory can just be an array, doesn't have to implement more complex memory details
     * LSQ can use PC to map LSQ entries to addresses computed by the ALU 
 */
+
 module LSQ(
-    clk,
-    rstn, 
-    
-    // from Dispatch ...
-    memRead,
-    memWrite,
-    PCDis,
-    swData,
+    input clk, 
+    input rstn,
 
-    // from LSU ...
-    PCLsu,
-    lsuValid,
-    address,
+    // from dispatch ... receives instruction address, whether read/write, and rs2 val if SW
+    input [31:0] pcDis,
+    input memRead,
+    input memWrite,
+    input swData,
 
-    // from memory hierarchy ...
-    // addressMem,
-    // dataMem,
+    // from LSU ... recieves instruction address (to match) & computed address: rs1+offset
+    input [31:0] pcLsu,
+    input [31:0] addressLsu,
 
-    // outputs ...
-    PCOut,
-    lwData,
+    // from retirement ... deallocate space in LSQ
+    input [31:0] pcRet,
 
-    stall,
-    noIssueOut,
-    issueOut,
-    callMem // for load instructions with data (from stores) alr known, don't need to query from memory
+    // outputs ... issues instruction; completes LW instruction if store seen in LSQ
+    output reg [31:0] pcOut,
+    output reg [31:0] addressOut,
+    output reg [31:0] lwData,
+    output reg complete // 1 if LW and data is found in LSQ
 );
-    // Inputs
-    input clk;
-    input rstn;
-
-    input memRead;
-    input memWrite;
-    input [31:0] PCDis;
-    input [31:0] swData;
-
-    input [31:0] PCLsu;
-    input lsuValid;
-    input [9:0] addressLsu;
-
-    // input [9:0] addressMem;
-    // input [7:0] dataMem;
-
-    // Outputs
-    output [31:0] PCOut;
-    output [7:0] lwData;
-
-    output stall;
-    output noIssueOut;
-    output issueOut;
     
-    // LSQ fields 
-    reg [15:0] valid; // 0: Invalid, 1: Valid
-    reg [15:0] PC [0:31];
-    reg [15:0] op; // 0: Read, 1: Write
-    reg [15:0] address [0:9];
-    reg [15:0] data [0:7];
+    // LSQ fields ...
+    reg [15:0] VALID;
+    reg [15:0] PC [31:0];
+    reg [15:0] OP; // 0: read, 1: write
+    reg [15:0] ADDRESS [31:0];
+    reg [15:0] LSQ_DATA [31:0];
 
     integer i;
-    integer j;
 
-    always @(posedge clk or negedge rstn) begin
-        if (~rstn) begin
-            valid <= 16'b0;
-            op <= 16'b0;
-            for (i=0; i<16; i+=1) begin
-                address[i] <= 10'b0;
-                data[i] <= 8'b0;
+    always @(posedge clk) begin
+        if (~rstn) begin // on reset, set all LSQ entries to 0 ...
+            VALID = 16'b0;
+            OP = 16'b0;
+            for (i=0; i<16; i++) begin
+                PC[i] = 32'b0;
+                ADDRESS[i] = 32'b0;
+                LSQ_DATA[i] = 32'b0;
             end
-        end else begin
-            if (memRead || memWrite) begin // Load or Store instruction being passed from dispatch
-                // allocate new entry in LSQ
-                for (i=0; i<16; i+=1) begin
-                    if (valid[i] == 0) begin
-                        j=i;
-                        break;
-                    end
-                end
-                valid[j] = 1;
-                PC[j] = PCDis;
-                op[j] = memWrite && (~memRead);
-                if (memWrite) begin // speculative store
-                    data[j] = swData[7:0];
-                end
-            end
-            if (lsuValid) begin // LSU is passing address for SW/LW instruction
-                for (i=0; i<16; i+=1) begin
-                    if (valid[i] == 1 && PC[i] == PCLsu) begin
-                        j=i;
-                        break
-                    end
-                end
-                address[j] = addressLsu; // load address to LSQ entry with matching PC 
+            pcOut = 32'b0;
+            addressOut = 32'b0;
+            lwData = 32'b0;
+        end else begin 
+            // dispatch logic ... if read/write, reserve space in LSQ
 
-                // handle speculative stores ...
-            end
+
+            // execution logic ... if store, update address & data in LSQ entry; if read, scan LSQ to find matching addresses, provide data for latest write
+
+
+            // issue logic ... complete reads if data exists, else issue most recent available instruction 
+
+
+            // retirement logic ... deallocate LSQ entry
+            
+
         end
     end
 endmodule
