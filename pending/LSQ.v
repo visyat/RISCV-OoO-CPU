@@ -1,3 +1,5 @@
+`timescale 1ns/1ps
+
 /*
 Load-Store Queue:
 * Size = 16 instructions
