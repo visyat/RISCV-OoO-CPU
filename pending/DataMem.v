@@ -1,40 +1,60 @@
+/*
+    * 1 read/write port – can only process one instruction at a time; if another instruction pending, must stall
+    * memoryHierarchy needs to handle calling to cache first (returning in one cycle), if Miss -> call to DataMemory
+*/
 module dataMemory(
-    clk, 
+    clk,
+    rstn,
     address, 
+    dataSw,
     memRead,
     memWrite,
-    writeData,
-    readData
+    storeSize,
+    lwData,
+    cacheMiss
 );
     input clk;
+    input rstn;
+
     input [31:0] address;
-    input memRead; 
+    input [31:0] dataSw;
+
+    input memRead;
     input memWrite;
-    input [31:0] writeData;
+    input storeSize; // 0: Word (16 bit), 1: Byte (8 bit)
+    input cacheMiss;
+    
+    output [31:0] lwData;
 
-    output reg [31:0] readData;
+    reg [3:0] delay;
+    reg [1023:0] DATAMEM [0:7]; 
 
-    reg [7:0] dataMem [0:1023];
     integer i;
 
-    initial begin
-        for (i=0; i<1024; i=i+1) begin
-            dataMem[i] = 8'b0;
-        end
-    end
-
-    always @(posedge clk) begin
-        if (memRead == 1) begin
-          	readData[31:0] = {dataMem[address],dataMem[address+1],dataMem[address+2],dataMem[address+3]};
+    for @(posedge clk) begin
+        if (~rstn) begin
+            for (i = 0; i < 1024; i++) begin
+                DATAMEM[i] = 8'b0;
+            end
+            delay = 4'b0;
         end else begin
-            readData = 32'b0;
-        end
-
-        if (memWrite == 1) begin
-            dataMem[address] = writeData[31:24];
-            dataMem[address+1] = writeData[23:16];
-            dataMem[address+2] = writeData[15:8];
-            dataMem[address+3] = writeData[7:0];
+            if ((memRead || memWrite) && cacheMiss) begin
+                if (delay < 10) begin
+                    delay += 1;
+                end else begin
+                    if (memRead) begin
+                        lwData = {16'b0, DATAMEM[address], DATAMEM[address+1]};
+                    end
+                    if (memWrite) begin
+                        if (~storeSize) begin
+                            DATAMEM[address] = swData[15:8];
+                            DATAMEM[address+1] = swData[7:0];
+                        end else
+                            DATAMEM[address] = swData[7:0];
+                    end
+                    delay = 0;
+                end
+            end
         end
     end
 endmodule
