@@ -43,7 +43,11 @@ module reorder_buffer(
     input               rstn,
     
     
-    output reg  retire [63:0],
+    output reg          retire [63:0],
+    output reg [5:0]    out_add_1,
+    output reg [31:0]   out_data_1,
+    output reg [5:0]    out_add_2,
+    output reg [31:0]   out_data_2,
     output reg [1:0]    stall
     
     
@@ -92,6 +96,11 @@ module reorder_buffer(
                 ROB[i][7] = 0;       // complete
                 
                 retire[i]=1'b0;      //return buffer
+                
+                out_add_1=0;
+                out_data_1=0;
+                out_add_2=0;
+                out_data_2=0;
             end
             
             //set up complete and data arrays
@@ -154,17 +163,26 @@ module reorder_buffer(
             for (i = 0; i < 64; i = i + 1) begin //check to retire
                 if (ROB[i][1] == 1'b1) begin
                     if(ROB[i][7]==1'b1)begin
+                        //writeback logic
+                        if(out_add_1==0)begin
+                            out_add_1=ROB[i][1];
+                            out_data_1=ROB[i][3];
+                        end
+                        else begin
+                            out_add_2=ROB[i][1];
+                            out_data_2=ROB[i][3];
+                        end 
+                        
                         //retire in ROB and retire buffer
-                         
                         retire[ROB[i][1]]=1'b0; 
                          
-                        ROB[i][0] = 1'b1;           //valid
-                        ROB[i][1] = dest_reg_0;     //dr
-                        ROB[i][2] = old_dest_reg_0; //old dr
-                        ROB[i][3] = dest_data_0;    //data at dr
-                        ROB[i][4] = store_add_0;    //store address
-                        ROB[i][5] = store_data_0;   //store data
-                        ROB[i][6] = instr_PC_0;     //instr pc
+                        ROB[i][0] = 1'b0;           //valid
+                        ROB[i][1] = 0;     //dr
+                        ROB[i][2] = 0; //old dr
+                        ROB[i][3] = 0;    //data at dr
+                        ROB[i][4] = 0;    //store address
+                        ROB[i][5] = 0;   //store data
+                        ROB[i][6] = 0;     //instr pc
                         ROB[i][7] = 1'b0;           //complete
                              
                         max_retire=max_retire+1;
