@@ -1,3 +1,4 @@
+
 `timescale 1ns/1ps
 
 /*
@@ -56,7 +57,7 @@ module LSQ(
             VALID = 16'b0;
             OP = 16'b0;
             ISSUED = 16'b0;
-            for (i=0; i<16; i++) begin
+            for (i=0; i<16; i=i+1) begin
                 PC[i] = 32'b0;
                 ADDRESS[i] = 32'b0;
                 LSQ_DATA[i] = 32'b0;
@@ -64,10 +65,11 @@ module LSQ(
             pcOut = 32'b0;
             addressOut = 32'b0;
             lwData = 32'b0;
+            complete = 0;
         end else begin 
             // dispatch logic ... if read/write, reserve space in LSQ
             if (memRead || memWrite) begin
-                for (i=0; i<16; i++) begin
+                for (i=0; i<16; i=i+1) begin
                     if (~VALID[i]) begin // find first vacant entry ...
                         VALID[i]=1;
                         PC[i]=pcDis;
@@ -81,14 +83,14 @@ module LSQ(
             end
 
             // execution logic ... if update address in LSQ entry; if load, scan LSQ to find matching addresses, provide data for latest store
-            for (i=0; i<16; i++) begin
+            for (i=0; i<16; i=i+1) begin
                 if (PC[i] == pcLsu) begin
                     ADDRESS[i] = addressLsu;
                     j = i;
                     i=16;
                 end
             end
-            for (i=15; i>=0; i++) begin
+            for (i=15; i>=0; i=i-1) begin
                 if (ADDRESS[i] == ADDRESS[j]) begin
                     LSQ_DATA[j] = LSQ_DATA[i]; // populate LW data with the most recent store to the same address
                     i=-1;
@@ -96,8 +98,8 @@ module LSQ(
             end
 
             // issue logic ... complete loads if data exists, else issue most recent available instruction 
-            for (i=0; i<16; i++) begin
-                if (~ISSUED[i] && ~OP[i] && LSQ_DATA[i] != 32'b0) begin
+            for (i=0; i<16; i=i+1) begin
+                if (VALID[i] && ~ISSUED[i] && ~OP[i] && LSQ_DATA[i] != 32'b0) begin
                     pcOut = PC[i];
                     addressOut = ADDRESS[i];
                     lwData = LSQ_DATA[i];
@@ -107,8 +109,8 @@ module LSQ(
                     i=16;
                 end
             end
-            for (i=0; i<16; i++) begin
-                if (~complete && ~ISSUED[i]) begin
+            for (i=0; i<16; i=i+1) begin
+                if (~complete && VALID[i] && ~ISSUED[i]) begin
                     pcOut = PC[i];
                     addressOut = ADDRESS[i];
                     lwData = 32'b0;
@@ -121,7 +123,7 @@ module LSQ(
 
             // retirement logic ... deallocate LSQ entry
             if (retire) begin
-                for (i=0; i<16; i++) begin
+                for (i=0; i<16; i=i+1) begin
                     if (pcRet == PC[i]) begin
                         VALID[i] = 0;
                         PC[i] = 0;
