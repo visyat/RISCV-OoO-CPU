@@ -1,6 +1,7 @@
+
 `timescale 1ns/1ps
 
-module LSQ_tb;
+module LSQ_tb();
     reg clk;
     reg rstn;
 
@@ -43,8 +44,8 @@ module LSQ_tb;
     always #5 clk = ~clk;
     initial begin
             rstn = 1'b1;
-        #1  rstn = 1'b0;
-        #1  rstn = 1'b1;
+        #20  rstn = 1'b0;
+        #10  rstn = 1'b1;
     end
 
     initial begin
@@ -59,6 +60,7 @@ module LSQ_tb;
         retire = 0;
 
         // dispatch first store instruction ... 
+        #50;
         #10 begin
             pcDis = 32'h0001;
             memRead = 0;
@@ -99,7 +101,7 @@ module LSQ_tb;
         // retire first store instruction ...
         #10 begin
             pcRet =32'h0001;
-            retire = 1;
+            retire = 0;
         end
     end
 
