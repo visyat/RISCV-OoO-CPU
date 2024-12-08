@@ -1,4 +1,4 @@
-`timescale 1ns / 1ps
+
 //////////////////////////////////////////////////////////////////////////////////
 // Engineer: Paige Larson
 // 
@@ -17,6 +17,8 @@
 // Additional Comments:
 // 
 //////////////////////////////////////////////////////////////////////////////////
+`timescale 1ns / 1ps
+
 
 module reorder_buffer(
     
@@ -43,7 +45,7 @@ module reorder_buffer(
     input               rstn,
     
     
-    output reg          retire [63:0],
+    
     output reg [5:0]    out_add_1,
     output reg [31:0]   out_data_1,
     output reg [5:0]    out_add_2,
@@ -70,7 +72,7 @@ module reorder_buffer(
         
         //go through ROB, starting from top, if complete=1 and all prior lines are retired, set reg is ready to 1
 
-    
+    reg        retire [63:0];
     reg [31:0] ROB [63:0] [7:0];
     reg [31:0] new_dr_data [3:0];
     reg [31:0] complete_pc [3:0];
@@ -82,7 +84,7 @@ module reorder_buffer(
     integer max_retire;
     integer vals;
     
-    always @(*) begin
+    always @(posedge clk) begin
         //reset ROB
         if (~rstn)begin
             for (i = 0; i < 64; i = i + 1) begin
@@ -191,7 +193,7 @@ module reorder_buffer(
                         i=64;
                     end            
                 end
-                
+                 
                 if(max_retire>=2)begin //not retiring more than two instr per cycle
                     i=64; 
                 end
