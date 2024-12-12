@@ -4,6 +4,7 @@
 
 module rename(
     //inputs: sr1, sr2, dr
+    input clk,
     input [4 : 0]   sr1, 
     input [4 : 0]   sr2,
     input [4 : 0]   dr,
@@ -54,7 +55,7 @@ module rename(
     integer j;
     integer old_index;
 
-    always @(*) begin
+    always @(posedge clk) begin
         if(~rstn) begin
             sr1_p       = 6'd0;
             sr2_p       = 6'd0;
