@@ -28,8 +28,8 @@ module dataMemory(
     
     output reg [31:0] lwData;
 
-    reg [3:0] delay;
-    reg [1023:0] DATAMEM [0:7]; 
+    reg [31:0] delay [9:0];
+    reg [0:7] DATAMEM [1023:0]; 
 
     integer i;
 
@@ -38,25 +38,25 @@ module dataMemory(
             for (i = 0; i < 1024; i++) begin
                 DATAMEM[i] = 8'b0;
             end
-            delay = 4'b0;
+            for (i=0; i<10; i++) begin
+                delay[i]=32'b0;
+            end
+
         end else begin
             if ((memRead || memWrite) && cacheMiss) begin
-                if (delay < 10) begin
-                    delay += 1;
-                end else begin
-                    if (memRead) begin
-                        lwData = {16'b0, DATAMEM[address], DATAMEM[address+1]};
-                    end
-                    if (memWrite) begin
-                        if (~storeSize) begin
-                            DATAMEM[address] = dataSw[15:8];
-                            DATAMEM[address+1] = dataSw[7:0];
-                        end else
-                            DATAMEM[address] = dataSw[7:0];
-                    end
-                    delay = 0;
+                if (memRead) begin
+                    delay[0] = {16'b0, DATAMEM[address], DATAMEM[address+1]};
+                end
+                if (memWrite) begin
+                    if (~storeSize) begin
+                        DATAMEM[address] = dataSw[15:8];
+                        DATAMEM[address+1] = dataSw[7:0];
+                    end else
+                        DATAMEM[address] = dataSw[7:0];
                 end
             end
+            lwData = delay[9];
+            delay = {delay[8:0],32'b0};
         end
     end
 endmodule
