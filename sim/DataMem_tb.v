@@ -29,8 +29,8 @@ module dataMem_tb;
     always #5 clk = ~clk;
     initial begin
             rstn = 1'b1;
-        #1  rstn = 1'b0;
-        #1  rstn = 1'b1;
+        #20  rstn = 1'b0;
+        #10  rstn = 1'b1;
     end
 
     initial begin
