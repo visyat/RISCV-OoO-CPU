@@ -23,7 +23,8 @@ module decode(
     output reg              branch,
     output reg              memRead,
     output reg              memWrite,
-    output reg              memToReg
+    output reg              memToReg,
+    output reg              storeSize
 );
     // COMPONENTS: 
     // 1. Extract Opcode, funct3, funct7 (distinguish instruction)
@@ -68,6 +69,7 @@ module decode(
             memRead     <= 1'b0;
             memWrite    <= 1'b0;
             memToReg    <= 1'b0;
+            storeSize   <= 1'b0;
         end
         else begin
             imm         <= imm_wire;
@@ -82,12 +84,18 @@ module decode(
             if (opcode == 7'b0000011) begin // Load instruction
                 destReg     = instr[11:7];
                 srcReg2     = 5'b0;
+                storeSize <= 0;
             end else if (opcode == 7'b0100011) begin // Store instruction
                 destReg     = 5'b0;
                 srcReg2     = instr[24:20];
+                if (funct3 == 3'b000)
+                    storeSize <= 1;
+                else 
+                    storeSize <= 0;
             end else begin
                 destReg     = instr[11:7];
                 srcReg2     = instr[24:20];
+                storeSize <= 0;
             end
             
             hasImm      <= controlSignals[6];
