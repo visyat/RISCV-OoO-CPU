@@ -12,6 +12,7 @@ module ID_EX_Reg (
     input           clk,
     input           rstn,
     
+    input [31:0]    PC_in,
     input [6:0]     opcode_in,
     input [2:0]     funct3_in,
     input [6:0]     funct7_in,
@@ -28,7 +29,9 @@ module ID_EX_Reg (
     input           memWrite_in,
     input           memToReg_in,
     input           hasImm_in,
+    input           storeSize_in,
     output reg          hasImm_out,
+    output reg [31:0]    PC_out,
     output reg [6:0]    opcode_out,
     output reg [2:0]    funct3_out,
     output reg [6:0]    funct7_out,
@@ -43,11 +46,13 @@ module ID_EX_Reg (
     //output          branch_out,
     output reg        memRead_out,
     output reg         memWrite_out,
-    output reg         memToReg_out    
+    output reg         memToReg_out,
+    output reg storeSize_out  
 );
 
     always @(posedge clk or negedge rstn) begin
         if (~rstn) begin
+            PC_out          <= 32'b0;
             opcode_out      <= 7'b0;
             funct3_out      <= 3'b0;
             funct7_out      <= 7'b0;
@@ -64,8 +69,10 @@ module ID_EX_Reg (
             memWrite_out    <= 1'b0;
             memToReg_out    <= 1'b0;
             hasImm_out      <= 1'b0;
+            storeSize_out   <= 1'b0;
         end
         else begin
+            PC_out          <= PC_in;
             opcode_out      <= opcode_in;
             funct3_out      <= funct3_in;
             funct7_out      <= funct7_in;
@@ -82,6 +89,7 @@ module ID_EX_Reg (
             memWrite_out    <= memWrite_in;
             memToReg_out    <= memToReg_in;
             hasImm_out      <= hasImm_in;
+            storeSize_out   <= storeSize_in;
         end
     end
 

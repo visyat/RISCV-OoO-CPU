@@ -24,6 +24,7 @@ module LSQ(
     input [31:0] pcDis,
     input memRead,
     input memWrite,
+    input storeSize,
     input [31:0] swData,
 
     // from LSU ... recieves instruction address (to match) & computed address: rs1+offset
@@ -39,6 +40,8 @@ module LSQ(
     output reg [31:0] addressOut,
     output reg [31:0] lwData,
     output reg loadStore, // 0 if load, 1 if store
+    output reg storeSizeOut, 
+    output reg [31:0] swDataOut,
     output reg complete // 1 if LW and data is found in LSQ
 );
     
@@ -46,6 +49,7 @@ module LSQ(
     reg [15:0] VALID;
     reg [31:0] PC [15:0];
     reg [15:0] OP; // 0: load, 1: store
+    reg [15:0] SIZE; // 0: word, 1: byte
     reg [31:0] ADDRESS [15:0];
     reg [31:0] LSQ_DATA [15:0];
     reg [15:0] ISSUED;
@@ -56,6 +60,7 @@ module LSQ(
         if (~rstn) begin // on reset, set all LSQ entries to 0 ...
             VALID = 16'b0;
             OP = 16'b0;
+            SIZE = 16'b0;
             ISSUED = 16'b0;
             for (i=0; i<16; i=i+1) begin
                 PC[i] = 32'b0;
@@ -73,6 +78,7 @@ module LSQ(
                     if (~VALID[i]) begin // find first vacant entry ...
                         VALID[i]=1;
                         PC[i]=pcDis;
+                        SIZE[i]=storeSize;
                         OP[i] = memWrite; // 0 if load, 1 if store
                         if (memWrite) begin
                             LSQ_DATA[i] = swData;
@@ -105,6 +111,8 @@ module LSQ(
                     lwData = LSQ_DATA[i];
                     complete = 1;
                     loadStore = 0;
+                    storeSizeOut = SIZE[i];
+                    swDataOut = 32'b0;
                     ISSUED[i] = 1;
                     i=16;
                 end
@@ -116,6 +124,8 @@ module LSQ(
                     lwData = 32'b0;
                     complete = 0;
                     loadStore = OP[i];
+                    storeSizeOut = SIZE[i];
+                    swDataOut = LSQ_DATA[i];
                     ISSUED[i] = 1;
                     i=16;
                 end
@@ -128,6 +138,7 @@ module LSQ(
                         VALID[i] = 0;
                         PC[i] = 0;
                         OP[i] = 0;
+                        SIZE[i] = 0;
                         ADDRESS[i] = 32'b0;
                         LSQ_DATA[i] = 32'b0;
                         ISSUED[i] = 0;
@@ -139,4 +150,3 @@ module LSQ(
         end
     end
 endmodule
-
