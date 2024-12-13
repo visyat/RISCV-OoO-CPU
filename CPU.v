@@ -83,6 +83,7 @@ module CPU(
     wire [31:0] srcReg2_ARF_data_EX;
 
     //Issue
+    wire [31:0] PC_issue0_EX;
     wire [5:0] srcReg1_issue0_EX;
     wire [5:0] srcReg2_issue0_EX;
     wire [5:0] destReg_issue0_EX;
@@ -91,6 +92,7 @@ module CPU(
     wire [31:0] imm_issue0_EX;
     wire [1:0] FU_number_out0_EX;
 
+    wire [31:0] PC_issue1_EX;
     wire [5:0] srcReg1_issue1_EX;
     wire [5:0] srcReg2_issue1_EX;
     wire [5:0] destReg_issue1_EX;
@@ -99,6 +101,7 @@ module CPU(
     wire [31:0] imm_issue1_EX;
     wire [1:0] FU_number_out1_EX;
 
+    wire [31:0] PC_issue2_EX;
     wire [5:0] srcReg1_issue2_EX;
     wire [5:0] srcReg2_issue2_EX;
     wire [5:0] destReg_issue2_EX;
@@ -274,6 +277,7 @@ module CPU(
         .rstn(rstn),
 
         // info from decode and rename ...
+        .PC_in(PC_EX),
         .opcode_in(opcode_EX),
         .funct3_in(funct3_EX),
         .funct7_in(funct7_EX),
@@ -301,6 +305,7 @@ module CPU(
         .reg_value_from_FU2_in(),
 
         // issue 1 ...
+        .PC_out0(PC_issue0_EX),
         .rs1_out0(srcReg1_issue0_EX),
         .rs2_out0(srcReg2_issue0_EX),
         .rd_out0(destReg_issue0_EX),
@@ -310,6 +315,7 @@ module CPU(
         .fu_number_out0(FU_number_out0_EX),
 
         // issue 2 ...
+        .PC_out1(PC_issue1_EX),
         .rs1_out1(srcReg1_issue1_EX),
         .rs2_out1(srcReg2_issue1_EX),
         .rd_out1(destReg_issue1_EX),
@@ -319,6 +325,7 @@ module CPU(
         .fu_number_out1(FU_number_out1_EX),
 
         // issue 3 ...
+        .PC_out2(PC_issue2_EX),
         .rs1_out2(srcReg1_issue2_EX),
         .rs2_out2(srcReg2_issue2_EX),
         .rd_out2(destReg_issue2_EX),
