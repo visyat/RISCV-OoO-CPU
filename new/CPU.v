@@ -10,6 +10,7 @@ module CPU(
     wire stop_IF;
     
     //ID stage signals 
+    wire [31:0] PC_ID;
     wire [31:0] instr_ID;
     wire stop_ID;
     
@@ -33,7 +34,7 @@ module CPU(
 
     // EX stage signals
     //Rename
-    wire[31:0] PC_EX; 
+    wire [31:0] PC_EX; 
     wire [6:0] opcode_EX;
     wire [2:0] funct3_EX; 
     wire [6:0] funct7_EX;
@@ -137,9 +138,11 @@ module CPU(
         .clk (clk),
         .rstn(rstn),
         
+        .PC_in(PC_IF),
         .inst_IF_in(instr_IF),
         .stop_in(stop),
 
+        .PC_out(PC_ID),
         .inst_ID_out(instr_ID),
         .stop_out(stop_ID)
     );
@@ -171,6 +174,7 @@ module CPU(
     ID_EX_Reg ID_EX_pipe (
         .clk(clk),
         .rstn(rstn),
+        .PC_in(PC_ID),
         .opcode_in(opcode_ID),
         .funct3_in(funct3_ID),
         .funct7_in(funct7_ID),
@@ -188,6 +192,7 @@ module CPU(
         .aluSrc_in(aluSrc_ID),
         .branch_in(branch_ID),
         .storeSize_in(storeSize_ID),
+        .PC_out(PC_EX),
         .aluOp_out(aluOp_EX),
         .aluSrc_out(aluSrc_EX),
         .branch_out(branch_EX),
