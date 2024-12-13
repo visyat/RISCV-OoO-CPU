@@ -78,6 +78,39 @@ module CPU(
     wire [31:0] new_dr_data_2_EX,
     wire [31:0] new_dr_data_3_EX,
 
+    wire is_dispatching,
+    wire is_store,
+    wire [5:0] UIQ_input_invalid,
+
+    wire [63:0]   retire;
+    wire [5:0]    out_add_1,
+    wire [31:0]   out_data_1,
+    wire [31:0]   out_pc_1,
+
+    wire [5:0]    out_add_2,
+    wire [31:0]   out_data_2,
+    wire [31:0]   out_pc_2,
+    wire [1:0]    stall,
+    wire [63:0] ready,
+
+    wire [5:0]    reg_update_ARF_1,
+    wire [5:0]    reg_update_ARF_2,
+    wire [31:0]   value_update_ARF_1,
+    wire [31:0]   value_update_ARF_2,
+
+    wire [5:0]    old_reg_1,
+    wire [5:0]    old_reg_2,
+
+    wire          src1_ready_flag,     
+    wire          src2_ready_flag,
+    wire [5:0]    sr1_reg_ready,   
+    wire [5:0]    sr2_reg_ready,
+    wire [31:0]   sr1_value_ready,
+    wire [31:0]   sr2_value_ready,
+
+    wire [31:0]   pc_retire_1,
+    wire [31:0]   pc_retire_2
+
     //ARF
     wire [31:0] srcReg1_ARF_data_EX;
     wire [31:0] srcReg2_ARF_data_EX;
@@ -121,6 +154,12 @@ module CPU(
     wire complete_LSQ_MEM;
 
     wire [31:0] load_data_DataMem_MEM;
+
+    //COMPLETE STAGE SIGNALS
+    wire [31:0] PC_MEM;
+
+
+
     
     //IF Stage
     instructionMemory instr_mem(
@@ -246,6 +285,31 @@ module CPU(
         .new_dr_data_1(new_dr_data_1_EX),
         .new_dr_data_2(new_dr_data_2_EX),
         .new_dr_data_3(new_dr_data_3_EX),
+
+        .is_dispatching(is_dispatching_EX),
+        .is_store(is_store_EX),
+        .UIQ_input_invalid(invalid_from_UIQ_EX),
+
+        .retire(retire_EX),
+        .reg_update_ARF_1(srcReg1_p_EX),
+        .reg_update_ARF_2(srcReg1_p_EX),
+        .value_update_ARF_1(srcReg1_ARF_data_EX),
+        .value_update_ARF_2(srcReg2_ARF_data_EX),
+
+        .old_reg_1(old_reg_1_EX),
+        .old_reg_2(old_reg_2_EX),
+
+        .src1_ready_flag(src1_dis_ready_EX),     
+        .src2_ready_flag(src2_dis_ready_EX),
+        .sr1_reg_ready(src1_dis_reg_EX),   
+        .sr2_reg_ready(src2_dis_reg_EX),
+        .sr1_value_ready(src1_dis_val_EX),
+        .sr2_value_ready(src2_dis_val_EX),
+
+        .pc_retire_1(retire_pc1_EX),
+        .pc_retire_2(retire_pc2_EX)
+
+
     );
 
     ARF ARF_mod(
@@ -285,8 +349,8 @@ module CPU(
         .rd_in(destReg_p_EX),
 
         // info from ROB ...
-        .rs1_ready_from_ROB_in(),
-        .rs2_ready_from_ROB_in(),
+        .rs1_ready_from_ROB_in(src1_dis_ready_EX),
+        .rs2_ready_from_ROB_in(src2_dis_ready_EX),
 
         // info from ALU units ... 
         .fu_ready_from_FU_in(),
@@ -387,6 +451,32 @@ module CPU(
     assign fu_ready_from_FU = {FU_ready_alu2, FU_ready_alu1, FU_ready_alu0};
     
     //MEM
+    EX_MEM_Reg EX_MEM_Reg_inst(
+        .clk                (clk),
+        .rstn               (rstn),
+        .tunnel_in          (tunnel_from_UIQ),
+        .rd_result_fu0_in   (data_out_dr_alu0),
+        .pc_fu0_in          (PC_info_out0_from_UIQ),
+        .rd_result_fu1_in   (data_out_dr_alu1),
+        .pc_fu1_in          (PC_info_out1_from_UIQ),
+        .rd_result_fu2_in   (data_out_dr_alu2),
+        .pc_fu2_in          (PC_info_out2_from_UIQ),
+        .op_write_in        (FU_write_flag),
+        .op_read_in         (FU_read_flag),
+        .op_in              (op_out2_from_UIQ),
+
+        .tunnel_out         (tunnel_MEM),
+        .rd_result_fu0_out  (rd_result_fu0_MEM),
+        .pc_fu0_out         (pc_fu0_MEM),
+        .rd_result_fu1_out  (rd_result_fu1_MEM),
+        .pc_fu1_out         (pc_fu1_MEM),
+        .rd_result_fu2_out  (rd_result_fu2_MEM),
+        .pc_fu2_out         (pc_fu2_MEM),
+        .op_write_out       (op_write_MEM),
+        .op_read_out        (op_read_MEM),
+        .op_out             (mem_op)
+    );
+
     // make some changes to LSQ to support SB in addition to SW ...
     LSQ LSQ_mod(
         .clk(clk), 
@@ -435,6 +525,30 @@ module CPU(
     );
 
     //Complete
+
+    ///////////////////////////////////////////////////////////////////////
+    // pipeline register between MEM and COMPLETE stage
+    MEM_C_Reg MEM_C_Reg_inst (
+        .clk                (clk),
+        .rstn               (rstn),
+        .from_lsq           (load_data_from_lsq),
+        .mem_vaild          (data_vaild_from_mem),
+        .lwData_from_LSQ_in (load_data_to_comp_from_LSU),
+        .lwData_from_MEM_in (lwData_from_mem),
+        .pc_from_LSU_in     (inst_pc_from_LSU),
+        .pc_from_MEM_in     (inst_pc_from_mem),
+        .FU_write_flag      (FU_write_flag),
+        .FU_read_flag       (FU_read_flag),
+        .FU_read_flag_MEM   (op_read_MEM),
+
+        .lwData_out         (lwData_comp),
+        .pc_out             (pc_ls_comp),
+        .vaild_out          (vaild_comp),
+        .lsq_out            (lsq_comp),
+        .FU_write_flag_com  (FU_write_flag_com),
+        .FU_read_flag_com   (FU_read_flag_com),
+        .FU_read_flag_MEM_com(FU_read_flag_MEM_com)
+    );
 
 
 endmodule

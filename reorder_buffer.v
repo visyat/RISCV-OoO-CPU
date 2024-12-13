@@ -45,9 +45,9 @@ module reorder_buffer(
     
     input is_dispatching,
     input is_store,
-    input [5:0] set_invalid_from_UIQ,
+    input [5:0] UIQ_input_invalid,
 
-    output reg [63:0]    retire;
+    output reg [63:0]   retire;
     output reg [5:0]    out_add_1,
     output reg [31:0]   out_data_1,
     output reg [31:0]   out_pc_1,
@@ -292,8 +292,13 @@ module reorder_buffer(
         if (src2_ready_flag) begin
             src2_reg_ready   = reg_update_ARF_2;
             src2_value_ready  = value_update_ARF_2;
+        end
 
-
+        always @(UIQ_input_invalid) begin
+        if(UIQ_input_invalid != 6'b0) begin
+            R_ready[UIQ_input_invalid] = 1'b0;
+        end
+    end
     end
 
 endmodule
