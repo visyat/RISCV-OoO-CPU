@@ -27,7 +27,7 @@ module ALU (
     input           rstn,
     input [2:0]     ALU_NO,
     input [3:0]     optype,
-    input [2:0]     alu_number
+    input [2:0]     alu_number,
 
     input [31:0]    data_in_sr1,
     input [31:0]    data_in_sr2,
