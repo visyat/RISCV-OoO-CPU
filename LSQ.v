@@ -32,13 +32,14 @@ module LSQ(
     input [31:0] addressLsu,
 
     // from retirement ... deallocate space in LSQ
-    input [31:0] pcRet,
-    input retire,
+    input [31:0] pcRet1,
+    input [31:0] pcRet2,
 
     // outputs ... issues instruction; completes LW instruction if store seen in LSQ
     output reg [31:0] pcOut,
     output reg [31:0] addressOut,
     output reg [31:0] lwData,
+    output reg fromLSQ, 
     output reg loadStore, // 0 if load, 1 if store
     output reg storeSizeOut, 
     output reg [31:0] swDataOut,
@@ -69,6 +70,7 @@ module LSQ(
             end
             pcOut = 32'b0;
             addressOut = 32'b0;
+            fromLSQ = 0;
             lwData = 32'b0;
             complete = 0;
         end else begin 
@@ -109,6 +111,7 @@ module LSQ(
                     pcOut = PC[i];
                     addressOut = ADDRESS[i];
                     lwData = LSQ_DATA[i];
+                    fromLSQ = 1;
                     complete = 1;
                     loadStore = 0;
                     storeSizeOut = SIZE[i];
@@ -122,6 +125,7 @@ module LSQ(
                     pcOut = PC[i];
                     addressOut = ADDRESS[i];
                     lwData = 32'b0;
+                    fromLSQ = 0;
                     complete = 0;
                     loadStore = OP[i];
                     storeSizeOut = SIZE[i];
@@ -132,18 +136,16 @@ module LSQ(
             end
 
             // retirement logic ... deallocate LSQ entry
-            if (retire) begin
-                for (i=0; i<16; i=i+1) begin
-                    if (pcRet == PC[i]) begin
-                        VALID[i] = 0;
-                        PC[i] = 0;
-                        OP[i] = 0;
-                        SIZE[i] = 0;
-                        ADDRESS[i] = 32'b0;
-                        LSQ_DATA[i] = 32'b0;
-                        ISSUED[i] = 0;
-                        i=16;
-                    end
+            for (i=0; i<16; i=i+1) begin
+                if (pcRet1 == PC[i] || pcRet2 == PC[i]) begin
+                    VALID[i] = 0;
+                    PC[i] = 0;
+                    OP[i] = 0;
+                    SIZE[i] = 0;
+                    ADDRESS[i] = 32'b0;
+                    LSQ_DATA[i] = 32'b0;
+                    ISSUED[i] = 0;
+                    i=16;
                 end
             end
 

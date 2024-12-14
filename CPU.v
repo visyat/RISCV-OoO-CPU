@@ -224,6 +224,7 @@ module CPU(
     wire loadStore_LSQ_MEM;
     wire storeSize_LSQ_MEM;
     wire [31:0] swData_LSQ_MEM;
+    wire fromLSQ_MEM;
     wire complete_LSQ_MEM;
 
     wire [31:0] load_data_DataMem_MEM;
@@ -427,8 +428,6 @@ module CPU(
 
         .pc_retire_1(retire_pc1_EX),
         .pc_retire_2(retire_pc2_EX)
-
-
     );
 
     ARF ARF_mod(
@@ -660,13 +659,14 @@ module CPU(
         .addressLsu(compute_address_LSU_MEM),
         
         // from retirement ...
-        .pcRet(),
-        .retire(),
+        .pcRet1(retire_pc1_EX),
+        .pcRet2(retire_pc2_EX),
 
         // outputs ...
         .pcOut(PC_LSQ_MEM),
         .addressOut(address_LSQ_MEM),
         .lwData(load_data_LSQ_MEM),
+        .fromLSQ(fromLSQ_MEM),
         .loadStore(loadStore_LSQ_MEM),
         .storeSizeOut(storeSize_LSQ_MEM),
         .swDataOut(swData_LSQ_MEM),
@@ -679,6 +679,7 @@ module CPU(
         .rstn(rstn),
         
         //inputs 
+        .fromLSQ(fromLSQ_MEM),
         .address(address_LSQ_MEM), 
         .dataSw(swData_LSQ_MEM),
         .memRead(~loadStore_LSQ_MEM),

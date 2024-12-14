@@ -13,6 +13,7 @@ module dataMemory(
     memWrite,
     storeSize,
     cacheMiss,
+    fromLSQ,
     lwData
 );
     input clk;
@@ -25,6 +26,7 @@ module dataMemory(
     input memWrite;
     input storeSize; // 0: Word (16 bit), 1: Byte (8 bit)
     input cacheMiss;
+    input fromLSQ;
     
     output reg [31:0] lwData;
 
@@ -41,9 +43,8 @@ module dataMemory(
             for (i=0; i<10; i++) begin
                 delay[i]=32'b0;
             end
-
         end else begin
-            if ((memRead || memWrite) && cacheMiss) begin
+            if ((memRead || memWrite) && cacheMiss && ~fromLSQ) begin
                 if (memRead) begin
                     delay[0] = {16'b0, DATAMEM[address], DATAMEM[address+1]};
                 end
