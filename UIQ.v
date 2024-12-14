@@ -318,6 +318,16 @@ module Unified_Issue_Queue #(
                 fu_number_out[j]    <= 'b0;
                 tunnel_out[j]       <= 'b0;
             end
+            
+            PC_out_LSU = 0;
+            optype_out_LSU = 0;
+            rs1_out_LSU = 0;
+            rs2_out_LSU = 0;
+            rd_out_LSU = 0;
+            rs1_value_out_LSU = 0;
+            rs2_value_out_LSU = 0;
+            imm_value_out_LSU = 0;
+            fu_number_out_LSU = 0;
         end
         else begin
             // whether a fu is taken within this cycle
