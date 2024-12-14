@@ -47,14 +47,14 @@ module reorder_buffer(
     input is_store,
     input [5:0] UIQ_input_invalid,
 
-    output reg [63:0]   retire;
+    output reg [63:0]   retire,
     output reg [5:0]    out_add_1,
     output reg [31:0]   out_data_1,
 
     output reg [5:0]    out_add_2,
     output reg [31:0]   out_data_2,
     output reg [1:0]    stall,
-    output [63:0] ready,
+    output reg [63:0] ready,
 
     output reg [5:0]    reg_update_ARF_1,
     output reg [5:0]    reg_update_ARF_2,
@@ -64,8 +64,8 @@ module reorder_buffer(
     output reg [5:0]    old_reg_1,
     output reg [5:0]    old_reg_2,
 
-    output reg          src1_ready_flag,     
-    output reg          src2_ready_flag,
+    output reg          sr1_ready_flag,     
+    output reg          sr2_ready_flag,
     output reg [5:0]    sr1_reg_ready,   
     output reg [5:0]    sr2_reg_ready,
     output reg [31:0]   sr1_value_ready,
@@ -149,7 +149,7 @@ module reorder_buffer(
         else begin
 
             for (i = 0; i < 64; i = i + 1) begin
-                R_retire[i]=1'b0;      // initialize retire buffer every cycle
+                retire[i]=1'b0;      // initialize retire buffer every cycle
             end
 
             //adding something new to rob
@@ -164,8 +164,7 @@ module reorder_buffer(
                     ROB[new_head][6] = instr_PC_0;     //instr pc
                     ROB[new_head][7] = 1'b0;           //complete
                     
-                    new_head=new_head+1
-                     
+                    new_head=new_head+1;   
                 end
                 else if(i==64) begin
                     stall=1'b1;
@@ -214,8 +213,8 @@ module reorder_buffer(
         reg_update_ARF_2    = 6'b0;
         value_update_ARF_1  = 32'b0;
         value_update_ARF_2  = 32'b0;
-        src1_ready_flag = 1'b0;
-        src2_ready_flag = 1'b0;
+        sr1_ready_flag = 1'b0;
+        sr2_ready_flag = 1'b0;
 
         max_retire=0;
         for (i = 0; i < 2; i = i + 1) begin //check to retire
@@ -240,7 +239,7 @@ module reorder_buffer(
                         reg_update_ARF_1 = ROB[retire_head][1];
                         value_update_ARF_1 = ROB[retire_head][3];
                         old_reg_1= ROB[retire_head][2];
-                        src1_ready_flag= 1'b1;
+                        sr1_ready_flag= 1'b1;
                     end
 
                     retire_head = retire_head + 1;
@@ -271,7 +270,7 @@ module reorder_buffer(
                         reg_update_ARF_1 = ROB[retire_head][1];
                         value_update_ARF_1 = ROB[retire_head][3];
                         old_reg_1= ROB[retire_head][2];
-                        src1_ready_flag= 1'b1;
+                        sr1_ready_flag= 1'b1;
                     end
 
                     retire_head = retire_head + 1;
@@ -283,20 +282,22 @@ module reorder_buffer(
 
         end
 
-        if (src1_ready_flag) begin
-            src1_reg_ready   = reg_update_ARF_1;
-            src1_value_ready  = value_update_ARF_1;
+        if (sr1_ready_flag) begin
+            sr1_reg_ready   = reg_update_ARF_1;
+            sr1_value_ready  = value_update_ARF_1;
         end
-        if (src2_ready_flag) begin
-            src2_reg_ready   = reg_update_ARF_2;
-            src2_value_ready  = value_update_ARF_2;
+        if (sr2_ready_flag) begin
+            sr2_reg_ready   = reg_update_ARF_2;
+            sr2_value_ready  = value_update_ARF_2;
         end
-
-        always @(UIQ_input_invalid) begin
-        if(UIQ_input_invalid != 6'b0) begin
-            R_ready[UIQ_input_invalid] = 1'b0;
-        end
+  
     end
+    
+    
+    always @(UIQ_input_invalid) begin
+        if(UIQ_input_invalid != 6'b0) begin
+            ready[UIQ_input_invalid] = 1'b0;
+        end
     end
 
 endmodule

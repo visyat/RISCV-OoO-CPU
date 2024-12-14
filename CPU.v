@@ -30,7 +30,7 @@ module CPU(
     wire memRead_ID;
     wire memWrite_ID;
     wire memToReg_ID;
-    wire storeSize_ID:
+    wire storeSize_ID;
 
     // EX stage signals
     //Rename
@@ -54,8 +54,8 @@ module CPU(
     wire storeSize_EX;
     
     wire [15:0] ROB_num_EX;
-    wire [5:0] srcReg1_p_EX;
-    wire [5:0] srcReg2_p_EX;
+    //wire [5:0] srcReg1_p_EX;
+    //wire [5:0] srcReg2_p_EX;
     wire [5:0] destReg_p_EX;
     wire [5:0] oldDestReg_EX;
     wire stall_rename_EX;
@@ -79,7 +79,7 @@ module CPU(
     wire [31:0] new_dr_data_3_EX;
 
     wire is_dispatching_EX;
-    wire is_store;_EX
+    wire is_store_EX;
     wire [5:0] invalid_from_UIQ_EX;
 
     wire [63:0] retire_EX;
@@ -271,7 +271,7 @@ module CPU(
     wire [5:0]      regout_from_lsu;
     wire [5:0]      regout_from_lsu2;
     wire [5:0]      regout_from_dm;
-
+    reg is_store;
     wire            has_stored;   
     wire [31 : 0]   data_check;
     wire            FU_read_flag_MEM_com;
@@ -413,13 +413,13 @@ module CPU(
         .reg_update_ARF_2(srcReg2_p_EX),
         .value_update_ARF_1(srcReg1_ARF_data_EX),
         .value_update_ARF_2(srcReg2_ARF_data_EX),
-        .ready(ready_EX)
+        .ready(ready_EX),
 
         .old_reg_1(old_reg_1_EX),
         .old_reg_2(old_reg_2_EX),
 
-        .src1_ready_flag(src1_dis_ready_EX),    
-        .src2_ready_flag(src2_dis_ready_EX),
+        .sr1_ready_flag(src1_dis_ready_EX),    
+        .sr2_ready_flag(src2_dis_ready_EX),
         .sr1_reg_ready(src1_dis_reg_EX),   
         .sr2_reg_ready(src2_dis_reg_EX),
         .sr1_value_ready(src1_dis_val_EX),
@@ -439,7 +439,7 @@ module CPU(
         // from ROB ...
         .write_addr1(src1_dis_reg_EX),
         .write_data1(src1_dis_val_EX),
-        .old_addr1(old_reg_1_EX)),
+        .old_addr1(old_reg_1_EX),
         .write_addr2(src2_dis_reg_EX),
         .write_data2(src2_dis_val_EX),
         .old_addr2(old_reg_2_EX),
@@ -537,7 +537,7 @@ module CPU(
 
     //ALUs
     ALU alu0(
-        .ALU_NO         (2'b00)
+        .ALU_NO         (2'b00),
         .clk            (clk),
         .rstn           (rstn),
         .alu_number     (UIQ_tunnel_out),
@@ -553,7 +553,7 @@ module CPU(
         .FU_occ         (ALU0_occ)
     );
     ALU alu1(
-        .ALU_NO         (2'b01)
+        .ALU_NO         (2'b01),
         .clk            (clk),
         .rstn           (rstn),
         .alu_number     (UIQ_tunnel_out),
@@ -569,7 +569,7 @@ module CPU(
         .FU_occ         (ALU1_occ)
     );
     ALU alu2(
-        .ALU_NO         (2'b10)
+        .ALU_NO         (2'b10),
         .clk            (clk),
         .rstn           (rstn),
         .alu_number     (UIQ_tunnel_out),
@@ -585,7 +585,7 @@ module CPU(
         .FU_occ         (ALU2_occ)
     );
     ALU lsu(
-        .ALU_NO         (2'b11)
+        .ALU_NO         (2'b11),
         .clk            (clk),
         .rstn           (rstn),
         .alu_number     (UIQ_tunnel_out),
@@ -600,7 +600,7 @@ module CPU(
         .FU_ready       (LSU_ready),
         .FU_occ         (LSU_occ)
     );
-    assign fu_ready_from_FU = {LSU_ready, FU_ready_alu2, FU_ready_alu1, FU_ready_alu0};
+    assign fu_ready_from_FU = {LSU_ready, ALU2_ready, ALU1_ready, ALU0_ready};
 
     //MEM
     EX_MEM_Reg EX_MEM_Reg_inst(
@@ -634,7 +634,7 @@ module CPU(
         .pc_fu2_out         (PC_issue2_MEM),
 
         .result_lsu_out     (compute_address_LSU_MEM),
-        .pc_lsu_out         (PC_issue_LSU_MEM),
+        .pc_lsu_out         (PC_issue_LSU_MEM)
 
         // .op_write_out       (op_write_MEM),
         // .op_read_out        (op_read_MEM),
@@ -712,7 +712,7 @@ module CPU(
         .lwData_out         (load_data_DataMem_MEM),
         .pc_out             (pc_ls_comp),
         .vaild_out          (vaild_comp),
-        .lsq_out            (lsq_comp),
+        .lsq_out            (lsq_comp)
         //.FU_write_flag_com  (FU_write_flag_com),
         //.FU_read_flag_com   (FU_read_flag_com),
         //.FU_read_flag_MEM_com(FU_read_flag_MEM_com)
@@ -720,7 +720,7 @@ module CPU(
 
     //complete 
     always @(*) begin
-        is_store_reg = 1'b0;
+        is_store = 1'b0;
         if(tunnel_MEM[0]) begin
             rd_result_comp_0_reg    = destReg_data_ALU0_MEM;
             pc_comp_0_reg           = PC_issue0_MEM;
@@ -742,7 +742,7 @@ module CPU(
         if(tunnel_MEM[2]) begin
             pc_comp_2_reg           = PC_issue2_MEM;
             if (FU_write_flag_com && ~FU_read_flag_MEM_com) begin
-                is_store_reg = 1'b1;
+                is_store= 1'b1;
             end
             else begin
                 rd_result_comp_2_reg = destReg_data_ALU1_MEM;
@@ -754,8 +754,8 @@ module CPU(
         end
     
 
-        if(from_lsq) begin
-            rd_result_comp_3_reg    = lwData_out;
+        if(fromLSQ_MEM) begin
+            rd_result_comp_3_reg    = load_data_DataMem_MEM;
             pc_comp_3_reg           = pc_ls_comp;
         end
         else begin
@@ -772,6 +772,6 @@ module CPU(
     assign pc_comp_2        = pc_comp_2_reg;
     assign rd_result_comp_3 = rd_result_comp_3_reg;
     assign pc_comp_3        = pc_comp_3_reg; 
-    assign is_store         = is_store_reg;   
+    assign is_store_comp         = is_store;   
 
 endmodule

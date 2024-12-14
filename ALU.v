@@ -37,7 +37,7 @@ module ALU (
     //outputs: data for dest reg
     output reg [31:0]   data_out_dr,
     output reg [5:0]    dr_out,
-    output reg          FU_ready
+    output reg          FU_ready,
     output reg FU_occ
 
 );

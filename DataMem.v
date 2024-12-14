@@ -37,10 +37,10 @@ module dataMemory(
 
     always @(posedge clk) begin
         if (~rstn) begin
-            for (i = 0; i < 1024; i++) begin
+            for (i = 0; i < 1024; i=i+1) begin
                 DATAMEM[i] = 8'b0;
             end
-            for (i=0; i<10; i++) begin
+            for (i=0; i<10; i=i+1) begin
                 delay[i]=32'b0;
             end
         end else begin

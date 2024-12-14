@@ -360,15 +360,15 @@ module Unified_Issue_Queue #(
                         if (issue_count == 3)           j = RS_SIZE + 1;
                     end else begin
                         if (~mem_issue) begin
-                            PC_out_lsu             <= PC[j];
-                            optype_out_lsu         <= operation[j];
-                            rs1_out_lsu            <= src_reg1[j];
-                            rs2_out_lsu            <= src_reg2[j];
-                            rd_out_lsu             <= dest_reg[j];
-                            rs1_value_out_lsu      <= src1_data[j];
-                            rs2_value_out_lsu      <= src2_data[j];
-                            imm_value_out_lsu      <= imm[j];
-                            fu_number_out_lsu      <= 2'b11;
+                            PC_out_LSU             <= PC[j];
+                            optype_out_LSU         <= operation[j];
+                            rs1_out_LSU           <= src_reg1[j];
+                            rs2_out_LSU            <= src_reg2[j];
+                            rd_out_LSU             <= dest_reg[j];
+                            rs1_value_out_LSU       <= src1_data[j];
+                            rs2_value_out_LSU       <= src2_data[j];
+                            imm_value_out_LSU      <= imm[j];
+                            fu_number_out_LSU      <= 2'b11;
 
                             valid[j]            <= 1'b0;
                             tunnel_out[3]       <= 1;
