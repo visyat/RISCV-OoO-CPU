@@ -224,7 +224,6 @@ module CPU(
     wire loadStore_LSQ_MEM;
     wire storeSize_LSQ_MEM;
     wire [31:0] swData_LSQ_MEM;
-    wire fromLSQ_MEM;
     wire complete_LSQ_MEM;
 
     wire [31:0] load_data_DataMem_MEM;
@@ -714,17 +713,17 @@ module CPU(
         .pc_out             (pc_ls_comp),
         .vaild_out          (vaild_comp),
         .lsq_out            (lsq_comp),
-        .FU_write_flag_com  (FU_write_flag_com),
-        .FU_read_flag_com   (FU_read_flag_com),
-        .FU_read_flag_MEM_com(FU_read_flag_MEM_com)
-
+        //.FU_write_flag_com  (FU_write_flag_com),
+        //.FU_read_flag_com   (FU_read_flag_com),
+        //.FU_read_flag_MEM_com(FU_read_flag_MEM_com)
+    );
 
     //complete 
     always @(*) begin
         is_store_reg = 1'b0;
         if(tunnel_MEM[0]) begin
-            rd_result_comp_0_reg    = rd_result_fu0_MEM;
-            pc_comp_0_reg           = pc_fu0_MEM;
+            rd_result_comp_0_reg    = destReg_data_ALU0_MEM;
+            pc_comp_0_reg           = PC_issue0_MEM;
         end
         else begin
             rd_result_comp_0_reg    = 32'd1;
@@ -732,32 +731,31 @@ module CPU(
         end
 
         if(tunnel_MEM[1]) begin
-            rd_result_comp_1_reg    = rd_result_fu1_MEM;
-            pc_comp_1_reg           = pc_fu1_MEM;
+            rd_result_comp_1_reg    = destReg_data_ALU1_MEM;
+            pc_comp_1_reg           = PC_issue1_MEM;
         end
         else begin
             rd_result_comp_1_reg    = 32'd1;
             pc_comp_1_reg           = 32'd1;
         end
         
-        if (~FU_read_flag_com) begin
-            if(tunnel_MEM[2]) begin
-                pc_comp_2_reg           = pc_fu2_MEM;
-                if (FU_write_flag_com && ~FU_read_flag_MEM_com) begin
-                    is_store_reg = 1'b1;
-                end
-                else begin
-                    rd_result_comp_2_reg = rd_result_fu2_MEM;
-                end
+        if(tunnel_MEM[2]) begin
+            pc_comp_2_reg           = PC_issue2_MEM;
+            if (FU_write_flag_com && ~FU_read_flag_MEM_com) begin
+                is_store_reg = 1'b1;
             end
             else begin
-                rd_result_comp_2_reg    = 32'd1;
-                pc_comp_2_reg           = 32'd1;
+                rd_result_comp_2_reg = destReg_data_ALU1_MEM;
             end
         end
+        else begin
+            rd_result_comp_2_reg    = 32'd1;
+            pc_comp_2_reg           = 32'd1;
+        end
+    
 
-        if(vaild_comp || lsq_comp) begin
-            rd_result_comp_3_reg    = lwData_comp;
+        if(from_lsq) begin
+            rd_result_comp_3_reg    = lwData_out;
             pc_comp_3_reg           = pc_ls_comp;
         end
         else begin
