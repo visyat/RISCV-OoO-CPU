@@ -117,6 +117,7 @@ module CPU(
 
     //Issue
     wire [31:0] PC_issue0_EX;
+    wire [3:0] optype_issue0_EX;
     wire [5:0] srcReg1_issue0_EX;
     wire [5:0] srcReg2_issue0_EX;
     wire [5:0] destReg_issue0_EX;
@@ -126,6 +127,7 @@ module CPU(
     wire [1:0] FU_number_out0_EX;
 
     wire [31:0] PC_issue1_EX;
+    wire [3:0] optype_issue1_EX;
     wire [5:0] srcReg1_issue1_EX;
     wire [5:0] srcReg2_issue1_EX;
     wire [5:0] destReg_issue1_EX;
@@ -135,6 +137,7 @@ module CPU(
     wire [1:0] FU_number_out1_EX;
 
     wire [31:0] PC_issue2_EX;
+    wire [3:0] optype_issue2_EX;
     wire [5:0] srcReg1_issue2_EX;
     wire [5:0] srcReg2_issue2_EX;
     wire [5:0] destReg_issue2_EX;
@@ -143,11 +146,32 @@ module CPU(
     wire [31:0] imm_issue2_EX;
     wire [1:0] FU_number_out2_EX;
 
+    wire [31:0] PC_issue_LSU_EX;
+    wire [3:0] optype_issue_LSU_EX;
+    wire [5:0] srcReg1_issue_LSU_EX;
+    wire [5:0] srcReg2_issue_LSU_EX;
+    wire [5:0] destReg_issue_LSU_EX;
+    wire [31:0] srcReg1_value_issue_LSU_EX;
+    wire [31:0] srcReg2_value_issue_LSU_EX;
+    wire [31:0] imm_issue_LSU_EX;
+    wire [1:0] FU_number_out2_EX;
+
     wire UIQ_no_issue;
     wire UIQ_stall;
-    wire [2:0] UIQ_tunnel_out;
+    wire [3:0] UIQ_tunnel_out;
 
     //MEM stage signals 
+    wire [3:0] tunnel_out_MEM;
+
+    wire [31:0] PC_issue0_MEM;
+    wire [31:0] destReg_data_ALU0_MEM;
+    wire [31:0] PC_issue1_MEM;
+    wire [31:0] destReg_data_ALU1_MEM;
+    wire [31:0] PC_issue2_MEM;
+    wire [31:0] destReg_data_ALU2_MEM;
+    wire [31:0] PC_issue_LSU_MEM;
+    wire [31:0] compute_address_LSU_MEM;
+    
     wire [31:0] PC_LSQ_MEM;
     wire [31:0] address_LSQ_MEM;
     wire [31:0] load_data_LSQ_MEM;
@@ -367,9 +391,12 @@ module CPU(
         .FU2_flag_in(),
         .reg_tag_from_FU2_in(),
         .reg_value_from_FU2_in(),
+        .LSU_flag_in(),
+        .reg_tag_from_LSU_in(),
 
         // issue 1 ...
         .PC_out0(PC_issue0_EX),
+        .optype_out0(optype_issue0_EX),
         .rs1_out0(srcReg1_issue0_EX),
         .rs2_out0(srcReg2_issue0_EX),
         .rd_out0(destReg_issue0_EX),
@@ -380,6 +407,7 @@ module CPU(
 
         // issue 2 ...
         .PC_out1(PC_issue1_EX),
+        .optype_out1(optype_issue1_EX),
         .rs1_out1(srcReg1_issue1_EX),
         .rs2_out1(srcReg2_issue1_EX),
         .rd_out1(destReg_issue1_EX),
@@ -390,6 +418,7 @@ module CPU(
 
         // issue 3 ...
         .PC_out2(PC_issue2_EX),
+        .optype_out2(optype_issue2_EX),
         .rs1_out2(srcReg1_issue2_EX),
         .rs2_out2(srcReg2_issue2_EX),
         .rd_out2(destReg_issue2_EX),
@@ -397,6 +426,17 @@ module CPU(
         .rs2_value_out2(srcReg2_value_issue2_EX),
         .imm_value_out2(imm_issue2_EX),
         .fu_number_out2(FU_number_out2_EX),
+
+        // issue 4 LSU ...
+        .PC_out_LSU(PC_issue_LSU_EX),
+        .optype_out_LSU(optype_issue_LSU_EX),
+        .rs1_out_LSU(srcReg1_issue_LSU_EX),
+        .rs2_out_LSU(srcReg2_issue_LSU_EX),
+        .rd_out_LSU(destReg_issue_LSU_EX),
+        .rs1_value_out_LSU(srcReg1_value_issue_LSU_EX),
+        .rs2_value_out_LSU(srcReg2_value_issue_LSU_EX),
+        .imm_value_out_LSU(imm_issue_LSU_EX),
+        .fu_number_out_LSU(fu_number_out_LSU),
 
         // general output ...
         .no_issue_out(UIQ_no_issue),
@@ -406,82 +446,108 @@ module CPU(
 
     //ALUs
     ALU alu0(
-        .ALU_NO(2'b00)
-        .clk(clk),
-        .rstn(rstn),
-        .alu_number(UIQ_tunnel_out),
-        .optype(op_out0),
+        .ALU_NO         (2'b00)
+        .clk            (clk),
+        .rstn           (rstn),
+        .alu_number     (UIQ_tunnel_out),
+        .optype         (optype_issue0_EX),
         .data_in_sr1    (srcReg1_value_issue0_EX),
-        .data_in_sr2    (imm_issue0_EX),
-        .data_in_imm    (imm_value_out0_from_UIQ),
-        .dr_in          (rd_out0_from_UIQ),
+        .data_in_sr2    (srcReg2_value_issue0_EX),
+        .data_in_imm    (imm_issue0_EX),
+        .dr_in          (destReg_issue0_EX),
 
-        .data_out_dr    (data_out_dr_alu0),
-        .dr_out         (dr_out_alu0),
-        .FU_ready       (FU_ready_alu0),
-        .FU_occ(FU_occ_alu0)
-        
+        .data_out_dr    (destReg_data_ALU0_EX),
+        .dr_out         (destReg_ALU0_EX),
+        .FU_ready       (ALU0_ready),
+        .FU_occ         (ALU0_occ)
     );
     ALU alu1(
-        .ALU_NO(2'b01)
-        .clk(clk),
-        .rstn(rstn),
-        .alu_number(UIQ_tunnel_out),
-        .optype(op_out1),
+        .ALU_NO         (2'b01)
+        .clk            (clk),
+        .rstn           (rstn),
+        .alu_number     (UIQ_tunnel_out),
+        .optype         (optype_issue1_EX),
         .data_in_sr1    (srcReg1_value_issue1_EX),
-        .data_in_sr2    (imm_issue1_EX),
-        .data_in_imm    (imm_value_out1_from_UIQ),
-        .dr_in          (rd_out1_from_UIQ),
-        .data_out_dr    (data_out_dr_alu1),
-        .dr_out         (dr_out_alu1),
-        .FU_ready       (FU_ready_alu1),
-        .FU_occ(FU_occ_alu1)
-        
+        .data_in_sr2    (srcReg2_value_issue1_EX),
+        .data_in_imm    (imm_issue1_EX),
+        .dr_in          (destReg_issue1_EX),
+
+        .data_out_dr    (destReg_data_ALU1_EX),
+        .dr_out         (destReg_ALU1_EX),
+        .FU_ready       (ALU1_ready),
+        .FU_occ         (ALU1_occ)
     );
     ALU alu2(
-        .ALU_NO(2'b10)
-        .clk(clk),
-        .rstn(rstn),
-        .alu_number(UIQ_tunnel_out),
-        .optype(op_out2),
+        .ALU_NO         (2'b10)
+        .clk            (clk),
+        .rstn           (rstn),
+        .alu_number     (UIQ_tunnel_out),
+        .optype         (optype_issue2_EX),
         .data_in_sr1    (srcReg1_value_issue2_EX),
-        .data_in_sr2    (imm_issue2_EX),
-        .data_in_imm    (imm_value_out2_from_UIQ),
-        .dr_in          (rd_out2_from_UIQ),
+        .data_in_sr2    (srcReg2_value_issue2_EX),
+        .data_in_imm    (imm_issue2_EX),
+        .dr_in          (destReg_issue2_EX),
 
-        .data_out_dr    (data_out_dr_alu2),
-        .dr_out         (dr_out_alu2),
-        .FU_ready       (FU_ready_alu2),
-        .FU_occ(FU_occ_alu2)
-        
+        .data_out_dr    (destReg_data_ALU2_EX),
+        .dr_out         (destReg_ALU2_EX),
+        .FU_ready       (ALU2_ready),
+        .FU_occ         (ALU2_occ)
     );
-    assign fu_ready_from_FU = {FU_ready_alu2, FU_ready_alu1, FU_ready_alu0};
-    
+    ALU lsu(
+        .ALU_NO         (2'b11)
+        .clk            (clk),
+        .rstn           (rstn),
+        .alu_number     (UIQ_tunnel_out),
+        .optype         (optype_issue_LSU_EX),
+        .data_in_sr1    (srcReg1_value_issue_LSU_EX),
+        .data_in_sr2    (srcReg2_value_issue_LSU_EX),
+        .data_in_imm    (imm_issue_LSU_EX),
+        .dr_in          (destReg_issue_LSU_EX),
+
+        .data_out_dr    (compute_address_LSU_EX),
+        .dr_out         (destReg_LSU_EX),
+        .FU_ready       (LSU_ready),
+        .FU_occ         (LSU_occ)
+    );
+    assign fu_ready_from_FU = {LSU_ready, FU_ready_alu2, FU_ready_alu1, FU_ready_alu0};
+
     //MEM
     EX_MEM_Reg EX_MEM_Reg_inst(
         .clk                (clk),
         .rstn               (rstn),
-        .tunnel_in          (tunnel_from_UIQ),
-        .rd_result_fu0_in   (data_out_dr_alu0),
-        .pc_fu0_in          (PC_info_out0_from_UIQ),
-        .rd_result_fu1_in   (data_out_dr_alu1),
-        .pc_fu1_in          (PC_info_out1_from_UIQ),
-        .rd_result_fu2_in   (data_out_dr_alu2),
-        .pc_fu2_in          (PC_info_out2_from_UIQ),
-        .op_write_in        (FU_write_flag),
-        .op_read_in         (FU_read_flag),
-        .op_in              (op_out2_from_UIQ),
+        .tunnel_in          (UIQ_tunnel_out),
 
-        .tunnel_out         (tunnel_MEM),
-        .rd_result_fu0_out  (rd_result_fu0_MEM),
-        .pc_fu0_out         (pc_fu0_MEM),
-        .rd_result_fu1_out  (rd_result_fu1_MEM),
-        .pc_fu1_out         (pc_fu1_MEM),
-        .rd_result_fu2_out  (rd_result_fu2_MEM),
-        .pc_fu2_out         (pc_fu2_MEM),
-        .op_write_out       (op_write_MEM),
-        .op_read_out        (op_read_MEM),
-        .op_out             (mem_op)
+        .rd_result_fu0_in   (destReg_data_ALU0_EX),
+        .pc_fu0_in          (PC_issue0_EX),
+
+        .rd_result_fu1_in   (destReg_data_ALU1_EX),
+        .pc_fu1_in          (PC_issue1_EX),
+
+        .rd_result_fu2_in   (destReg_data_ALU2_EX),
+        .pc_fu2_in          (PC_issue2_EX),
+
+        .result_lsu_in      (compute_address_LSU_EX),
+        .pc_lsu_in          (PC_issue_LSU_EX),
+
+        // .op_write_in        (FU_write_flag),
+        // .op_read_in         (FU_read_flag),
+
+        .tunnel_out         (tunnel_out_MEM),
+        .rd_result_fu0_out  (destReg_data_ALU0_MEM),
+        .pc_fu0_out         (PC_issue0_MEM),
+
+        .rd_result_fu1_out  (destReg_data_ALU1_MEM),
+        .pc_fu1_out         (PC_issue1_MEM),
+
+        .rd_result_fu2_out  (destReg_data_ALU2_MEM),
+        .pc_fu2_out         (PC_issue2_MEM),
+
+        .result_lsu_out     (compute_address_LSU_MEM),
+        .pc_lsu_out         (PC_issue_LSU_MEM),
+
+        // .op_write_out       (op_write_MEM),
+        // .op_read_out        (op_read_MEM),
+        // .op_out             (mem_op)
     );
 
     // make some changes to LSQ to support SB in addition to SW ...
@@ -497,8 +563,8 @@ module CPU(
         .swData(srcReg2_ARF_data_EX),
         
         // from lsu ... 
-        .pcLsu(),
-        .addressLsu(),
+        .pcLsu(PC_issue_LSU_MEM),
+        .addressLsu(compute_address_LSU_MEM),
         
         // from retirement ...
         .pcRet(),
@@ -557,5 +623,62 @@ module CPU(
         .FU_read_flag_MEM_com(FU_read_flag_MEM_com)
     );
 
+
+    //complete 
+    always @(*) begin
+        is_store_reg = 1'b0;
+        if(tunnel_MEM[0]) begin
+            rd_result_comp_0_reg    = rd_result_fu0_MEM;
+            pc_comp_0_reg           = pc_fu0_MEM;
+        end
+        else begin
+            rd_result_comp_0_reg    = 32'd1;
+            pc_comp_0_reg           = 32'd1;
+        end
+
+        if(tunnel_MEM[1]) begin
+            rd_result_comp_1_reg    = rd_result_fu1_MEM;
+            pc_comp_1_reg           = pc_fu1_MEM;
+        end
+        else begin
+            rd_result_comp_1_reg    = 32'd1;
+            pc_comp_1_reg           = 32'd1;
+        end
+        
+        if (~FU_read_flag_com) begin
+            if(tunnel_MEM[2]) begin
+                pc_comp_2_reg           = pc_fu2_MEM;
+                if (FU_write_flag_com && ~FU_read_flag_MEM_com) begin
+                    is_store_reg = 1'b1;
+                end
+                else begin
+                    rd_result_comp_2_reg = rd_result_fu2_MEM;
+                end
+            end
+            else begin
+                rd_result_comp_2_reg    = 32'd1;
+                pc_comp_2_reg           = 32'd1;
+            end
+        end
+
+        if(vaild_comp || lsq_comp) begin
+            rd_result_comp_3_reg    = lwData_comp;
+            pc_comp_3_reg           = pc_ls_comp;
+        end
+        else begin
+            rd_result_comp_3_reg    = 32'd1;
+            pc_comp_3_reg           = 32'd1;
+        end
+    end
+
+    assign rd_result_comp_0 = rd_result_comp_0_reg;
+    assign pc_comp_0        = pc_comp_0_reg;
+    assign rd_result_comp_1 = rd_result_comp_1_reg;
+    assign pc_comp_1        = pc_comp_1_reg;
+    assign rd_result_comp_2 = rd_result_comp_2_reg;
+    assign pc_comp_2        = pc_comp_2_reg;
+    assign rd_result_comp_3 = rd_result_comp_3_reg;
+    assign pc_comp_3        = pc_comp_3_reg; 
+    assign is_store         = is_store_reg;   
 
 endmodule

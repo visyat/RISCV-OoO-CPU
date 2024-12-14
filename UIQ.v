@@ -59,6 +59,7 @@ module Unified_Issue_Queue #(
     // output signals
     // issue NO.1
     output reg [31:0]                   PC_out0,
+    output reg [3:0]                    optype_out0,
     output reg [AR_SIZE - 1 : 0]        rs1_out0,
     output reg [AR_SIZE - 1 : 0]        rs2_out0,
     output reg [AR_SIZE - 1 : 0]        rd_out0,
@@ -69,6 +70,7 @@ module Unified_Issue_Queue #(
     
     // issue NO.2
     output reg [31:0]                   PC_out1,
+    output reg [3:0]                    optype_out1,
     output reg [AR_SIZE - 1 : 0]        rs1_out1,
     output reg [AR_SIZE - 1 : 0]        rs2_out1,
     output reg [AR_SIZE - 1 : 0]        rd_out1,
@@ -79,6 +81,7 @@ module Unified_Issue_Queue #(
     
     // issue NO.3
     output reg [31:0]                   PC_out2,
+    output reg [3:0]                    optype_out2,
     output reg [AR_SIZE - 1 : 0]        rs1_out2,
     output reg [AR_SIZE - 1 : 0]        rs2_out2,
     output reg [AR_SIZE - 1 : 0]        rd_out2,
@@ -86,6 +89,17 @@ module Unified_Issue_Queue #(
     output reg [31 : 0]                 rs2_value_out2,
     output reg [31 : 0]                 imm_value_out2,
     output reg [FU_SIZE - 1 : 0]        fu_number_out2, 
+
+    // issue No.4 LSU ...
+    output reg [31:0]                   PC_out_LSU,
+    output reg [3:0]                    optype_out_LSU,
+    output reg [AR_SIZE - 1 : 0]        rs1_out_LSU,
+    output reg [AR_SIZE - 1 : 0]        rs2_out_LSU,
+    output reg [AR_SIZE - 1 : 0]        rd_out_LSU,
+    output reg [31 : 0]                 rs1_value_out_LSU,
+    output reg [31 : 0]                 rs2_value_out_LSU,
+    output reg [31 : 0]                 imm_value_out_LSU,
+    output reg [FU_SIZE - 1 : 0]        fu_number_out_LSU, 
 
     // control signals for next stage
     output reg                          no_issue_out, 
@@ -139,9 +153,11 @@ module Unified_Issue_Queue #(
     // output logic
     integer                     j               = 0;
     reg [1 : 0]                 issue_count     = 0;
+    reg                         mem_issue       = 0;
     reg                         fu_taken        [FU_ARRAY - 1 : 0];
 
     reg [31:0]                  PC_out          [2 : 0];
+    reg [3:0]                   optype_out      [2:0];
     reg [AR_SIZE - 1 : 0]       rs1_out         [2 : 0];
     reg [AR_SIZE - 1 : 0]       rs2_out         [2 : 0];
     reg [AR_SIZE - 1 : 0]       rd_out          [2 : 0];
@@ -292,6 +308,7 @@ module Unified_Issue_Queue #(
         if (~rstn) begin
             for (j = 0; j < 3; j = j + 1) begin
                 PC_out[j]           <= 'b0;
+                optype_out[j]       <= 'b0;
                 rs1_out[j]          <= 'b0;
                 rs2_out[j]          <= 'b0;
                 rd_out[j]           <= 'b0;
@@ -310,39 +327,61 @@ module Unified_Issue_Queue #(
             end
             // issue_count reset
             issue_count         = 0;
+            mem_issue           = 0;
             // no_issue_out reset
             no_issue_out        = 1;
             
             for (j = 0; j < RS_SIZE; j = j + 1) begin
                 if (valid[j] && src1_ready[j] && src2_ready[j] && fu_ready_from_FU_in[fu_number[j]]
                     && (~fu_taken[fu_number[j]])) begin
-                    // output signals
-                    PC_out[fu_number[j]]            = PC[j];
-                    rs1_out[fu_number[j]]           = src_reg1[j];
-                    rs2_out[fu_number[j]]           = src_reg2[j];
-                    rd_out[fu_number[j]]            = dest_reg[j];
-                    rs1_value_out[fu_number[j]]     = src1_data[j];
-                    rs2_value_out[fu_number[j]]     = src2_data[j];
-                    imm_value_out[fu_number[j]]     = imm[j];
-                    fu_number_out[fu_number[j]]     = fu_number[j];
-                    // clear RS
-                    valid[j]                        <= 1'b0;
-                    // select tunnel(FU)
-                    tunnel_out[fu_number[j]]        <= 1;
-                    // issue_count increase
-                    issue_count                     = issue_count + 1;
-                    // mark which FU as taken
-                    fu_taken[fu_number[j]]          = 1;
-                    // no need to stall
-                    no_issue_out                    = 0;
+                    if (operation[j] != 4'b0111 || operation[j] != 4'b1000 || operation[j] != 4'b1001 || operation[j] != 4'b1010) begin
+                        // output signals
+                        PC_out[fu_number[j]]            = PC[j];
+                        optype_out[fu_number[j]]        = operation[j];
+                        rs1_out[fu_number[j]]           = src_reg1[j];
+                        rs2_out[fu_number[j]]           = src_reg2[j];
+                        rd_out[fu_number[j]]            = dest_reg[j];
+                        rs1_value_out[fu_number[j]]     = src1_data[j];
+                        rs2_value_out[fu_number[j]]     = src2_data[j];
+                        imm_value_out[fu_number[j]]     = imm[j];
+                        fu_number_out[fu_number[j]]     = fu_number[j];
+                        // clear RS
+                        valid[j]                        <= 1'b0;
+                        // select tunnel(FU)
+                        tunnel_out[fu_number[j]]        <= 1;
+                        // issue_count increase
+                        issue_count                     = issue_count + 1;
+                        // mark which FU as taken
+                        fu_taken[fu_number[j]]          = 1;
+                        // no need to stall
+                        no_issue_out                    = 0;
 
-                    // if already issued 3 instructions, break
-                    if (issue_count == 2)           j = RS_SIZE + 1;
+                        // if already issued 3 instructions, break
+                        if (issue_count == 3)           j = RS_SIZE + 1;
+                    end else begin
+                        if (~mem_issue) begin
+                            PC_out1             <= PC[j];
+                            optype_out1         <= operation[j];
+                            rs1_out1            <= src_reg1[j];
+                            rs2_out1            <= src_reg2[j];
+                            rd_out1             <= dest_reg[j];
+                            rs1_value_out1      <= src1_data[j];
+                            rs2_value_out1      <= src2_data[j];
+                            imm_value_out1      <= imm[j];
+                            fu_number_out1      <= 2'b11;
+
+                            valid[j]            <= 1'b0;
+                            tunnel_out[3]       <= 1;
+                            no_issue_out = 0;
+                            mem_issue = ~mem_issue;
+                        end
+                    end
                 end
             end
         end
 
         PC_out0             <= PC_out[0];
+        optype_out0         <= optype_out[0];
         rs1_out0            <= rs1_out[0];
         rs2_out0            <= rs2_out[0];
         rd_out0             <= rd_out[0];
@@ -352,6 +391,7 @@ module Unified_Issue_Queue #(
         fu_number_out0      <= fu_number_out[0];
 
         PC_out1             <= PC_out[1];
+        optype_out1         <= optype_out[1];
         rs1_out1            <= rs1_out[1];
         rs2_out1            <= rs2_out[1];
         rd_out1             <= rd_out[1];
@@ -361,6 +401,7 @@ module Unified_Issue_Queue #(
         fu_number_out1      <= fu_number_out[1];
 
         PC_out2             <= PC_out[2];
+        optype_out2         <= optype_out[2];
         rs1_out2            <= rs1_out[2];
         rs2_out2            <= rs2_out[2];
         rd_out2             <= rd_out[2];
