@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Function: module for Unified_Issue_Queue of RISC-V Out-of-Order Processor
 //
-// Author: Yudong Zhou
+// Author:
 //
 // Create date: 11/9/2024
 //
@@ -360,15 +360,15 @@ module Unified_Issue_Queue #(
                         if (issue_count == 3)           j = RS_SIZE + 1;
                     end else begin
                         if (~mem_issue) begin
-                            PC_out1             <= PC[j];
-                            optype_out1         <= operation[j];
-                            rs1_out1            <= src_reg1[j];
-                            rs2_out1            <= src_reg2[j];
-                            rd_out1             <= dest_reg[j];
-                            rs1_value_out1      <= src1_data[j];
-                            rs2_value_out1      <= src2_data[j];
-                            imm_value_out1      <= imm[j];
-                            fu_number_out1      <= 2'b11;
+                            PC_out_lsu             <= PC[j];
+                            optype_out_lsu         <= operation[j];
+                            rs1_out_lsu            <= src_reg1[j];
+                            rs2_out_lsu            <= src_reg2[j];
+                            rd_out_lsu             <= dest_reg[j];
+                            rs1_value_out_lsu      <= src1_data[j];
+                            rs2_value_out_lsu      <= src2_data[j];
+                            imm_value_out_lsu      <= imm[j];
+                            fu_number_out_lsu      <= 2'b11;
 
                             valid[j]            <= 1'b0;
                             tunnel_out[3]       <= 1;

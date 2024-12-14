@@ -50,11 +50,9 @@ module reorder_buffer(
     output reg [63:0]   retire;
     output reg [5:0]    out_add_1,
     output reg [31:0]   out_data_1,
-    output reg [31:0]   out_pc_1,
 
     output reg [5:0]    out_add_2,
     output reg [31:0]   out_data_2,
-    output reg [31:0]   out_pc_2,
     output reg [1:0]    stall,
     output [63:0] ready,
 

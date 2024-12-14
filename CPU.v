@@ -68,48 +68,41 @@ module CPU(
     wire store_data_0_EX;
     wire instr_PC_0_EX; 
 
-    wire [31:0] complete_pc_0_EX
-    wire [31:0] complete_pc_1_EX,
-    wire [31:0] complete_pc_2_EX,
-    wire [31:0] complete_pc_3_EX,
+    wire [31:0] complete_pc_0_EX;
+    wire [31:0] complete_pc_1_EX;
+    wire [31:0] complete_pc_2_EX;
+    wire [31:0] complete_pc_3_EX;
     
-    wire [31:0] new_dr_data_0_EX,
-    wire [31:0] new_dr_data_1_EX,
-    wire [31:0] new_dr_data_2_EX,
-    wire [31:0] new_dr_data_3_EX,
+    wire [31:0] new_dr_data_0_EX;
+    wire [31:0] new_dr_data_1_EX;
+    wire [31:0] new_dr_data_2_EX;
+    wire [31:0] new_dr_data_3_EX;
 
-    wire is_dispatching,
-    wire is_store,
-    wire [5:0] UIQ_input_invalid,
+    wire is_dispatching_EX;
+    wire is_store;_EX
+    wire [5:0] invalid_from_UIQ_EX;
 
-    wire [63:0]   retire;
-    wire [5:0]    out_add_1,
-    wire [31:0]   out_data_1,
-    wire [31:0]   out_pc_1,
+    wire [63:0] retire_EX;
+    wire [63:0] ready_EX;
 
-    wire [5:0]    out_add_2,
-    wire [31:0]   out_data_2,
-    wire [31:0]   out_pc_2,
-    wire [1:0]    stall,
-    wire [63:0] ready,
+    wire [5:0]    srcReg1_p_EX; //to arf
+    wire [31:0]   srcReg1_ARF_data_EX; //to arf
+    wire [31:0]   retire_pc1_EX;
 
-    wire [5:0]    reg_update_ARF_1,
-    wire [5:0]    reg_update_ARF_2,
-    wire [31:0]   value_update_ARF_1,
-    wire [31:0]   value_update_ARF_2,
+    wire [5:0]    srcReg2_p_EX; //to arf
+    wire [31:0]   srcReg2_ARF_data_EX; //to arf
+    wire [31:0]   retire_pc2_EX;
 
-    wire [5:0]    old_reg_1,
-    wire [5:0]    old_reg_2,
+    wire [5:0]    old_reg_1_EX;
+    wire [5:0]    old_reg_2_EX;
 
-    wire          src1_ready_flag,     
-    wire          src2_ready_flag,
-    wire [5:0]    sr1_reg_ready,   
-    wire [5:0]    sr2_reg_ready,
-    wire [31:0]   sr1_value_ready,
-    wire [31:0]   sr2_value_ready,
+    wire          src1_dis_ready_EX;   
+    wire          src2_dis_ready_EX;
+    wire [5:0]    src1_dis_reg_EX; 
+    wire [5:0]    src2_dis_reg_EX;
+    wire [31:0]   src1_dis_val_EX;
+    wire [31:0]   src2_dis_val_EX;
 
-    wire [31:0]   pc_retire_1,
-    wire [31:0]   pc_retire_2
 
     //ARF
     wire [31:0] srcReg1_ARF_data_EX;
@@ -159,6 +152,47 @@ module CPU(
     wire UIQ_no_issue;
     wire UIQ_stall;
     wire [3:0] UIQ_tunnel_out;
+
+    //ALUs
+    wire [3:0] optype_issue0_EX;
+    wire [31:0] srcReg1_value_issue0_EX;
+    wire [31:0] srcReg2_value_issue0_EX;
+    wire [31:0] imm_issue0_EX;
+    wire [5:0] destReg_issue0_EX;
+    wire [31:0] destReg_data_ALU0_EX;
+    wire [5:0] destReg_ALU0_EX;
+    wire ALU0_ready;
+    wire ALU0_occ;
+
+    wire [3:0] optype_issue1_EX;
+    wire [31:0] srcReg1_value_issue1_EX;
+    wire [31:0] srcReg2_value_issue1_EX;
+    wire [31:0] imm_issue1_EX;
+    wire [5:0] destReg_issue1_EX;
+    wire [31:0] destReg_data_ALU1_EX;
+    wire [5:0] destReg_ALU1_EX;
+    wire ALU1_ready;
+    wire ALU1_occ;
+
+    wire [3:0] optype_issue2_EX;
+    wire [31:0] srcReg1_value_issue2_EX;
+    wire [31:0] srcReg2_value_issue2_EX;
+    wire [31:0] imm_issue2_EX;
+    wire [5:0] destReg_issue2_EX;
+    wire [31:0] destReg_data_ALU2_EX;
+    wire [5:0] destReg_ALU2_EX;
+    wire ALU2_ready;
+    wire ALU2_occ;
+
+    wire [3:0] optype_issue_LSU_EX;
+    wire [31:0] srcReg1_value_issue_LSU_EX;
+    wire [31:0] srcReg2_value_issue_LSU_EX;
+    wire [31:0] imm_issue_LSU_EX;
+    wire [5:0] destReg_issue_LSU_EX;
+    wire [31:0] destReg_data_ALU_LSU_EX;
+    wire [5:0] destReg_ALU_LSU_EX;
+    wire LSU_ready;
+    wire LSU_occ;
 
     // EX_MEM pipeline register signals
     wire [31 : 0]   rd_result_fu0_MEM;
@@ -360,12 +394,12 @@ module CPU(
         .store_data_0(store_data_0_EX), //from rename
         .instr_PC_0(instr_PC_0_EX),    //from rename    
 
-        .complete_pc_0(complete_pc_0_EX),
+        .complete_pc_0(complete_pc_0_EX), //TODO: FIX VARIABLE NAMES
         .complete_pc_1(complete_pc_1_EX),
         .complete_pc_2(complete_pc_2_EX),
         .complete_pc_3(complete_pc_3_EX),
         
-        .new_dr_data_0(new_dr_data_0_EX),
+        .new_dr_data_0(new_dr_data_0_EX), 
         .new_dr_data_1(new_dr_data_1_EX),
         .new_dr_data_2(new_dr_data_2_EX),
         .new_dr_data_3(new_dr_data_3_EX),
@@ -376,14 +410,15 @@ module CPU(
 
         .retire(retire_EX),
         .reg_update_ARF_1(srcReg1_p_EX),
-        .reg_update_ARF_2(srcReg1_p_EX),
+        .reg_update_ARF_2(srcReg2_p_EX),
         .value_update_ARF_1(srcReg1_ARF_data_EX),
         .value_update_ARF_2(srcReg2_ARF_data_EX),
+        .ready(ready_EX)
 
         .old_reg_1(old_reg_1_EX),
         .old_reg_2(old_reg_2_EX),
 
-        .src1_ready_flag(src1_dis_ready_EX),     
+        .src1_ready_flag(src1_dis_ready_EX),    
         .src2_ready_flag(src2_dis_ready_EX),
         .sr1_reg_ready(src1_dis_reg_EX),   
         .sr2_reg_ready(src2_dis_reg_EX),
@@ -404,13 +439,13 @@ module CPU(
         .read_en(1'b1),
 
         // from ROB ...
-        .write_addr1(),
-        .write_data1(),
-        .old_addr1(),
-        .write_addr2(),
-        .write_data2(),
-        .old_addr2(),
-        .write_en(),
+        .write_addr1(src1_dis_reg_EX),
+        .write_data1(src1_dis_val_EX),
+        .old_addr1(old_reg_1_EX)),
+        .write_addr2(src2_dis_reg_EX),
+        .write_data2(src2_dis_val_EX),
+        .old_addr2(old_reg_2_EX),
+        .write_en(1'b1),
         
         // output ...
         .read_data1(srcReg1_ARF_data_EX),
@@ -438,18 +473,19 @@ module CPU(
         .rs2_ready_from_ROB_in(src2_dis_ready_EX),
 
         // info from ALU units ... 
-        .fu_ready_from_FU_in(),
-        .FU0_flag_in(),
-        .reg_tag_from_FU0_in(),
-        .reg_value_from_FU0_in(),
-        .FU1_flag_in(),
-        .reg_tag_from_FU1_in(),
-        .reg_value_from_FU1_in(),
-        .FU2_flag_in(),
-        .reg_tag_from_FU2_in(),
-        .reg_value_from_FU2_in(),
-        .LSU_flag_in(),
-        .reg_tag_from_LSU_in(),
+        .fu_ready_from_FU_in(fu_ready_from_FU),
+
+        .FU0_flag_in(ALU0_occ),
+        .reg_tag_from_FU0_in(destReg_ALU0_EX),
+        .reg_value_from_FU0_in(destReg_data_ALU0_EX),
+        .FU1_flag_in(ALU1_occ),
+        .reg_tag_from_FU1_in(destReg_ALU1_EX),
+        .reg_value_from_FU1_in(destReg_data_ALU1_EX),
+        .FU2_flag_in(ALU2_occ),
+        .reg_tag_from_FU2_in(destReg_ALU2_EX),
+        .reg_value_from_FU2_in(destReg_data_ALU2_EX),
+        .LSU_flag_in(LSU_occ),
+        .reg_tag_from_LSU_in(destReg_LSU_EX),
 
         // issue 1 ...
         .PC_out0(PC_issue0_EX),
@@ -658,27 +694,28 @@ module CPU(
 
     ///////////////////////////////////////////////////////////////////////
     // pipeline register between MEM and COMPLETE stage
-    MEM_C_Reg MEM_C_Reg_inst (
+    MEM_C_Reg MEM_C_Reg_inst (   //TODO:ADJUST VARIABLE NAMES
+        
         .clk                (clk),
         .rstn               (rstn),
-        .from_lsq           (load_data_from_lsq),
+        .from_lsq           (load_data_LSQ_MEM),
         .mem_vaild          (data_vaild_from_mem),
-        .lwData_from_LSQ_in (load_data_to_comp_from_LSU),
-        .lwData_from_MEM_in (lwData_from_mem),
-        .pc_from_LSU_in     (inst_pc_from_LSU),
-        .pc_from_MEM_in     (inst_pc_from_mem),
-        .FU_write_flag      (FU_write_flag),
-        .FU_read_flag       (FU_read_flag),
-        .FU_read_flag_MEM   (op_read_MEM),
 
-        .lwData_out         (lwData_comp),
+        .lwData_from_LSQ_in (load_data_LSQ_MEM),
+        .lwData_from_MEM_in (load_data_DataMem_MEM),
+        .pc_from_LSU_in     (PC_LSQ_MEM),
+        //.pc_from_MEM_in     (inst_pc_from_mem),
+        //.FU_write_flag      (FU_write_flag),
+        //.FU_read_flag       (FU_read_flag),
+        //.FU_read_flag_MEM   (op_read_MEM),
+
+        .lwData_out         (load_data_DataMem_MEM),
         .pc_out             (pc_ls_comp),
         .vaild_out          (vaild_comp),
         .lsq_out            (lsq_comp),
         .FU_write_flag_com  (FU_write_flag_com),
         .FU_read_flag_com   (FU_read_flag_com),
         .FU_read_flag_MEM_com(FU_read_flag_MEM_com)
-    );
 
 
     //complete 

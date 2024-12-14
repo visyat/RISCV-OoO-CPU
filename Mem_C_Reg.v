@@ -35,18 +35,18 @@ module MEM_C_Reg (
         end
         else begin
             if (from_lsq) begin
-                lwData_out          <= lwData_from_LSQ_in;
+                lwData_out          <= load_data_LSQ_MEM;
                 pc_out              <= pc_from_LSU_in;
             end
             else if (mem_vaild) begin
-                lwData_out          <= lwData_from_MEM_in;
-                pc_out              <= pc_from_MEM_in;
+                lwData_out          <= load_data_DataMem_MEM;
+                pc_out              <= PC_LSQ_MEM;
             end
-            vaild_out               <= mem_vaild;
-            lsq_out                 <= from_lsq;
-            FU_write_flag_com       <= FU_write_flag;
-            FU_read_flag_com        <= FU_read_flag;
-            FU_read_flag_MEM_com    <= FU_read_flag_MEM;
+            //vaild_out               <= mem_vaild;
+            //lsq_out                 <= from_lsq;
+            //FU_write_flag_com       <= FU_write_flag;
+            //FU_read_flag_com        <= FU_read_flag;
+            //FU_read_flag_MEM_com    <= FU_read_flag_MEM;
         end
     end
 
