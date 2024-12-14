@@ -160,6 +160,18 @@ module CPU(
     wire UIQ_stall;
     wire [3:0] UIQ_tunnel_out;
 
+    // EX_MEM pipeline register signals
+    wire [31 : 0]   rd_result_fu0_MEM;
+    wire [31 : 0]   pc_fu0_MEM;
+    wire [31 : 0]   rd_result_fu1_MEM;
+    wire [31 : 0]   pc_fu1_MEM;
+    wire [31 : 0]   rd_result_fu2_MEM;
+    wire [31 : 0]   pc_fu2_MEM;
+    wire            op_write_MEM;
+    wire            op_read_MEM;
+    wire [3 : 0]    mem_op;
+    wire [2 : 0]    tunnel_MEM;
+
     //MEM stage signals 
     wire [3:0] tunnel_out_MEM;
 
@@ -182,8 +194,53 @@ module CPU(
 
     wire [31:0] load_data_DataMem_MEM;
 
-    //COMPLETE STAGE SIGNALS
-    wire [31:0] PC_MEM;
+    // MEM stage signals
+    wire [31 : 0]   mem_addr_from_LSU;
+    wire [31 : 0]   store_data_to_mem_from_LSU;
+    wire [31 : 0]   load_data_to_comp_from_LSU;
+    wire [31 : 0]   inst_pc_from_LSU;
+    wire            write_en_from_LSU;
+    wire            read_en_from_LSU;
+    wire [3 : 0]    op_from_LSU;
+    wire            load_data_from_lsq;
+    wire [31 : 0]   inst_pc_from_mem;
+    wire [31 : 0]   lwData_from_mem;
+    wire            data_vaild_from_mem;
+
+    // pipeline register between MEM and COMPLETE stage
+    wire [31 : 0]   lwData_comp;
+    wire [31 : 0]   pc_ls_comp;
+    wire            vaild_comp;
+    wire            lsq_comp;
+    wire            FU_write_flag_com;
+    wire            FU_read_flag_com;
+
+    // COMPLETE stage signals
+    wire [31 : 0]   rd_result_comp_0;
+    wire [31 : 0]   pc_comp_0;
+    wire [31 : 0]   rd_result_comp_1;
+    wire [31 : 0]   pc_comp_1;
+    wire [31 : 0]   rd_result_comp_2;
+    wire [31 : 0]   pc_comp_2;
+    wire [31 : 0]   rd_result_comp_3;
+    wire [31 : 0]   pc_comp_3;
+    reg  [31 : 0]   rd_result_comp_0_reg;
+    reg  [31 : 0]   pc_comp_0_reg;
+    reg  [31 : 0]   rd_result_comp_1_reg;
+    reg  [31 : 0]   pc_comp_1_reg;
+    reg  [31 : 0]   rd_result_comp_2_reg;
+    reg  [31 : 0]   pc_comp_2_reg;
+    reg  [31 : 0]   rd_result_comp_3_reg;
+    reg  [31 : 0]   pc_comp_3_reg;
+
+    wire [5:0]      set_rob_reg_invaild;
+    wire [5:0]      regout_from_lsu;
+    wire [5:0]      regout_from_lsu2;
+    wire [5:0]      regout_from_dm;
+
+    wire            has_stored;   
+    wire [31 : 0]   data_check;
+    wire            FU_read_flag_MEM_com;
 
 
 
