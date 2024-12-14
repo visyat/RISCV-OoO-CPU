@@ -241,6 +241,8 @@ module CPU(
     wire [31 : 0]   lwData_from_mem;
     wire            data_vaild_from_mem;
 
+    wire [31:0] PC_DataMem_MEM;
+
     // pipeline register between MEM and COMPLETE stage
     wire [31 : 0]   lwData_comp;
     wire [31 : 0]   pc_ls_comp;
@@ -678,6 +680,7 @@ module CPU(
         .rstn(rstn),
         
         //inputs 
+        .PC_in(PC_LSQ_MEM),
         .fromLSQ(fromLSQ_MEM),
         .address(address_LSQ_MEM), 
         .dataSw(swData_LSQ_MEM),
@@ -688,6 +691,7 @@ module CPU(
 
         //outputs
         .lwData(load_data_DataMem_MEM)
+        .PC_out(PC_DataMem_MEM)
     );
 
     //Complete
