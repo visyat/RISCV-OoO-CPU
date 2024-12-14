@@ -7,6 +7,7 @@
 module dataMemory(
     clk,
     rstn,
+    PC_in,
     address, 
     dataSw,
     memRead,
@@ -14,11 +15,13 @@ module dataMemory(
     storeSize,
     cacheMiss,
     fromLSQ,
-    lwData
+    lwData,
+    PC_out
 );
     input clk;
     input rstn;
 
+    input [31:0] PC_in;
     input [31:0] address;
     input [31:0] dataSw;
 
@@ -29,6 +32,7 @@ module dataMemory(
     input fromLSQ;
     
     output reg [31:0] lwData;
+    output reg [31:0] PC_out;
 
     // reg [31:0] delay [9:0];
     reg [0:7] DATAMEM [1023:0]; 
@@ -40,6 +44,8 @@ module dataMemory(
             for (i = 0; i < 1024; i=i+1) begin
                 DATAMEM[i] = 8'b0;
             end
+            lwData = 'b0;
+            PC_out = 'b0;
             // for (i=0; i<10; i=i+1) begin
             //     delay[i]=32'b0;
             // end
@@ -55,6 +61,7 @@ module dataMemory(
                     end else
                         DATAMEM[address] = dataSw[7:0];
                 end
+                PC_out = PC_in;
             end
             // lwData = delay[9];
             // delay = {delay[8:0],32'b0};
