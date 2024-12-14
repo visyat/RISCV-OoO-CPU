@@ -710,9 +710,9 @@ module CPU(
         //.FU_read_flag_MEM   (op_read_MEM),
 
         .lwData_out         (load_data_DataMem_MEM),
-        .pc_out             (pc_ls_comp),
-        .vaild_out          (vaild_comp),
-        .lsq_out            (lsq_comp)
+        .pc_out             (pc_ls_comp)
+        //.vaild_out          (vaild_comp),
+        //.lsq_out            (lsq_comp)
         //.FU_write_flag_com  (FU_write_flag_com),
         //.FU_read_flag_com   (FU_read_flag_com),
         //.FU_read_flag_MEM_com(FU_read_flag_MEM_com)

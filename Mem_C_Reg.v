@@ -35,12 +35,12 @@ module MEM_C_Reg (
         end
         else begin
             if (from_lsq) begin
-                lwData_out          <= load_data_LSQ_MEM;
+                lwData_out          <= lwData_from_LSQ_in;
                 pc_out              <= pc_from_LSU_in;
             end
             else if (mem_vaild) begin
-                lwData_out          <= load_data_DataMem_MEM;
-                pc_out              <= PC_LSQ_MEM;
+                lwData_out          <= lwData_from_MEM_in;
+                pc_out              <= pc_ls_comp;
             end
             //vaild_out               <= mem_vaild;
             //lsq_out                 <= from_lsq;
