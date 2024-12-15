@@ -3,6 +3,7 @@
 //Author: Paige Larson
 
 module rename(
+    input clk,
     //inputs: sr1, sr2, dr
     input [4 : 0]   sr1, 
     input [4 : 0]   sr2,
@@ -11,6 +12,8 @@ module rename(
     input [6 : 0]   opcode,
     input           hasImm,
     input [31 : 0]  imm,
+    
+    input [63:0] ROB_retire,
     
     //Output: Source registers, destination registers
     //output reg [31 : 0]     imm,
