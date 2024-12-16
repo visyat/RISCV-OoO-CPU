@@ -34,7 +34,6 @@ module dataMemory(
     output reg [31:0] lwData;
     output reg [31:0] PC_out;
 
-    // reg [31:0] delay [9:0];
     reg [0:7] DATAMEM [1023:0]; 
 
     integer i;
@@ -46,9 +45,7 @@ module dataMemory(
             end
             lwData = 'b0;
             PC_out = 'b0;
-            // for (i=0; i<10; i=i+1) begin
-            //     delay[i]=32'b0;
-            // end
+            
         end else begin
             if ((memRead || memWrite) && cacheMiss && ~fromLSQ) begin
                 if (memRead) begin
@@ -63,8 +60,6 @@ module dataMemory(
                 end
                 PC_out = PC_in;
             end
-            // lwData = delay[9];
-            // delay = {delay[8:0],32'b0};
         end
     end
 endmodule
