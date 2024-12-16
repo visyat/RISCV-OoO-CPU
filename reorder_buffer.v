@@ -5,7 +5,7 @@
 // Create Date: 11/25/2024 01:54:11 AM
 
 
-module ROB(
+module reorder_buffer(
     input               clk, 
     input               rstn,
     input [31:0]        instr_PC_0, 
