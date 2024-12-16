@@ -54,43 +54,25 @@ module CPU(
     wire storeSize_EX;
     
     wire [15:0] ROB_num_EX;
-    //wire [5:0] srcReg1_p_EX;
-    //wire [5:0] srcReg2_p_EX;
+    wire [5:0] srcReg1_p_EX;
+    wire [5:0] srcReg2_p_EX;
     wire [5:0] destReg_p_EX;
     wire [5:0] oldDestReg_EX;
     wire stall_rename_EX;
     
-    //ROB    
-    wire [5:0] old_dest_reg_0_EX; 
-    wire [5:0] dest_reg_0_EX;
+    //ROB   
     wire [31:0] dest_data_0_EX; 
     wire store_add_0_EX;
     wire store_data_0_EX;
     wire instr_PC_0_EX; 
+    wire stall_ROB_EX;
 
-    wire [31:0] complete_pc_0_EX;
-    wire [31:0] complete_pc_1_EX;
-    wire [31:0] complete_pc_2_EX;
-    wire [31:0] complete_pc_3_EX;
-    
-    wire [31:0] new_dr_data_0_EX;
-    wire [31:0] new_dr_data_1_EX;
-    wire [31:0] new_dr_data_2_EX;
-    wire [31:0] new_dr_data_3_EX;
-
-    wire is_dispatching_EX;
-    wire is_store_EX;
     wire [5:0] invalid_from_UIQ_EX;
 
     wire [63:0] retire_EX;
     wire [63:0] ready_EX;
 
-    wire [5:0]    srcReg1_p_EX; //to arf
-    wire [31:0]   srcReg1_ARF_data_EX; //to arf
     wire [31:0]   retire_pc1_EX;
-
-    wire [5:0]    srcReg2_p_EX; //to arf
-    wire [31:0]   srcReg2_ARF_data_EX; //to arf
     wire [31:0]   retire_pc2_EX;
 
     wire [5:0]    old_reg_1_EX;
@@ -105,6 +87,8 @@ module CPU(
 
 
     //ARF
+    wire [31:0] srcReg1_ARF_reg_EX;
+    wire [31:0] srcReg2_ARF_reg_EX;
     wire [31:0] srcReg1_ARF_data_EX;
     wire [31:0] srcReg2_ARF_data_EX;
 
@@ -167,7 +151,6 @@ module CPU(
     wire [3:0] optype_issue1_EX;
     wire [31:0] srcReg1_value_issue1_EX;
     wire [31:0] srcReg2_value_issue1_EX;
-    wire [31:0] imm_issue1_EX;
     wire [5:0] destReg_issue1_EX;
     wire [31:0] destReg_data_ALU1_EX;
     wire [5:0] destReg_ALU1_EX;
@@ -252,33 +235,40 @@ module CPU(
     wire            FU_read_flag_com;
 
     // COMPLETE stage signals
-    wire [31 : 0]   rd_result_comp_0;
-    wire [31 : 0]   pc_comp_0;
-    wire [31 : 0]   rd_result_comp_1;
-    wire [31 : 0]   pc_comp_1;
-    wire [31 : 0]   rd_result_comp_2;
-    wire [31 : 0]   pc_comp_2;
-    wire [31 : 0]   rd_result_comp_3;
-    wire [31 : 0]   pc_comp_3;
-    reg  [31 : 0]   rd_result_comp_0_reg;
-    reg  [31 : 0]   pc_comp_0_reg;
-    reg  [31 : 0]   rd_result_comp_1_reg;
-    reg  [31 : 0]   pc_comp_1_reg;
-    reg  [31 : 0]   rd_result_comp_2_reg;
-    reg  [31 : 0]   pc_comp_2_reg;
-    reg  [31 : 0]   rd_result_comp_3_reg;
-    reg  [31 : 0]   pc_comp_3_reg;
+    wire [31 : 0]   dr_data_0;
+    wire [31 : 0]   complete_pc_0;
+    wire [31 : 0]   dr_data_1;
+    wire [31 : 0]   complete_pc_1;
+    wire [31 : 0]   dr_data_2;
+    wire [31 : 0]   complete_pc_2;
+    wire [31 : 0]   dr_data_3;
+    wire [31 : 0]   complete_pc_3;
+    reg  [31 : 0]   dr_data_0_reg;
+    reg  [31 : 0]   complete_pc_0_reg;
+    reg  [31 : 0]   dr_data_1_reg;
+    reg  [31 : 0]   complete_pc_1_reg;
+    reg  [31 : 0]   dr_data_2_reg;
+    reg  [31 : 0]   complete_pc_2_reg;
+    reg  [31 : 0]   dr_data_3_reg;
+    reg  [31 : 0]   complete_pc_3_reg;
 
     wire [5:0]      set_rob_reg_invaild;
     wire [5:0]      regout_from_lsu;
     wire [5:0]      regout_from_lsu2;
     wire [5:0]      regout_from_dm;
-    reg is_store;
-    wire            has_stored;   
+    reg is_store_r;
+    wire is_store;   
     wire [31 : 0]   data_check;
     wire            FU_read_flag_MEM_com;
 
-
+    always @(posedge clk or negedge rstn) begin
+        if(~rstn) begin
+            PC_IF = 32'b0;
+        end
+        else begin
+            PC_IF = PC_IF+ 4;
+        end
+    end
 
     
     //IF Stage
@@ -389,30 +379,31 @@ module CPU(
     reorder_buffer ROB(
         .clk(clk),
         .rstn(rstn),
-        .old_dest_reg_0(old_dest_reg_0_EX),//from rename      
-        .dest_reg_0(dest_reg_0_EX),   //from rename
-        .dest_data_0(dest_data_0_EX),  //from rename    
-        .store_add_0(store_add_0_EX),  //from rename
-        .store_data_0(store_data_0_EX), //from rename
-        .instr_PC_0(instr_PC_0_EX),    //from rename    
-
-        .complete_pc_0(complete_pc_0_EX), //TODO: FIX VARIABLE NAMES
-        .complete_pc_1(complete_pc_1_EX),
-        .complete_pc_2(complete_pc_2_EX),
-        .complete_pc_3(complete_pc_3_EX),
+        .stall(stall_ROB),
         
-        .new_dr_data_0(new_dr_data_0_EX), 
-        .new_dr_data_1(new_dr_data_1_EX),
-        .new_dr_data_2(new_dr_data_2_EX),
-        .new_dr_data_3(new_dr_data_3_EX),
+        .old_dest_reg_0(oldDestReg_EX),//from rename      
+        .dest_reg_0(destReg_p_EX),   //from rename
+        .dest_data_0(dest_data_0_EX),  //from rename??? WHERE TO GET    
+        .store_add_0(),  //from rename
+        .store_data_0(), //from rename AGAIN WHERE??
+        .instr_PC_0(PC_EX),    //from rename    
 
-        .is_dispatching(is_dispatching_EX),
-        .is_store(is_store_EX),
+        .complete_pc_0(complete_pc_0), //TODO: FIX VARIABLE NAMES
+        .complete_pc_1(complete_pc_1),
+        .complete_pc_2(complete_pc_2),
+        .complete_pc_3(complete_pc_3),
+        
+        .new_dr_data_0(dr_data_0), 
+        .new_dr_data_1(dr_data_1),
+        .new_dr_data_2(dr_data_2),
+        .new_dr_data_3(dr_data_3),
+
+        .is_store(is_store),
         .UIQ_input_invalid(invalid_from_UIQ_EX),
 
         .retire(retire_EX),
-        .reg_update_ARF_1(srcReg1_p_EX),
-        .reg_update_ARF_2(srcReg2_p_EX),
+        .reg_update_ARF_1(srcReg1_ARF_reg_EX),
+        .reg_update_ARF_2(srcReg2_ARF_reg_EX),
         .value_update_ARF_1(srcReg1_ARF_data_EX),
         .value_update_ARF_2(srcReg2_ARF_data_EX),
         .ready(ready_EX),
@@ -439,11 +430,11 @@ module CPU(
         .read_en(1'b1),
 
         // from ROB ...
-        .write_addr1(src1_dis_reg_EX),
-        .write_data1(src1_dis_val_EX),
+        .write_addr1(srcReg1_ARF_reg_EX),
+        .write_data1(srcReg1_ARF_data_EX),
         .old_addr1(old_reg_1_EX),
-        .write_addr2(src2_dis_reg_EX),
-        .write_data2(src2_dis_val_EX),
+        .write_addr2(srcReg2_ARF_reg_EX),
+        .write_data2(srcReg2_ARF_data_EX),
         .old_addr2(old_reg_2_EX),
         .write_en(1'b1),
         
@@ -469,8 +460,8 @@ module CPU(
         .rd_in(destReg_p_EX),
 
         // info from ROB ...
-        .rs1_ready_from_ROB_in(src1_dis_ready_EX),
-        .rs2_ready_from_ROB_in(src2_dis_ready_EX),
+        .rs1_ready_from_ROB_in(ready_EX),
+        .rs2_ready_from_ROB_in(ready_EX),
 
         // info from ALU units ... 
         .fu_ready_from_FU_in(fu_ready_from_FU),
@@ -484,8 +475,8 @@ module CPU(
         .FU2_flag_in(ALU2_occ),
         .reg_tag_from_FU2_in(destReg_ALU2_EX),
         .reg_value_from_FU2_in(destReg_data_ALU2_EX),
-        .LSU_flag_in(LSU_occ),
-        .reg_tag_from_LSU_in(destReg_LSU_EX),
+        // .LSU_flag_in(LSU_occ),
+        //.reg_tag_from_LSU_in(destReg_LSU_EX),
 
         // issue 1 ...
         .PC_out0(PC_issue0_EX),
@@ -690,7 +681,7 @@ module CPU(
         .cacheMiss(1'b1),
 
         //outputs
-        .lwData(load_data_DataMem_MEM)
+        .lwData(load_data_DataMem_MEM),
         .PC_out(PC_DataMem_MEM)
     );
 
@@ -703,79 +694,71 @@ module CPU(
         .clk                (clk),
         .rstn               (rstn),
         .from_lsq           (load_data_LSQ_MEM),
-        .mem_vaild          (data_vaild_from_mem),
-
         .lwData_from_LSQ_in (load_data_LSQ_MEM),
         .lwData_from_MEM_in (load_data_DataMem_MEM),
         .pc_from_LSU_in     (PC_LSQ_MEM),
-        //.pc_from_MEM_in     (inst_pc_from_mem),
-        //.FU_write_flag      (FU_write_flag),
-        //.FU_read_flag       (FU_read_flag),
-        //.FU_read_flag_MEM   (op_read_MEM),
+        .pc_from_MEM_in     (PC_DataMem_MEM),
 
         .lwData_out         (load_data_DataMem_MEM),
-        .pc_out             (pc_ls_comp),
-        .vaild_out          (vaild_comp),
-        .lsq_out            (lsq_comp)
-        //.FU_write_flag_com  (FU_write_flag_com),
-        //.FU_read_flag_com   (FU_read_flag_com),
-        //.FU_read_flag_MEM_com(FU_read_flag_MEM_com)
+        .pc_out             (pc_ls_comp)
+
     );
+
 
     //complete 
     always @(*) begin
-        is_store = 1'b0;
+        is_store_r = 1'b0;
         if(tunnel_MEM[0]) begin
-            rd_result_comp_0_reg    = destReg_data_ALU0_MEM;
-            pc_comp_0_reg           = PC_issue0_MEM;
+            dr_data_0_reg= destReg_data_ALU0_MEM;
+            complete_pc_0_reg = PC_issue0_MEM;
         end
         else begin
-            rd_result_comp_0_reg    = 32'd1;
-            pc_comp_0_reg           = 32'd1;
+            dr_data_0_reg= 32'd1;
+            complete_pc_0_reg= 32'd1;
         end
 
         if(tunnel_MEM[1]) begin
-            rd_result_comp_1_reg    = destReg_data_ALU1_MEM;
-            pc_comp_1_reg           = PC_issue1_MEM;
+            dr_data_1_reg= destReg_data_ALU1_MEM;
+            complete_pc_1_reg= PC_issue1_MEM;
         end
         else begin
-            rd_result_comp_1_reg    = 32'd1;
-            pc_comp_1_reg           = 32'd1;
+            dr_data_1_reg = 32'd1;
+            complete_pc_1_reg = 32'd1;
         end
         
         if(tunnel_MEM[2]) begin
-            pc_comp_2_reg           = PC_issue2_MEM;
+            complete_pc_2_reg           = PC_issue2_MEM;
             if (FU_write_flag_com && ~FU_read_flag_MEM_com) begin
-                is_store= 1'b1;
+                is_store_r= 1'b1;
             end
             else begin
-                rd_result_comp_2_reg = destReg_data_ALU1_MEM;
+                dr_data_2_reg = destReg_data_ALU1_MEM;
             end
         end
         else begin
-            rd_result_comp_2_reg    = 32'd1;
-            pc_comp_2_reg           = 32'd1;
+            dr_data_2_reg    = 32'd1;
+            complete_pc_2_reg           = 32'd1;
         end
     
 
         if(fromLSQ_MEM) begin
-            rd_result_comp_3_reg    = load_data_DataMem_MEM;
-            pc_comp_3_reg           = pc_ls_comp;
+            dr_data_3_reg    = load_data_DataMem_MEM;
+            complete_pc_3_reg           = pc_ls_comp;
         end
         else begin
-            rd_result_comp_3_reg    = 32'd1;
-            pc_comp_3_reg           = 32'd1;
+            dr_data_3_reg    = 32'd1;
+            complete_pc_3_reg           = 32'd1;
         end
     end
 
-    assign rd_result_comp_0 = rd_result_comp_0_reg;
-    assign pc_comp_0        = pc_comp_0_reg;
-    assign rd_result_comp_1 = rd_result_comp_1_reg;
-    assign pc_comp_1        = pc_comp_1_reg;
-    assign rd_result_comp_2 = rd_result_comp_2_reg;
-    assign pc_comp_2        = pc_comp_2_reg;
-    assign rd_result_comp_3 = rd_result_comp_3_reg;
-    assign pc_comp_3        = pc_comp_3_reg; 
-    assign is_store_comp         = is_store;   
+    assign dr_data_comp_0 = dr_data_0_reg;
+    assign complete_pc_0        = complete_pc_0_reg;
+    assign dr_data_comp_1 = dr_data_1_reg;
+    assign complete_pc_1        = complete_pc_1_reg;
+    assign dr_data_comp_2 = dr_data_2_reg;
+    assign complete_pc_2        = complete_pc_2_reg;
+    assign dr_data_comp_3 = dr_data_3_reg;
+    assign complete_pc_3        = complete_pc_3_reg; 
+    assign is_store        = is_store_r;   
 
 endmodule

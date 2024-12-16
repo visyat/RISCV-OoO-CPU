@@ -29,9 +29,9 @@ module reorder_buffer(
     input [5:0]         old_dest_reg_0,       //from rename      
     input [5:0]         dest_reg_0,           //from rename
     input [31:0]        dest_data_0,          //from rename    
-    input               store_add_0,          //from rename
-    input               store_data_0,         //from rename
-    input               instr_PC_0,            //from rename    
+    input               store_add_0,          //from pipeline
+    input               store_data_0,         //from pipeline
+    input               instr_PC_0,            //from pipeline    
 
     input [31:0]        complete_pc_0,
     input [31:0]        complete_pc_1,
@@ -97,7 +97,7 @@ module reorder_buffer(
         //go through ROB, starting from top, if complete=1 and all prior lines are retired, set reg is ready to 1
 
     reg [6:0]  retire_head;
-    reg [6:0]  new_head;
+    reg [6:0]  ROB_head;
 
 
 
@@ -110,7 +110,7 @@ module reorder_buffer(
     integer j;
     integer k;
     integer max_retire=0;
-    integer vals;
+    integer new_vals;
     
     always @(posedge clk or negedge rstn) begin
         //reset ROB
@@ -128,8 +128,10 @@ module reorder_buffer(
                 retire[i]=1'b0;      //return buffer
                 ready[i]=1'b1;
 
-                retire_head = 'b0;
-                new_head= 'b0;
+                retire_head = 6'b000000;
+                ROB_head = 6'b000000;
+            end 
+
                 reg_update_ARF_1= 6'b0;
                 reg_update_ARF_2= 6'b0;
                 value_update_ARF_1= 32'b0;
@@ -144,32 +146,36 @@ module reorder_buffer(
 
                 pc_retire_1= 32'b0;
                 pc_retire_2= 32'b0;
-            end  
+             
         end            
         else begin
-
+            stall=1'b0;
             for (i = 0; i < 64; i = i + 1) begin
                 retire[i]=1'b0;      // initialize retire buffer every cycle
             end
 
             //adding something new to rob
-            if(is_dispatching) begin //place first new instr
-                if (ROB[new_head][0] == 1'b0) begin
-                    ROB[new_head][0] = 1'b1;           //valid
-                    ROB[new_head][1] = dest_reg_0;     //dr
-                    ROB[new_head][2] = old_dest_reg_0; //old dr
-                    ROB[new_head][3] = dest_data_0;    //data at dr
-                    ROB[new_head][4] = store_add_0;    //store address
-                    ROB[new_head][5] = store_data_0;   //store data
-                    ROB[new_head][6] = instr_PC_0;     //instr pc
-                    ROB[new_head][7] = 1'b0;           //complete
-                    
-                    new_head=new_head+1;   
+            
+            //place first new instr
+            if (ROB[ROB_head][0] == 1'b0) begin
+                ROB[ROB_head][0] = 1'b1;           //valid
+                ROB[ROB_head][1] = dest_reg_0;     //dr
+                ROB[ROB_head][2] = old_dest_reg_0; //old dr
+                ROB[ROB_head][3] = dest_data_0;    //data at dr
+                ROB[ROB_head][4] = store_add_0;    //store address
+                ROB[ROB_head][5] = store_data_0;   //store data
+                ROB[ROB_head][6] = instr_PC_0;     //instr pc
+                ROB[ROB_head][7] = 1'b0;           //complete
+                
+                ROB_head=ROB_head+1; 
+
+                if(ROB_head>63) begin
+                stall=1'b1;
                 end
-                else if(i==64) begin
-                    stall=1'b1;
-                end
-            end    
+            end
+            else begin
+                stall<=1'b1;
+            end     
         end
     end
 
@@ -189,11 +195,11 @@ module reorder_buffer(
 
         //complete and update data
         for(k=0; k<64; k=k+1)begin
-            if(ROB[i][0]==1'b1) begin
+            if(ROB[k][0]==1'b1) begin
                 for (i = 0; i < 4; i = i + 1) begin
                     if(ROB[k][6]==complete_pc[i] && ROB[k][0]==1'b1)begin
                         ROB[k][7]=1'b1;             //set to complete
-                        ROB[k][3]=new_dr_data[k];   // update data
+                        ROB[k][3]=new_dr_data[i];   // update data
                     end
                 end
             end
@@ -224,14 +230,14 @@ module reorder_buffer(
                     ready[ROB[retire_head][1]]=1'b1;
                     retire[ROB[retire_head][2]]=1'b1; 
 
-                    ROB[retire_head][0] = 1'b0;           //valid
-                    ROB[retire_head][1] = 0;     //dr
+                    ROB[retire_head][0] = 1'b0;  //valid
+                    ROB[retire_head][1] = 0; //dr
                     ROB[retire_head][2] = 0; //old dr
-                    ROB[retire_head][3] = 0;    //data at dr
-                    ROB[retire_head][4] = 0;    //store address
-                    ROB[retire_head][5] = 0;   //store data
-                    ROB[retire_head][6] = 0;     //instr pc
-                    ROB[retire_head][7] = 1'b0;           //complete
+                    ROB[retire_head][3] = 0; //data at dr
+                    ROB[retire_head][4] = 0; //store address
+                    ROB[retire_head][5] = 0; //store data
+                    ROB[retire_head][6] = 0; //instr pc
+                    ROB[retire_head][7] = 1'b0; //complete
                             
                     max_retire=0;
 
@@ -246,11 +252,9 @@ module reorder_buffer(
                     if(retire_head > 63)begin
                         retire_head = 0;
                     end
-                end          
-            end
+                end
 
-            if (ROB[retire_head][0] == 1'b1) begin
-                if(ROB[retire_head][7]==1'b1 && max_retire==1)begin
+                else if(ROB[retire_head][7]==1'b1 && max_retire==1)begin
                     //retire in ROB and retire buffer 
                     ready[ROB[retire_head][1]]=1'b1;
                     retire[ROB[retire_head][2]]=1'b1; 
@@ -277,9 +281,8 @@ module reorder_buffer(
                     if(retire_head > 63)begin
                         retire_head = 0;
                     end
-                end          
+                end
             end
-
         end
 
         if (sr1_ready_flag) begin
@@ -300,4 +303,9 @@ module reorder_buffer(
         end
     end
 
+    always @(posedge clk) begin
+        for(i=0;i<9;i=i+1)begin
+            $display("ROB line: %d, valid = %d, reg = %d, old_reg = %d, data = %d, PC = %d, complete = %d", i, ROB[i][0], ROB[i][1], ROB[i][2], ROB[i][3],ROB[i][6],ROB[i][7]);
+        end
+    end
 endmodule
