@@ -96,8 +96,8 @@ module reorder_buffer(
                 ready_reg[i]  = 1'b1;     // register ready array
             end
             
-            retire_pointer      = 'd0;
-            place_pointer       = 'd0;
+            retire_pointer      = 6'd0;
+            place_pointer       = 6'd0;
 
             reg_update_ARF_1    = 6'b0;
             reg_update_ARF_2    = 6'b0;
