@@ -33,7 +33,8 @@ module CPU(
     wire storeSize_ID;
 
     // EX stage signals
-    //Rename
+
+    //inputs from pipeline
     wire [31:0] PC_EX; 
     wire [6:0] opcode_EX;
     wire [2:0] funct3_EX; 
@@ -53,44 +54,51 @@ module CPU(
     wire memToReg_EX;
     wire storeSize_EX;
     
+
+    //rename outputs
     wire [15:0] ROB_num_EX;
-    wire [5:0] srcReg1_p_EX;
-    wire [5:0] srcReg2_p_EX;
-    wire [5:0] destReg_p_EX;
-    wire [5:0] oldDestReg_EX;
-    wire stall_rename_EX;
+    wire [5:0] srcReg1_p; //rename output & rob input
+    wire [5:0] srcReg2_p; //rename output & rob input
+    wire [5:0] destReg_p; //rename output & rob input
+    wire [5:0] oldDestReg; //rename output & rob input
+    wire [31:0] destReg_p_data; //rename output & rob input
+    wire stall_rename; 
     
-    //ROB   
-    wire [31:0] dest_data_0_EX; 
-    wire store_add_0_EX;
-    wire store_data_0_EX;
-    wire instr_PC_0_EX; 
-    wire stall_ROB_EX;
+    //ROB    
+    wire store_add; //rob input
+    wire store_data; //rob input
+    wire instr_PC; //rob input
+    wire stall_ROB; 
+    wire [5:0] invalid_from_UIQ; 
 
-    wire [5:0] invalid_from_UIQ_EX;
+    wire [63:0] retire; 
+    wire [63:0] ready;
 
-    wire [63:0] retire_EX;
-    wire [63:0] ready_EX;
+    wire [31:0]   retire_pc1; 
+    wire [31:0]   retire_pc2;
 
-    wire [31:0]   retire_pc1_EX;
-    wire [31:0]   retire_pc2_EX;
+    wire [5:0]    old_reg_1;
+    wire [5:0]    old_reg_2;
 
-    wire [5:0]    old_reg_1_EX;
-    wire [5:0]    old_reg_2_EX;
+    wire [5:0]    src1_ARF_reg; //all for ARF
+    wire [5:0]    src2_ARF_reg;
+    wire [31:0]   src1_ARF_data;
+    wire [31:0]   src2_ARF_data;
 
-    wire          src1_dis_ready_EX;   
-    wire          src2_dis_ready_EX;
-    wire [5:0]    src1_dis_reg_EX; 
-    wire [5:0]    src2_dis_reg_EX;
-    wire [31:0]   src1_dis_val_EX;
-    wire [31:0]   src2_dis_val_EX;
+    wire          src1_dis_ready;    //all for UIQ
+    wire          src2_dis_ready;
+    wire [5:0]    src1_dis_reg; 
+    wire [5:0]    src2_dis_reg;
+    wire [31:0]   src1_dis_val;
+    wire [31:0]   src2_dis_val;
 
 
     //ARF
-    wire [31:0] srcReg1_ARF_reg_EX;
-    wire [31:0] srcReg2_ARF_reg_EX;
-    wire [31:0] srcReg1_ARF_data_EX;
-    wire [31:0] srcReg2_ARF_data_EX;
+    wire [31:0] src1_ARF_reg; //write values
+    wire [31:0] src2_ARF_reg;
+
+    wire [31:0] src1_ARF_data;
+    wire [31:0] src2_ARF_data;
 
     //Issue
     wire [31:0] PC_issue0_EX;
@@ -373,11 +381,12 @@ module CPU(
         .hasImm(hasImm_EX),
         .imm(imm_EX),
         .ROB_num(ROB_num_EX),
-        .sr1_p(srcReg1_p_EX),
-        .sr2_p(srcReg2_p_EX),
-        .dr_p(destReg_p_EX),
-        .old_dr(oldDestReg_EX),
-        .stall(stall_rename_EX)  
+        .sr1_p(srcReg1_p),
+        .sr2_p(srcReg2_p),
+        .dr_p(destReg_p),
+        .data(destReg_p_data),
+        .old_dr(oldDestReg),
+        .stall(stall_rename)  
     );
 
     reorder_buffer ROB(
@@ -385,11 +394,11 @@ module CPU(
         .rstn(rstn),
         .stall(stall_ROB),
         
-        .old_dest_reg_0(oldDestReg_EX),//from rename      
-        .dest_reg_0(destReg_p_EX),   //from rename
-        .dest_data_0(dest_data_0_EX),  //from rename??? WHERE TO GET    
-        .store_add_0(),  //from rename
-        .store_data_0(), //from rename AGAIN WHERE??
+        .old_dest_reg_0(oldDestReg),//from rename      
+        .dest_reg_0(destReg_p),   //from rename
+        .dest_data_0(destReg_p_data),  //from rename    
+        .store_add_0(),  //???
+        .store_data_0(), //???
         .instr_PC_0(PC_EX),    //from rename    
 
         .complete_pc_0(complete_pc_0), //TODO: FIX VARIABLE NAMES
@@ -403,43 +412,44 @@ module CPU(
         .new_dr_data_3(dr_data_3),
 
         .is_store(is_store),
-        .UIQ_input_invalid(invalid_from_UIQ_EX),
+        .UIQ_input_invalid(invalid_from_UIQ),
 
-        .retire(retire_EX),
-        .reg_update_ARF_1(srcReg1_ARF_reg_EX),
-        .reg_update_ARF_2(srcReg2_ARF_reg_EX),
-        .value_update_ARF_1(srcReg1_ARF_data_EX),
-        .value_update_ARF_2(srcReg2_ARF_data_EX),
-        .ready(ready_EX),
+        .retire_reg(retire),
+        .ready_reg(ready),
 
-        .old_reg_1(old_reg_1_EX),
-        .old_reg_2(old_reg_2_EX),
+        .reg_update_ARF_1(src1_ARF_reg), //ARF write values
+        .reg_update_ARF_2(src2_ARF_reg),
+        .value_update_ARF_1(src1_ARF_data),
+        .value_update_ARF_2(src2_ARF_data),
 
-        .sr1_ready_flag(src1_dis_ready_EX),    
-        .sr2_ready_flag(src2_dis_ready_EX),
-        .sr1_reg_ready(src1_dis_reg_EX),   
-        .sr2_reg_ready(src2_dis_reg_EX),
-        .sr1_value_ready(src1_dis_val_EX),
-        .sr2_value_ready(src2_dis_val_EX),
+        .old_reg_1(old_reg_1), //used in arf and uiq
+        .old_reg_2(old_reg_2),
 
-        .pc_retire_1(retire_pc1_EX),
-        .pc_retire_2(retire_pc2_EX)
+        .sr1_ready_flag(src1_dis_ready),   //for UIQ 
+        .sr2_ready_flag(src2_dis_ready), //for UIQ
+        .sr1_reg_ready(src1_dis_reg), //for UIQ
+        .sr2_reg_ready(src2_dis_reg), //for UIQ
+        .sr1_value_ready(src1_dis_val), //for UIQ
+        .sr2_value_ready(src2_dis_val), //for UIQ
+
+        .pc_retire_1(retire_pc1),
+        .pc_retire_2(retire_pc2)
     );
 
     ARF ARF_mod(
         .clk(clk),
         .rstn(rstn),
-        .read_addr1(srcReg1_p_EX),
-        .read_addr2(srcReg2_p_EX),
+        .read_addr1(),
+        .read_addr2(),
         .read_en(1'b1),
 
         // from ROB ...
-        .write_addr1(srcReg1_ARF_reg_EX),
-        .write_data1(srcReg1_ARF_data_EX),
-        .old_addr1(old_reg_1_EX),
-        .write_addr2(srcReg2_ARF_reg_EX),
-        .write_data2(srcReg2_ARF_data_EX),
-        .old_addr2(old_reg_2_EX),
+        .write_addr1(src1_ARF_reg),
+        .write_data1(src1_ARF_data),
+        .old_addr1(old_reg_1),
+        .write_addr2(src2_ARF_reg),
+        .write_data2(src2_ARF_data),
+        .old_addr2(old_reg_2),
         .write_en(1'b1),
         
         // output ...
@@ -464,8 +474,8 @@ module CPU(
         .rd_in(destReg_p_EX),
 
         // info from ROB ...
-        .rs1_ready_from_ROB_in(ready_EX), // this is the same, are they supposed to different? 
-        .rs2_ready_from_ROB_in(ready_EX),
+        .rs1_ready_from_ROB_in(ready),
+        .rs2_ready_from_ROB_in(ready),
 
         // info from ALU units ... 
         .fu_ready_from_FU_in(fu_ready_from_FU),
@@ -642,8 +652,8 @@ module CPU(
         .addressLsu(compute_address_LSU_MEM),
         
         // from retirement ...
-        .pcRet1(retire_pc1_EX),
-        .pcRet2(retire_pc2_EX),
+        .pcRet1(retire_pc1),
+        .pcRet2(retire_pc2),
 
         // outputs ...
         .pcOut(PC_LSQ_MEM),
@@ -742,13 +752,13 @@ module CPU(
         end
     end
 
-    assign dr_data_comp_0 = dr_data_0_reg;
+    assign dr_data_0 = dr_data_0_reg;
     assign complete_pc_0        = complete_pc_0_reg;
-    assign dr_data_comp_1 = dr_data_1_reg;
+    assign dr_data_1 = dr_data_1_reg;
     assign complete_pc_1        = complete_pc_1_reg;
-    assign dr_data_comp_2 = dr_data_2_reg;
+    assign dr_data_2 = dr_data_2_reg;
     assign complete_pc_2        = complete_pc_2_reg;
-    assign dr_data_comp_3 = dr_data_3_reg;
+    assign dr_data_3 = dr_data_3_reg;
     assign complete_pc_3        = complete_pc_3_reg; 
     assign is_store        = is_store_r;   
 
