@@ -37,10 +37,10 @@ module Cache(
 
     integer i;
 
-    reg [31:0] search_1;
-    reg [31:0] search_2;
-    reg [31:0] search_3;
-    reg [31:0] search_4;
+    reg [511:0] search_1;
+    reg [511:0] search_2;
+    reg [511:0] search_3;
+    reg [511:0] search_4;
 
     always @(posedge clk) begin
         // search way 1 ...

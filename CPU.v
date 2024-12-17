@@ -289,7 +289,7 @@ module CPU(
         
         .PC_in(PC_IF),
         .inst_IF_in(instr_IF),
-        .stop_in(stop),
+        .stop_in(stop_IF),
 
         .PC_out(PC_ID),
         .inst_ID_out(instr_ID),
@@ -297,9 +297,9 @@ module CPU(
     );
 
     decode decode_mod(
-        .instr(instr_ID),
         .clk (clk),
         .rstn(rstn),
+        .instr(instr_ID),
         .opcode(opcode_ID),
         .funct3(funct3_ID),
         .funct7(funct7_ID),
@@ -323,6 +323,8 @@ module CPU(
     ID_EX_Reg ID_EX_pipe (
         .clk(clk),
         .rstn(rstn),
+
+        // input ...
         .PC_in(PC_ID),
         .opcode_in(opcode_ID),
         .funct3_in(funct3_ID),
@@ -341,6 +343,8 @@ module CPU(
         .aluSrc_in(aluSrc_ID),
         .branch_in(branch_ID),
         .storeSize_in(storeSize_ID),
+        
+        // output ... 
         .PC_out(PC_EX),
         .aluOp_out(aluOp_EX),
         .aluSrc_out(aluSrc_EX),
@@ -361,10 +365,10 @@ module CPU(
         .storeSize_out(storeSize_EX)
     );
     rename rename_mod (
+        .rstn(rstn),
         .sr1(srcReg1_EX), 
         .sr2(srcReg2_EX),
         .dr(destReg_EX),
-        .rstn(rstn),
         .opcode(opcode_EX),
         .hasImm(hasImm_EX),
         .imm(imm_EX),
@@ -460,7 +464,7 @@ module CPU(
         .rd_in(destReg_p_EX),
 
         // info from ROB ...
-        .rs1_ready_from_ROB_in(ready_EX),
+        .rs1_ready_from_ROB_in(ready_EX), // this is the same, are they supposed to different? 
         .rs2_ready_from_ROB_in(ready_EX),
 
         // info from ALU units ... 
@@ -599,39 +603,26 @@ module CPU(
     EX_MEM_Reg EX_MEM_Reg_inst(
         .clk                (clk),
         .rstn               (rstn),
-        .tunnel_in          (UIQ_tunnel_out),
 
+        .tunnel_in          (UIQ_tunnel_out),
         .rd_result_fu0_in   (destReg_data_ALU0_EX),
         .pc_fu0_in          (PC_issue0_EX),
-
         .rd_result_fu1_in   (destReg_data_ALU1_EX),
         .pc_fu1_in          (PC_issue1_EX),
-
         .rd_result_fu2_in   (destReg_data_ALU2_EX),
         .pc_fu2_in          (PC_issue2_EX),
-
         .result_lsu_in      (compute_address_LSU_EX),
         .pc_lsu_in          (PC_issue_LSU_EX),
-
-        // .op_write_in        (FU_write_flag),
-        // .op_read_in         (FU_read_flag),
 
         .tunnel_out         (tunnel_out_MEM),
         .rd_result_fu0_out  (destReg_data_ALU0_MEM),
         .pc_fu0_out         (PC_issue0_MEM),
-
         .rd_result_fu1_out  (destReg_data_ALU1_MEM),
         .pc_fu1_out         (PC_issue1_MEM),
-
         .rd_result_fu2_out  (destReg_data_ALU2_MEM),
         .pc_fu2_out         (PC_issue2_MEM),
-
         .result_lsu_out     (compute_address_LSU_MEM),
         .pc_lsu_out         (PC_issue_LSU_MEM)
-
-        // .op_write_out       (op_write_MEM),
-        // .op_read_out        (op_read_MEM),
-        // .op_out             (mem_op)
     );
 
     // make some changes to LSQ to support SB in addition to SW ...
