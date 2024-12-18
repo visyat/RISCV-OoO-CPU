@@ -314,14 +314,14 @@ module Unified_Issue_Queue (
         destReg_issue1 = destReg_issue[1];
         ROBNum_issue1 = ROBNum_issue[1];
 
-        PC_issue1 = PC_issue[1];
-        optype_issue1 = optype_issue[1];
-        aluNum_issue1 = aluNum_issue[1];
-        srcReg1_data_issue1 = srcReg1_data_issue[1];
-        srcReg2_data_issue1 = srcReg2_data_issue[1];
-        imm_issue1 = imm_issue[1];
-        destReg_issue1 = destReg_issue[1];
-        ROBNum_issue1 = ROBNum_issue[1];
+        PC_issue2 = PC_issue[2];
+        optype_issue2 = optype_issue[2];
+        aluNum_issue2 = aluNum_issue[2];
+        srcReg1_data_issue2 = srcReg1_data_issue[2];
+        srcReg2_data_issue2 = srcReg2_data_issue[2];
+        imm_issue2 = imm_issue[2];
+        destReg_issue2 = destReg_issue[2];
+        ROBNum_issue2 = ROBNum_issue[2];
 
     end
 
