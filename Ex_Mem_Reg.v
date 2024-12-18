@@ -2,7 +2,7 @@
 
 module EX_MEM_Reg (
     input           clk,
-    input           rstn,
+    input           rstn
 );
 
     always @(posedge clk or negedge rstn) begin

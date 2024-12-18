@@ -20,7 +20,7 @@ module ALU (
     output reg [31:0]   data_out_dr,
     // output reg [5:0]    dr_out,
     // output reg [31:0]   sr2_data_out_sw,
-    output reg          FU_ready,
+    output reg          FU_ready
     // output reg          FU_occ
 
 );

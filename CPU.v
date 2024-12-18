@@ -336,7 +336,7 @@ module CPU(
         .write_data1(),
         // retire 2 ...
         .write_addr2(),
-        .write_data2() 
+        .write_data2(),
 
         // outputs ...
         .read_data1(srcReg1_data_ARF_EX),
@@ -351,7 +351,7 @@ module CPU(
         .PC_in(PC_EX),
         .opcode_in(opcode_EX),
         .funct3_in(funct3_EX),
-        .funt7_in(funct7_EX),
+        .funct7_in(funct7_EX),
         .srcReg1_p_in(srcReg1_p_EX),
         .srcReg2_p_in(srcReg2_p_EX),
         .imm_in(imm_EX),
