@@ -20,7 +20,7 @@ module ALU (
     output reg [31:0]   data_out_dr,
     // output reg [5:0]    dr_out,
     // output reg [31:0]   sr2_data_out_sw,
-    output reg          FU_ready,
+    output reg          FU_ready
     // output reg          FU_occ
 
 );
@@ -37,7 +37,7 @@ module ALU (
         else begin
             if (alu_number[ALU_NO] == 1) begin
                 // dr_out = dr_in;
-                FU_ready = 1'b1;
+                FU_ready = 1'b0;
                 // sr2_data_out_sw = data_in_sr2;
                 // if ((optype != 4'd7) && (optype != 4'd8)) begin
                 //     FU_occ = 1'b1; // not load, so alu occupied
@@ -76,7 +76,7 @@ module ALU (
                         data_out_dr = data_in_sr1 + data_in_imm;
                 endcase 
                 // optype_out = optype;
-                FU_ready = 1'b0;
+                FU_ready = 1'b1;
             end 
         end
     end

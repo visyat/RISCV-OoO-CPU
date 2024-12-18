@@ -93,14 +93,14 @@ module Unified_Issue_Queue (
     reg [5:0] rob_round_robin = 0;
 
     // output group registers ...
-    reg [31:0] PC_issue [1:0];
-    reg [3:0] optype_issue [1:0];
-    reg [1:0] aluNum_issue [1:0];
-    reg [31:0] srcReg1_data_issue [1:0];
-    reg [31:0] srcReg2_data_issue [1:0];
-    reg [31:0] imm_issue [1:0];
-    reg [5:0] destReg_issue [1:0];
-    reg [15:0] ROBNum_issue [1:0];
+    reg [31:0] PC_issue [2:0];
+    reg [3:0] optype_issue [2:0];
+    reg [1:0] aluNum_issue [2:0];
+    reg [31:0] srcReg1_data_issue [2:0];
+    reg [31:0] srcReg2_data_issue [2:0];
+    reg [31:0] imm_issue [2:0];
+    reg [5:0] destReg_issue [2:0];
+    reg [15:0] ROBNum_issue [2:0];
 
     // operation parameter
     parameter ADD   =  4'd1;
@@ -172,7 +172,7 @@ module Unified_Issue_Queue (
                 ROB[i] = 'b0;
             end
         end else begin
-            if (~stall_in && optype != 0) begin 
+            if (~stall_in && op_type != 0) begin 
             // check first that a valid instruction is being entered and that processor is not stalled ...
                 for (i=0; i<64; i=i+1) begin
                     if (~VALID[i]) begin // find the first invalid (vacant) entry ...
@@ -200,12 +200,12 @@ module Unified_Issue_Queue (
 
                         // handling special cases: 
                         if (op_type == LUI) begin
-                            src1_ready[i]   = 1'b1;
-                            src1_data[i]    = 32'b0;
+                            SRC1READY[i]   = 1'b1;
+                            SRC1DATA[i]    = 32'b0;
                         end
                         if ((op_type == LUI) || (op_type == ORI) || (op_type == SRAI) || (op_type == ADDI)|| (op_type == LW) || (op_type == LB)) begin
-                            src2_ready[i]   = 1'b1;
-                            src2_data[i]    = 32'b0;
+                            SRC2READY[i]   = 1'b1;
+                            SRC2DATA[i]    = 32'b0;
                         end
                         
                         // assign functional units and ROB entries round robin ...
@@ -238,22 +238,22 @@ module Unified_Issue_Queue (
         for (j=0; j<64; j=j+1) begin
             if (VALID[j]) begin
                 // check if allocated ALU unit is available ...
-                if (FU[i] == 2'd0 && FU_ready_ALU0_in) begin
-                    FU_READY[i] = 1'b1;
+                if (FU[j] == 2'd0 && FU_ready_ALU0_in) begin
+                    FU_READY[j] = 1'b1;
                 end
-                if (FU[i] == 2'd1 && FU_ready_ALU1_in) begin
-                    FU_READY[i] = 1'b1;
+                if (FU[j] == 2'd1 && FU_ready_ALU1_in) begin
+                    FU_READY[j] = 1'b1;
                 end
-                if (FU[i] == 2'd2 && FU_ready_ALU2_in) begin
-                    FU_READY[i] = 1'b1;
+                if (FU[j] == 2'd2 && FU_ready_ALU2_in) begin
+                    FU_READY[j] = 1'b1;
                 end
                 // add additional forwards from MEM and ALU ... 
 
-                if (~SRC1READY[i] && srcReg1_ready_ROB_in) begin
-                    SRC1READY[i] = 1'b1;
+                if (~SRC1READY[j] && srcReg1_ready_ROB_in) begin
+                    SRC1READY[j] = 1'b1;
                 end
-                if (~SRC2READY[i] && srcReg2_ready_ROB_in) begin
-                    SRC2READY[i] = 1'b1;
+                if (~SRC2READY[j] && srcReg2_ready_ROB_in) begin
+                    SRC2READY[j] = 1'b1;
                 end
             end
         end
@@ -274,7 +274,14 @@ module Unified_Issue_Queue (
             end
         end else begin
             for (k=0; k<64; k=k+1) begin
-                if (VALID[k] && SRC1READY[k] && SRC2READY[k] && FU_READY[k] && ~fu_taken[FU[k]]) begin
+                
+                if(VALID[k])begin
+                $display("%d, %d, %d ,%d ,%d, %d", SRC1READY[k], SRCREG1[k], SRC2READY[k],SRCREG2[k], FU_READY[k], FU[k]);
+                
+                end
+                
+               
+                if (VALID[k] && SRC1READY[k] && SRC2READY[k] && FU_READY[k]) begin
                     PC_issue[FU[k]] = PC[k];
                     optype_issue[FU[k]] = OP[k];
                     aluNum_issue[FU[k]] = FU[k];
@@ -291,9 +298,10 @@ module Unified_Issue_Queue (
                         k = 65; 
                     end else begin
                         issued = issued+1;
-                    end
+                    end 
                 end
             end
+            $display("/////////////////////////////////////////////////////////////////////////////////////////");
         end
         
         PC_issue0 = PC_issue[0];
@@ -314,14 +322,14 @@ module Unified_Issue_Queue (
         destReg_issue1 = destReg_issue[1];
         ROBNum_issue1 = ROBNum_issue[1];
 
-        PC_issue1 = PC_issue[1];
-        optype_issue1 = optype_issue[1];
-        aluNum_issue1 = aluNum_issue[1];
-        srcReg1_data_issue1 = srcReg1_data_issue[1];
-        srcReg2_data_issue1 = srcReg2_data_issue[1];
-        imm_issue1 = imm_issue[1];
-        destReg_issue1 = destReg_issue[1];
-        ROBNum_issue1 = ROBNum_issue[1];
+        PC_issue2 = PC_issue[2];
+        optype_issue2 = optype_issue[2];
+        aluNum_issue2 = aluNum_issue[2];
+        srcReg1_data_issue2 = srcReg1_data_issue[2];
+        srcReg2_data_issue2 = srcReg2_data_issue[2];
+        imm_issue2 = imm_issue[2];
+        destReg_issue2 = destReg_issue[2];
+        ROBNum_issue2 = ROBNum_issue[2];
 
     end
 
