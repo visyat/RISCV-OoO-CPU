@@ -16,12 +16,12 @@ module Cache(
     output reg [31:0] lw_data,
     output cacheMiss
 
-    output reg [31:0] PC_out, 
-    output reg [31:0] address_out, 
-    output memRead_out,
-    output memWrite_out, 
-    output storeSize_out, 
-    output fromLSQ_out, 
+    // output reg [31:0] PC_out, 
+    // output reg [31:0] address_out, 
+    // output memRead_out,
+    // output memWrite_out, 
+    // output storeSize_out, 
+    // output fromLSQ_out, 
 );
     reg [18:0] TAG_WAY_1 [0:127];
     reg [511:0] DATA_WAY_1 [0:127];
@@ -154,21 +154,21 @@ module Cache(
     always @(posedge clk) begin
         // output ... 
         if (~rstn) begin
-            PC_out = 'b0;
+            // PC_out = 'b0;
             lw_data = 'b0;
             cacheMiss = 0;
-            address_out = 'b0;
-            memWrite_out = 0;
-            memRead_out = 0;
-            storeSize_out = 0;
-            fromLSQ_out = 0;
+            // address_out = 'b0;
+            // memWrite_out = 0;
+            // memRead_out = 0;
+            // storeSize_out = 0;
+            // fromLSQ_out = 0;
         end else begin
-            PC_out = PC_in;
-            address_out = address_in;
-            memWrite_out = memWrite;
-            memRead_out = memRead;
-            storeSize_out = storeSize;
-            fromLSQ_out = fromLSQ;
+            // PC_out = PC_in;
+            // address_out = address_in;
+            // memWrite_out = memWrite;
+            // memRead_out = memRead;
+            // storeSize_out = storeSize;
+            // fromLSQ_out = fromLSQ;
 
             if (search_1 != 'b0) begin
                 lw_data = search_1;
@@ -185,6 +185,11 @@ module Cache(
             end else begin
                 lw_data = 'b0;
                 cacheMiss = 1;
+            end
+
+            if (fromLSQ) begin
+                lw_data = 'b0;
+                cacheMiss = 0;
             end
         end
     end

@@ -3,20 +3,16 @@
 
 /*
 Load-Store Queue:
-* Size = 16 instructions
 + ------------------------------------- +
 | V | PC  | Op |   Address   | Data | I |
 + - | --- | -- | ----------- | ---- | - |
 | 1 | 0x4 | S  | 0x1...      | .... | 0 |
 | 1 | 0x8 | L  | 0x2...      |      | 0 | 
 | 0 |     |    |             |      | 0 |
-| 0 |     |    |             |      | 0 |
-| 0 |     |    |             |      | 0 |
-| 0 |     |    |             |      | 0 |
 + ------------------------------------- +
 */
 
-module LSQ(
+module Load_Store_Queue (
     input clk, 
     input rstn,
 
