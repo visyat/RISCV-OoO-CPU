@@ -238,22 +238,22 @@ module Unified_Issue_Queue (
         for (j=0; j<64; j=j+1) begin
             if (VALID[j]) begin
                 // check if allocated ALU unit is available ...
-                if (FU[i] == 2'd0 && FU_ready_ALU0_in) begin
-                    FU_READY[i] = 1'b1;
+                if (FU[j] == 2'd0 && FU_ready_ALU0_in) begin
+                    FU_READY[j] = 1'b1;
                 end
-                if (FU[i] == 2'd1 && FU_ready_ALU1_in) begin
-                    FU_READY[i] = 1'b1;
+                if (FU[j] == 2'd1 && FU_ready_ALU1_in) begin
+                    FU_READY[j] = 1'b1;
                 end
-                if (FU[i] == 2'd2 && FU_ready_ALU2_in) begin
-                    FU_READY[i] = 1'b1;
+                if (FU[j] == 2'd2 && FU_ready_ALU2_in) begin
+                    FU_READY[j] = 1'b1;
                 end
                 // add additional forwards from MEM and ALU ... 
 
-                if (~SRC1READY[i] && srcReg1_ready_ROB_in) begin
-                    SRC1READY[i] = 1'b1;
+                if (~SRC1READY[j] && srcReg1_ready_ROB_in) begin
+                    SRC1READY[j] = 1'b1;
                 end
-                if (~SRC2READY[i] && srcReg2_ready_ROB_in) begin
-                    SRC2READY[i] = 1'b1;
+                if (~SRC2READY[j] && srcReg2_ready_ROB_in) begin
+                    SRC2READY[j] = 1'b1;
                 end
             end
         end
@@ -274,6 +274,13 @@ module Unified_Issue_Queue (
             end
         end else begin
             for (k=0; k<64; k=k+1) begin
+                
+                if(VALID[k])begin
+                $display("%d, %d, %d ,%d ,%d, %d", SRC1READY[k], SRCREG1[k], SRC2READY[k],SRCREG2[k], FU_READY[k], FU[k]);
+                
+                end
+                
+               
                 if (VALID[k] && SRC1READY[k] && SRC2READY[k] && FU_READY[k] && ~fu_taken[FU[k]]) begin
                     PC_issue[FU[k]] = PC[k];
                     optype_issue[FU[k]] = OP[k];
@@ -286,14 +293,15 @@ module Unified_Issue_Queue (
 
                     VALID[k] = 1'b0;
                     fu_taken[FU[k]] = 1'b1;
-                    if (issued == 2'd2) begin
+                    if (issued == 2'd3) begin
                         issued = 0;
                         k = 65; 
                     end else begin
                         issued = issued+1;
-                    end
+                    end 
                 end
             end
+            $display("/////////////////////////////////////////////////////////////////////////////////////////");
         end
         
         PC_issue0 = PC_issue[0];
