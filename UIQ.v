@@ -277,7 +277,7 @@ module Unified_Issue_Queue (
                 if (VALID[k] && SRC1READY[k] && SRC2READY[k] && FU_READY[k] && ~fu_taken[FU[k]]) begin
                     PC_issue[FU[k]] = PC[k];
                     optype_issue[FU[k]] = OP[k];
-                    aluNum_issue[FU[k]] = issue;
+                    aluNum_issue[FU[k]] = FU[k];
                     srcReg1_data_issue[FU[k]] = SRC1DATA[k];
                     srcReg2_data_issue[FU[k]] = SRC2DATA[k];
                     imm_issue[FU[k]] = IMM[k];
@@ -286,11 +286,11 @@ module Unified_Issue_Queue (
 
                     VALID[k] = 1'b0;
                     fu_taken[FU[k]] = 1'b1;
-                    if (issue == 2'd2) begin
-                        issue = 0;
+                    if (issued == 2'd2) begin
+                        issued = 0;
                         k = 65; 
                     end else begin
-                        issue = issue+1;
+                        issued = issued+1;
                     end
                 end
             end
