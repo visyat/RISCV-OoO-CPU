@@ -70,13 +70,13 @@ module Unified_Issue_Queue (
 );
 
     reg [63:0]  VALID;
-    reg [31:0]  PC [63:0]
+    reg [31:0]  PC [63:0];
     reg [3:0]   OP [63:0];
     reg [5:0]   DESTREG [63:0];
     reg [5:0]   SRCREG1 [63:0];
     reg [31:0]  SRC1DATA [63:0];
     reg [63:0]  SRC1READY;
-    reg [5:0]   SRCREG2 [63:0]
+    reg [5:0]   SRCREG2 [63:0];
     reg [31:0]  SRC2DATA [63:0];
     reg [63:0]  SRC2READY;
     reg [31:0]  IMM [63:0];

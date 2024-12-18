@@ -35,11 +35,11 @@ module reorder_buffer(
     output reg [5:0]    old_reg_2,
 
     output reg          sr1_ready_flag,       
-    // output reg [5:0]    sr1_reg_ready,
+    output reg [5:0]    sr1_reg_ready,   // ROB update and broadcast to UIQ
     output reg [5:0]    sr2_reg_ready,
-    // output reg          sr2_ready_flag,
-    // output reg [31:0]   sr1_value_ready,
-    // output reg [31:0]   sr2_value_ready,
+    output reg          sr2_ready_flag,
+    output reg [31:0]   sr1_value_ready,
+    output reg [31:0]   sr2_value_ready,
 
     output reg [31:0]   pc_retire_1,
     output reg [31:0]   pc_retire_2

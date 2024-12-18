@@ -71,6 +71,10 @@ module CPU(
     wire [31:0] srcReg1_data_ARF_EX;
     wire [31:0] srcReg2_data_ARF_EX;
 
+    // ROB ...
+    wire srcReg1_ready_ROB_EX;
+    wire srcReg2_ready_ROB_EX;
+
     // UIQ ...
     wire stall_UIQ_EX;
     
@@ -260,18 +264,59 @@ module CPU(
         .ROB_retire(), // need to add retirement to rename module ...
         
         // outputs ...
-        .ROB_num(), // need to figure out where to output allocated ROB entry ...
         .sr1_p(srcReg1_p_EX),
         .sr2_p(srcReg2_p_EX),
         .dr_p(destReg_p_EX),
         .old_dr(oldDestReg_rename_EX),
-        // .stall(stall_rename_EX)
+        .stall(stall_rename_EX)
     );
 
     // simplified ROB interface ...
     reorder_buffer ROB(
-        .clk(),
-        .rstn(),
+        // inputs ...
+        .clk(clk),
+        .rstn(rstn),
+        .instr_PC_0(PC_EX),
+        .old_dest_reg_0(oldDestReg_rename_EX),
+        .dest_reg_0(destReg_p_EX),
+        
+        .dest_data_0(),
+        .store_add_0(),
+        .store_data_0(),
+
+        .complete_pc_0(),
+        .complete_pc_1(),
+        .complete_pc_2(),
+        .complete_pc_3(),
+        .new_dr_data_0(),
+        .new_dr_data_1(),
+        .new_dr_data_2(),
+        .new_dr_data_3(),
+        .is_store(),
+        .UIQ_input_invalid(),
+        
+        //outputs ...
+        .ready_reg(),
+        .retire_reg(),
+        .stall(),
+        .reg_update_ARF_1(),
+        .reg_update_ARF_2(),
+        .value_update_ARF_1(),
+        .value_update_ARF_2(),
+        .old_reg_1(),
+        .old_reg_2(),
+
+        .sr1_ready_flag(srcReg1_ready_ROB_EX),
+
+        .sr1_reg_ready(),
+        .sr2_reg_ready(),
+
+        .sr2_ready_flag(srcReg2_ready_ROB_EX),
+
+        .sr1_value_ready(),
+        .sr2_value_ready(),
+        .pc_retire_1(),
+        .pc_retire_2()
     );
 
     ARF ARF (
@@ -302,7 +347,7 @@ module CPU(
         // inputs ...
         .clk(clk),
         .rstn(rstn),
-        .stalled(1'b0), // need to indicate whether the processor has stalled prior ...
+        .stall_in(1'b0), // need to indicate whether the processor has stalled prior ...
         .PC_in(PC_EX),
         .opcode_in(opcode_EX),
         .funct3_in(funct3_EX),
@@ -315,8 +360,8 @@ module CPU(
         .srcReg2_data_ARF_in(srcReg2_data_ARF_EX),
 
         // ready flags from ROB ...
-        .srcReg1_ready_ROB_in(1'b1),
-        .srcReg2_ready_ROB_in(1'b1),
+        .srcReg1_ready_ROB_in(srcReg1_ready_ROB_EX),
+        .srcReg2_ready_ROB_in(srcReg2_ready_ROB_EX),
 
         // ready flags from functional units ...
         .FU_ready_ALU0_in(ready_ALU0_EX),
@@ -324,7 +369,7 @@ module CPU(
         .FU_ready_ALU2_in(ready_ALU2_EX),
 
         // outputs ...
-        .stall(stall_UIQ_EX),
+        .stall_out(stall_UIQ_EX),
 
         .PC_issue0(PC_issue0_EX),
         .optype_issue0(optype_issue0_EX),
@@ -351,7 +396,7 @@ module CPU(
         .srcReg2_data_issue2(srcReg2_data_issue2_EX),
         .imm_issue2(imm_issue2_EX),
         .destReg_issue2(destReg_issue2_EX),
-        .ROBNum_issue2(ROBNum_issue2_EX),
+        .ROBNum_issue2(ROBNum_issue2_EX)
     );
 
     ALU ALU0 (
