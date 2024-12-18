@@ -234,11 +234,4 @@ module reorder_buffer(
         
     end
 
-    // this needs to be redone ...
-    always @(UIQ_input_invalid) begin
-        if(UIQ_input_invalid != 6'b0) begin
-            ready_reg[UIQ_input_invalid] = 1'b0;
-        end
-    end
-
 endmodule
