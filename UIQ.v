@@ -93,14 +93,14 @@ module Unified_Issue_Queue (
     reg [5:0] rob_round_robin = 0;
 
     // output group registers ...
-    reg [31:0] PC_issue [1:0];
-    reg [3:0] optype_issue [1:0];
-    reg [1:0] aluNum_issue [1:0];
-    reg [31:0] srcReg1_data_issue [1:0];
-    reg [31:0] srcReg2_data_issue [1:0];
-    reg [31:0] imm_issue [1:0];
-    reg [5:0] destReg_issue [1:0];
-    reg [15:0] ROBNum_issue [1:0];
+    reg [31:0] PC_issue [2:0];
+    reg [3:0] optype_issue [2:0];
+    reg [1:0] aluNum_issue [2:0];
+    reg [31:0] srcReg1_data_issue [2:0];
+    reg [31:0] srcReg2_data_issue [2:0];
+    reg [31:0] imm_issue [2:0];
+    reg [5:0] destReg_issue [2:0];
+    reg [15:0] ROBNum_issue [2:0];
 
     // operation parameter
     parameter ADD   =  4'd1;
