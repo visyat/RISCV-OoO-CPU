@@ -33,8 +33,7 @@ module CPU(
     wire storeSize_ID;
 
     // EX stage signals
-
-    //inputs from pipeline
+    //Pipeline
     wire [31:0] PC_EX; 
     wire [6:0] opcode_EX;
     wire [2:0] funct3_EX; 
@@ -53,194 +52,64 @@ module CPU(
     wire memWrite_EX;
     wire memToReg_EX;
     wire storeSize_EX;
+
+    /*
+    REMAINDER OF EX STAGE: 
+    * Rename
+    * Reorder Buffer (ROB)
+    * Architectural Register File (ARF)
+    * Unified Issue Queue (UIQ) 
+    */
+    // Rename ...
+    wire [5:0] srcReg1_p_EX; // renamed registers ...
+    wire [5:0] srcReg2_p_EX;
+    wire [5:0] destReg_p_EX;
+    wire [5:0] oldDestReg_rename_EX;
+    wire stall_rename_EX;
     
+    // ARF ...
+    wire [31:0] srcReg1_data_ARF_EX;
+    wire [31:0] srcReg2_data_ARF_EX;
 
-    //rename outputs
-    wire [15:0] ROB_num_EX;
-    wire [5:0] srcReg1_p_EX; //rename output & rob input
-    wire [5:0] srcReg2_p_EX; //rename output & rob input
-    wire [5:0] destReg_p_EX; //rename output & rob input
-    wire [5:0] oldDestReg_EX; //rename output & rob input
-    wire [31:0] destReg_p_data_EX; //rename output & rob input
-    wire stall_rename_EX; 
+    // UIQ ...
+    wire stall_UIQ_EX;
     
-    //ROB    
-    wire store_add_EX; //rob input
-    wire store_data_EX; //rob input
-    wire instr_PC_EX; //rob input
-    wire stall_ROB_EX; 
-    wire [5:0] invalid_from_UIQ_EX; 
-
-    wire [63:0] retire_EX; 
-    wire [63:0] ready_EX;
-
-    wire [31:0]   retire_pc1_EX; 
-    wire [31:0]   retire_pc2_EX;
-
-    wire [5:0]    old_reg_1_EX;
-    wire [5:0]    old_reg_2_EX;
-
-    wire [5:0]    src1_ARF_reg_EX; //all for ARF
-    wire [5:0]    src2_ARF_reg_EX;
-    wire [31:0]   src1_ARF_data_EX;
-    wire [31:0]   src2_ARF_data_EX;
-
-    wire          src1_dis_ready_EX;    //all for UIQ
-    wire          src2_dis_ready_EX;
-    wire [5:0]    src1_dis_reg_EX; 
-    wire [5:0]    src2_dis_reg_EX;
-    wire [31:0]   src1_dis_val_EX;
-    wire [31:0]   src2_dis_val_EX;
-
-
-    //ARF
-    wire [31:0] src1_ARF_reg_EX; //write values
-    wire [31:0] src2_ARF_reg_EX;
-
-    wire [31:0] src1_ARF_data_EX;
-    wire [31:0] src2_ARF_data_EX;
-
-    //Issue
     wire [31:0] PC_issue0_EX;
     wire [3:0] optype_issue0_EX;
-    wire [5:0] srcReg1_issue0_EX;
-    wire [5:0] srcReg2_issue0_EX;
-    wire [5:0] destReg_issue0_EX;
-    wire [31:0] srcReg1_value_issue0_EX;
-    wire [31:0] srcReg2_value_issue0_EX;
+    wire [1:0] aluNum_issue0_EX;
+    wire [31:0] srcReg1_data_issue0_EX;
+    wire [31:0] srcReg2_data_issue0_EX;
     wire [31:0] imm_issue0_EX;
-    wire [1:0] FU_number_out0_EX;
-
+    wire [5:0] destReg_issue0_EX;
+    wire [15:0] ROBNum_issue0_EX;
+    
     wire [31:0] PC_issue1_EX;
     wire [3:0] optype_issue1_EX;
-    wire [5:0] srcReg1_issue1_EX;
-    wire [5:0] srcReg2_issue1_EX;
-    wire [5:0] destReg_issue1_EX;
-    wire [31:0] srcReg1_value_issue1_EX;
-    wire [31:0] srcReg2_value_issue1_EX;
+    wire [1:0] aluNum_issue1_EX;
+    wire [31:0] srcReg1_data_issue1_EX;
+    wire [31:0] srcReg2_data_issue1_EX;
     wire [31:0] imm_issue1_EX;
-    wire [1:0] FU_number_out1_EX;
+    wire [5:0] destReg_issue1_EX;
+    wire [15:0] ROBNum_issue1_EX;
 
     wire [31:0] PC_issue2_EX;
     wire [3:0] optype_issue2_EX;
-    wire [5:0] srcReg1_issue2_EX;
-    wire [5:0] srcReg2_issue2_EX;
-    wire [5:0] destReg_issue2_EX;
-    wire [31:0] srcReg1_value_issue2_EX;
-    wire [31:0] srcReg2_value_issue2_EX;
-    wire [31:0] imm_issue2_EX;
-    wire [1:0] FU_number_out2_EX;
-
-    wire [31:0] PC_issue_LSU_EX;
-    wire [3:0] optype_issue_LSU_EX;
-    wire [5:0] srcReg1_issue_LSU_EX;
-    wire [5:0] srcReg2_issue_LSU_EX;
-    wire [5:0] destReg_issue_LSU_EX;
-    wire [31:0] srcReg1_value_issue_LSU_EX;
-    wire [31:0] srcReg2_value_issue_LSU_EX;
-    wire [31:0] imm_issue_LSU_EX;
-    wire [1:0] FU_number_out2_EX;
-
-    wire UIQ_no_issue;
-    wire UIQ_stall;
-    wire [3:0] UIQ_tunnel_out;
-
-    //ALUs
-    wire [3:0] optype_issue0_EX;
-    wire [31:0] srcReg1_value_issue0_EX;
-    wire [31:0] srcReg2_value_issue0_EX;
-    wire [31:0] imm_issue0_EX;
-    wire [5:0] destReg_issue0_EX;
-    wire [31:0] destReg_data_ALU0_EX;
-    wire [5:0] destReg_ALU0_EX;
-    wire ALU0_ready;
-    wire ALU0_occ;
-
-    wire [3:0] optype_issue1_EX;
-    wire [31:0] srcReg1_value_issue1_EX;
-    wire [31:0] srcReg2_value_issue1_EX;
-    wire [5:0] destReg_issue1_EX;
-    wire [31:0] destReg_data_ALU1_EX;
-    wire [5:0] destReg_ALU1_EX;
-    wire ALU1_ready;
-    wire ALU1_occ;
-
-    wire [3:0] optype_issue2_EX;
-    wire [31:0] srcReg1_value_issue2_EX;
-    wire [31:0] srcReg2_value_issue2_EX;
+    wire [1:0] aluNum_issue2_EX;
+    wire [31:0] srcReg1_data_issue2_EX;
+    wire [31:0] srcReg2_data_issue2_EX;
     wire [31:0] imm_issue2_EX;
     wire [5:0] destReg_issue2_EX;
-    wire [31:0] destReg_data_ALU2_EX;
-    wire [5:0] destReg_ALU2_EX;
-    wire ALU2_ready;
-    wire ALU2_occ;
+    wire [15:0] ROBNum_issue2_EX;
 
-    wire [3:0] optype_issue_LSU_EX;
-    wire [31:0] srcReg1_value_issue_LSU_EX;
-    wire [31:0] srcReg2_value_issue_LSU_EX;
-    wire [31:0] imm_issue_LSU_EX;
-    wire [5:0] destReg_issue_LSU_EX;
-    wire [31:0] destReg_data_ALU_LSU_EX;
-    wire [5:0] destReg_ALU_LSU_EX;
-    wire LSU_ready;
-    wire LSU_occ;
-
-    // EX_MEM pipeline register signals
-    wire [31 : 0]   rd_result_fu0_MEM;
-    wire [31 : 0]   pc_fu0_MEM;
-    wire [31 : 0]   rd_result_fu1_MEM;
-    wire [31 : 0]   pc_fu1_MEM;
-    wire [31 : 0]   rd_result_fu2_MEM;
-    wire [31 : 0]   pc_fu2_MEM;
-    wire            op_write_MEM;
-    wire            op_read_MEM;
-    wire [3 : 0]    mem_op;
-    wire [2 : 0]    tunnel_MEM;
-
-    //MEM stage signals 
-    wire [3:0] tunnel_out_MEM;
-
-    wire [31:0] PC_issue0_MEM;
-    wire [31:0] destReg_data_ALU0_MEM;
-    wire [31:0] PC_issue1_MEM;
-    wire [31:0] destReg_data_ALU1_MEM;
-    wire [31:0] PC_issue2_MEM;
-    wire [31:0] destReg_data_ALU2_MEM;
-    wire [31:0] PC_issue_LSU_MEM;
-    wire [31:0] compute_address_LSU_MEM;
+    // ALU ...
+    wire [31:0] aluOutput_ALU0_EX;
+    wire ready_ALU0_EX;
     
-    wire [31:0] PC_LSQ_MEM;
-    wire [31:0] address_LSQ_MEM;
-    wire [31:0] load_data_LSQ_MEM;
-    wire loadStore_LSQ_MEM;
-    wire storeSize_LSQ_MEM;
-    wire [31:0] swData_LSQ_MEM;
-    wire complete_LSQ_MEM;
+    wire [31:0] aluOutput_ALU1_EX;
+    wire ready_ALU1_EX;
 
-    wire [31:0] load_data_DataMem_MEM;
-
-    // MEM stage signals
-    wire [31 : 0]   mem_addr_from_LSU;
-    wire [31 : 0]   store_data_to_mem_from_LSU;
-    wire [31 : 0]   load_data_to_comp_from_LSU;
-    wire [31 : 0]   inst_pc_from_LSU;
-    wire            write_en_from_LSU;
-    wire            read_en_from_LSU;
-    wire [3 : 0]    op_from_LSU;
-    wire            load_data_from_lsq;
-    wire [31 : 0]   inst_pc_from_mem;
-    wire [31 : 0]   lwData_from_mem;
-    wire            data_vaild_from_mem;
-
-    wire [31:0] PC_DataMem_MEM;
-
-    // pipeline register between MEM and COMPLETE stage
-    wire [31 : 0]   lwData_comp;
-    wire [31 : 0]   pc_ls_comp;
-    wire            vaild_comp;
-    wire            lsq_comp;
-    wire            FU_write_flag_com;
-    wire            FU_read_flag_com;
+    wire [31:0] aluOutput_ALU2_EX;
+    wire ready_ALU2_EX;
 
     // COMPLETE stage signals
     wire [31 : 0]   dr_data_0;
@@ -264,8 +133,8 @@ module CPU(
     wire [5:0]      regout_from_lsu;
     wire [5:0]      regout_from_lsu2;
     wire [5:0]      regout_from_dm;
-    reg is_store_r;
-    wire is_store;   
+    reg             is_store_r;
+    wire            is_store;   
     wire [31 : 0]   data_check;
     wire            FU_read_flag_MEM_com;
 
@@ -277,10 +146,10 @@ module CPU(
             PC_IF = PC_IF+ 4;
         end
     end
-
-    
+  
     //IF Stage
-    instructionMemory instr_mem(
+    instructionMemory InstrMem (
+        // inputs ...
         .clk (clk), 
         .PC (PC_IF),
         .rstn (rstn), 
@@ -291,23 +160,27 @@ module CPU(
     );
 
     //ID Stage
-    IF_ID_Reg IF_ID_pipe(
+    IF_ID_Reg IF_ID_Reg(
+        // inputs ...
         .clk (clk),
         .rstn(rstn),
-        
         .PC_in(PC_IF),
         .inst_IF_in(instr_IF),
         .stop_in(stop_IF),
 
+        // outputs ...
         .PC_out(PC_ID),
         .inst_ID_out(instr_ID),
         .stop_out(stop_ID)
     );
 
-    decode decode_mod(
+    decode Decode (
+        // inputs ...
         .clk (clk),
         .rstn(rstn),
         .instr(instr_ID),
+        
+        // outputs ...
         .opcode(opcode_ID),
         .funct3(funct3_ID),
         .funct7(funct7_ID),
@@ -327,12 +200,13 @@ module CPU(
         .storeSize(storeSize_ID)
     );
 
-    //Ex
-    ID_EX_Reg ID_EX_pipe (
+    //EX
+    ID_EX_Reg ID_EX_Reg (
+        // input ...
         .clk(clk),
         .rstn(rstn),
-
-        // input ...
+        // add input to check if stalled at Rename, UIQ, ROB, or IM (stopped)
+        // .stall_in(stall_Rename_EX || stall_UIQ_EX)
         .PC_in(PC_ID),
         .opcode_in(opcode_ID),
         .funct3_in(funct3_ID),
@@ -371,395 +245,217 @@ module CPU(
         .memWrite_out(memWrite_EX),
         .memToReg_out(memToReg_EX),
         .storeSize_out(storeSize_EX)
+        // .stalled()
+        // add output state to check that the processor is not stalled ... 
     );
-    rename rename_mod (
+    rename Rename (
+        // inputs ...
         .rstn(rstn),
-        .sr1(srcReg1_EX), 
+        .sr1(srcReg1_EX),
         .sr2(srcReg2_EX),
         .dr(destReg_EX),
         .opcode(opcode_EX),
         .hasImm(hasImm_EX),
         .imm(imm_EX),
-        .ROB_num(ROB_num_EX),
+        .ROB_retire(), // need to add retirement to rename module ...
+        
+        // outputs ...
+        .ROB_num(), // need to figure out where to output allocated ROB entry ...
         .sr1_p(srcReg1_p_EX),
         .sr2_p(srcReg2_p_EX),
         .dr_p(destReg_p_EX),
-        .data(destReg_p_data_EX),
-        .old_dr(oldDestReg_EX),
-        .stall(stall_rename_EX)  
+        .old_dr(oldDestReg_rename_EX),
+        // .stall(stall_rename_EX)
     );
 
+    // simplified ROB interface ...
     reorder_buffer ROB(
-        .clk(clk),
-        .rstn(rstn),
-        .stall(stall_ROB_EX),
-        
-        .old_dest_reg_0(oldDestReg_EX),//from rename      
-        .dest_reg_0(destReg_p_EX),   //from rename
-        .dest_data_0(destReg_p_data_EX),  //from rename    
-        .store_add_0(),  //???
-        .store_data_0(), //???
-        .instr_PC_0(PC_EX),    //from rename    
-
-        .complete_pc_0(complete_pc_0), 
-        .complete_pc_1(complete_pc_1),
-        .complete_pc_2(complete_pc_2),
-        .complete_pc_3(complete_pc_3),
-        
-        .new_dr_data_0(dr_data_0), 
-        .new_dr_data_1(dr_data_1),
-        .new_dr_data_2(dr_data_2),
-        .new_dr_data_3(dr_data_3),
-
-        .is_store(is_store),
-        .UIQ_input_invalid(invalid_from_UIQ_EX),
-
-        .retire_reg(retire_EX),
-        .ready_reg(ready_EX),
-
-        .reg_update_ARF_1(src1_ARF_reg_EX), //ARF write values
-        .reg_update_ARF_2(src2_ARF_reg_EX),
-        .value_update_ARF_1(src1_ARF_data_EX),
-        .value_update_ARF_2(src2_ARF_data_EX),
-
-        .old_reg_1(old_reg_1_EX), //used in arf and uiq
-        .old_reg_2(old_reg_2_EX),
-
-        .sr1_ready_flag(src1_dis_ready_EX),   //for UIQ 
-        .sr2_ready_flag(src2_dis_ready_EX), //for UIQ
-        .sr1_reg_ready(src1_dis_reg_EX), //for UIQ
-        .sr2_reg_ready(src2_dis_reg_EX), //for UIQ
-        .sr1_value_ready(src1_dis_val_EX), //for UIQ
-        .sr2_value_ready(src2_dis_val_EX), //for UIQ
-
-        .pc_retire_1(retire_pc1_EX),
-        .pc_retire_2(retire_pc2_EX)
+        .clk(),
+        .rstn(),
     );
 
-    ARF ARF_mod(
+    ARF ARF (
+        // inputs ...
         .clk(clk),
         .rstn(rstn),
-        .read_addr1(),
-        .read_addr2(),
-        .read_en(1'b1),
-
-        // from ROB ...
-        .write_addr1(src1_ARF_reg_EX),
-        .write_data1(src1_ARF_data_EX),
-        .old_addr1(old_reg_1_EX),
-        .write_addr2(src2_ARF_reg_EX),
-        .write_data2(src2_ARF_data_EX),
-        .old_addr2(old_reg_2_EX),
+        
+        // reading rs1 and rs2 ...
+        .read_addr1(srcReg1_p_EX),
+        .read_addr2(srcReg2_p_EX),
+        .read_en(1'b1), // if an instruction is dispatching ... stalled??
+        
+        // retiring instructions ...
         .write_en(1'b1),
-        
-        // output ...
-        .read_data1(src1_ARF_data_EX),
-        .read_data2(src2_ARF_data_EX)
+        // retire 1 ...
+        .write_addr1(),
+        .write_data1(),
+        // retire 2 ...
+        .write_addr2(),
+        .write_data2() 
+
+        // outputs ...
+        .read_data1(srcReg1_data_ARF_EX),
+        .read_data2(srcReg2_data_ARF_EX)
     );
 
-    Unified_Issue_Queue UIQ(
+    Unified_Issue_Queue UIQ (
+        // inputs ...
         .clk(clk),
         .rstn(rstn),
-
-        // info from decode and rename ...
+        .stalled(1'b0), // need to indicate whether the processor has stalled prior ...
         .PC_in(PC_EX),
         .opcode_in(opcode_EX),
         .funct3_in(funct3_EX),
-        .funct7_in(funct7_EX),
-        .rs1_in(srcReg1_p_EX),
-        .rs1_value_from_ARF_in(srcReg1_ARF_data_EX),
-        .rs2_in(srcReg2_p_EX),
-        .rs2_value_from_ARF_in(srcReg2_ARF_data_EX),
-        .imm_value_in(imm_EX),
-        .rd_in(destReg_p_EX),
+        .funt7_in(funct7_EX),
+        .srcReg1_p_in(srcReg1_p_EX),
+        .srcReg2_p_in(srcReg2_p_EX),
+        .imm_in(imm_EX),
+        .destReg_p_in(destReg_p_EX),
+        .srcReg1_data_ARF_in(srcReg1_data_ARF_EX),
+        .srcReg2_data_ARF_in(srcReg2_data_ARF_EX),
 
-        // info from ROB ...
-        .rs1_ready_from_ROB_in(src1_dis_ready_EX),
-        .rs2_ready_from_ROB_in(src2_dis_ready_EX),
+        // ready flags from ROB ...
+        .srcReg1_ready_ROB_in(1'b1),
+        .srcReg2_ready_ROB_in(1'b1),
 
-        // info from ALU units ... 
-        .fu_ready_from_FU_in(fu_ready_from_FU),
-
-        .FU0_flag_in(ALU0_occ),
-        .reg_tag_from_FU0_in(destReg_ALU0_EX),
-        .reg_value_from_FU0_in(destReg_data_ALU0_EX),
-        .FU1_flag_in(ALU1_occ),
-        .reg_tag_from_FU1_in(destReg_ALU1_EX),
-        .reg_value_from_FU1_in(destReg_data_ALU1_EX),
-        .FU2_flag_in(ALU2_occ),
-        .reg_tag_from_FU2_in(destReg_ALU2_EX),
-        .reg_value_from_FU2_in(destReg_data_ALU2_EX),
-        // .LSU_flag_in(LSU_occ),
-        //.reg_tag_from_LSU_in(destReg_LSU_EX),
-
-        // issue 1 ...
-        .PC_out0(PC_issue0_EX),
-        .optype_out0(optype_issue0_EX),
-        .rs1_out0(srcReg1_issue0_EX),
-        .rs2_out0(srcReg2_issue0_EX),
-        .rd_out0(destReg_issue0_EX),
-        .rs1_value_out0(srcReg1_value_issue0_EX),
-        .rs2_value_out0(srcReg2_value_issue0_EX),
-        .imm_value_out0(imm_issue0_EX),
-        .fu_number_out0(FU_number_out0_EX),
-
-        // issue 2 ...
-        .PC_out1(PC_issue1_EX),
-        .optype_out1(optype_issue1_EX),
-        .rs1_out1(srcReg1_issue1_EX),
-        .rs2_out1(srcReg2_issue1_EX),
-        .rd_out1(destReg_issue1_EX),
-        .rs1_value_out1(srcReg1_value_issue1_EX),
-        .rs2_value_out1(srcReg2_value_issue1_EX),
-        .imm_value_out1(imm_issue1_EX),
-        .fu_number_out1(FU_number_out1_EX),
-
-        // issue 3 ...
-        .PC_out2(PC_issue2_EX),
-        .optype_out2(optype_issue2_EX),
-        .rs1_out2(srcReg1_issue2_EX),
-        .rs2_out2(srcReg2_issue2_EX),
-        .rd_out2(destReg_issue2_EX),
-        .rs1_value_out2(srcReg1_value_issue2_EX),
-        .rs2_value_out2(srcReg2_value_issue2_EX),
-        .imm_value_out2(imm_issue2_EX),
-        .fu_number_out2(FU_number_out2_EX),
-
-        // issue 4 LSU ...
-        .PC_out_LSU(PC_issue_LSU_EX),
-        .optype_out_LSU(optype_issue_LSU_EX),
-        .rs1_out_LSU(srcReg1_issue_LSU_EX),
-        .rs2_out_LSU(srcReg2_issue_LSU_EX),
-        .rd_out_LSU(destReg_issue_LSU_EX),
-        .rs1_value_out_LSU(srcReg1_value_issue_LSU_EX),
-        .rs2_value_out_LSU(srcReg2_value_issue_LSU_EX),
-        .imm_value_out_LSU(imm_issue_LSU_EX),
-        .fu_number_out_LSU(fu_number_out_LSU),
-
-        // general output ...
-        .no_issue_out(UIQ_no_issue),
-        .stall_out(UIQ_stall),
-        .tunnel_out(UIQ_tunnel_out)
-    );
-
-    //ALUs
-    ALU alu0(
-        .ALU_NO         (2'b00),
-        .clk            (clk),
-        .rstn           (rstn),
-        .alu_number     (UIQ_tunnel_out),
-        .optype         (optype_issue0_EX),
-        .data_in_sr1    (srcReg1_value_issue0_EX),
-        .data_in_sr2    (srcReg2_value_issue0_EX),
-        .data_in_imm    (imm_issue0_EX),
-        .dr_in          (destReg_issue0_EX),
-
-        .data_out_dr    (destReg_data_ALU0_EX),
-        .dr_out         (destReg_ALU0_EX),
-        .FU_ready       (ALU0_ready),
-        .FU_occ         (ALU0_occ)
-    );
-    ALU alu1(
-        .ALU_NO         (2'b01),
-        .clk            (clk),
-        .rstn           (rstn),
-        .alu_number     (UIQ_tunnel_out),
-        .optype         (optype_issue1_EX),
-        .data_in_sr1    (srcReg1_value_issue1_EX),
-        .data_in_sr2    (srcReg2_value_issue1_EX),
-        .data_in_imm    (imm_issue1_EX),
-        .dr_in          (destReg_issue1_EX),
-
-        .data_out_dr    (destReg_data_ALU1_EX),
-        .dr_out         (destReg_ALU1_EX),
-        .FU_ready       (ALU1_ready),
-        .FU_occ         (ALU1_occ)
-    );
-    ALU alu2(
-        .ALU_NO         (2'b10),
-        .clk            (clk),
-        .rstn           (rstn),
-        .alu_number     (UIQ_tunnel_out),
-        .optype         (optype_issue2_EX),
-        .data_in_sr1    (srcReg1_value_issue2_EX),
-        .data_in_sr2    (srcReg2_value_issue2_EX),
-        .data_in_imm    (imm_issue2_EX),
-        .dr_in          (destReg_issue2_EX),
-
-        .data_out_dr    (destReg_data_ALU2_EX),
-        .dr_out         (destReg_ALU2_EX),
-        .FU_ready       (ALU2_ready),
-        .FU_occ         (ALU2_occ)
-    );
-    ALU lsu(
-        .ALU_NO         (2'b11),
-        .clk            (clk),
-        .rstn           (rstn),
-        .alu_number     (UIQ_tunnel_out),
-        .optype         (optype_issue_LSU_EX),
-        .data_in_sr1    (srcReg1_value_issue_LSU_EX),
-        .data_in_sr2    (srcReg2_value_issue_LSU_EX),
-        .data_in_imm    (imm_issue_LSU_EX),
-        .dr_in          (destReg_issue_LSU_EX),
-
-        .data_out_dr    (compute_address_LSU_EX),
-        .dr_out         (destReg_LSU_EX),
-        .FU_ready       (LSU_ready),
-        .FU_occ         (LSU_occ)
-    );
-    assign fu_ready_from_FU = {LSU_ready, ALU2_ready, ALU1_ready, ALU0_ready};
-
-    //MEM
-    EX_MEM_Reg EX_MEM_Reg_inst(
-        .clk                (clk),
-        .rstn               (rstn),
-
-        .tunnel_in          (UIQ_tunnel_out),
-        .rd_result_fu0_in   (destReg_data_ALU0_EX),
-        .pc_fu0_in          (PC_issue0_EX),
-        .rd_result_fu1_in   (destReg_data_ALU1_EX),
-        .pc_fu1_in          (PC_issue1_EX),
-        .rd_result_fu2_in   (destReg_data_ALU2_EX),
-        .pc_fu2_in          (PC_issue2_EX),
-        .result_lsu_in      (compute_address_LSU_EX),
-        .pc_lsu_in          (PC_issue_LSU_EX),
-
-        .tunnel_out         (tunnel_out_MEM),
-        .rd_result_fu0_out  (destReg_data_ALU0_MEM),
-        .pc_fu0_out         (PC_issue0_MEM),
-        .rd_result_fu1_out  (destReg_data_ALU1_MEM),
-        .pc_fu1_out         (PC_issue1_MEM),
-        .rd_result_fu2_out  (destReg_data_ALU2_MEM),
-        .pc_fu2_out         (PC_issue2_MEM),
-        .result_lsu_out     (compute_address_LSU_MEM),
-        .pc_lsu_out         (PC_issue_LSU_MEM)
-    );
-
-    // make some changes to LSQ to support SB in addition to SW ...
-    LSQ LSQ_mod(
-        .clk(clk), 
-        .rstn(rstn),
-        
-        // from dispatch ...
-        .pcDis(PC_EX),
-        .memRead(memRead_EX),
-        .memWrite(memRead_EX),
-        .storeSize(storeSize_EX),
-        .swData(srcReg2_ARF_data_EX),
-        
-        // from lsu ... 
-        .pcLsu(PC_issue_LSU_MEM),
-        .addressLsu(compute_address_LSU_MEM),
-        
-        // from retirement ...
-        .pcRet1(retire_pc1),
-        .pcRet2(retire_pc2),
+        // ready flags from functional units ...
+        .FU_ready_ALU0_in(ready_ALU0_EX),
+        .FU_ready_ALU1_in(ready_ALU1_EX),
+        .FU_ready_ALU2_in(ready_ALU2_EX),
 
         // outputs ...
-        .pcOut(PC_LSQ_MEM),
-        .addressOut(address_LSQ_MEM),
-        .lwData(load_data_LSQ_MEM),
-        .fromLSQ(fromLSQ_MEM),
-        .loadStore(loadStore_LSQ_MEM),
-        .storeSizeOut(storeSize_LSQ_MEM),
-        .swDataOut(swData_LSQ_MEM),
-        .complete(complete_LSQ_MEM)
+        .stall(stall_UIQ_EX),
+
+        .PC_issue0(PC_issue0_EX),
+        .optype_issue0(optype_issue0_EX),
+        .aluNum_issue0(aluNum_issue0_EX),
+        .srcReg1_data_issue0(srcReg1_data_issue0_EX),
+        .srcReg2_data_issue0(srcReg2_data_issue0_EX),
+        .imm_issue0(imm_issue0_EX),
+        .destReg_issue0(destReg_issue0_EX),
+        .ROBNum_issue0(ROBNum_issue1_EX),
+
+        .PC_issue1(PC_issue1_EX),
+        .optype_issue1(optype_issue1_EX),
+        .aluNum_issue1(aluNum_issue1_EX),
+        .srcReg1_data_issue1(srcReg1_data_issue1_EX),
+        .srcReg2_data_issue1(srcReg2_data_issue1_EX),
+        .imm_issue1(imm_issue1_EX),
+        .destReg_issue1(destReg_issue1_EX),
+        .ROBNum_issue1(ROBNum_issue1_EX),
+
+        .PC_issue2(PC_issue2_EX),
+        .optype_issue2(optype_issue2_EX),
+        .aluNum_issue2(aluNum_issue2_EX),
+        .srcReg1_data_issue2(srcReg1_data_issue2_EX),
+        .srcReg2_data_issue2(srcReg2_data_issue2_EX),
+        .imm_issue2(imm_issue2_EX),
+        .destReg_issue2(destReg_issue2_EX),
+        .ROBNum_issue2(ROBNum_issue2_EX),
     );
 
-    //data memory may need some debugging and need to add cache ...
-    dataMemory dataMem_mod(
+    ALU ALU0 (
+        // inputs ...
         .clk(clk),
         .rstn(rstn),
-        
-        //inputs 
-        .PC_in(PC_LSQ_MEM),
-        .fromLSQ(fromLSQ_MEM),
-        .address(address_LSQ_MEM), 
-        .dataSw(swData_LSQ_MEM),
-        .memRead(~loadStore_LSQ_MEM),
-        .memWrite(loadStore_LSQ_MEM),
-        .storeSize(storeSize_LSQ_MEM),
-        .cacheMiss(1'b1),
+        .ALU_NO(2'd0),
+        .optype(optype_issue0_EX),
+        .alu_number(aluNum_issue0_EX),
+        .data_in_sr1(srcReg1_data_issue0_EX),
+        .data_in_sr2(srcReg2_data_issue0_EX),
+        .data_in_imm(imm_issue0_EX),
 
-        //outputs
-        .lwData(load_data_DataMem_MEM),
-        .PC_out(PC_DataMem_MEM)
+        // outputs ...
+        .data_out_dr(aluOutput_ALU0_EX),
+        .FU_ready(ready_ALU0_EX)
+    );
+    ALU ALU1 (
+        // inputs ...
+        .clk(clk),
+        .rstn(rstn),
+        .ALU_NO(2'd1),
+        .optype(optype_issue1_EX),
+        .alu_number(aluNum_issue1_EX),
+        .data_in_sr1(srcReg1_data_issue1_EX),
+        .data_in_sr2(srcReg2_data_issue1_EX),
+        .data_in_imm(imm_issue1_EX),
+
+        // outputs ...
+        .data_out_dr(aluOutput_ALU1_EX),
+        .FU_ready(ready_ALU1_EX)
+    );
+    ALU ALU2 (
+        // inputs ...
+        .clk(clk),
+        .rstn(rstn),
+        .ALU_NO(2'd2),
+        .optype(optype_issue2_EX),
+        .alu_number(aluNum_issue2_EX),
+        .data_in_sr1(srcReg1_data_issue2_EX),
+        .data_in_sr2(srcReg2_data_issue2_EX),
+        .data_in_imm(imm_issue2_EX),
+
+        // outputs ...
+        .data_out_dr(aluOutput_ALU2_EX),
+        .FU_ready(ready_ALU2_EX)
     );
 
-    //Complete
-
-    ///////////////////////////////////////////////////////////////////////
-    // pipeline register between MEM and COMPLETE stage
-    MEM_C_Reg MEM_C_Reg_inst (   //TODO:ADJUST VARIABLE NAMES
-        
-        .clk                (clk),
-        .rstn               (rstn),
-        .from_lsq           (load_data_LSQ_MEM),
-        .lwData_from_LSQ_in (load_data_LSQ_MEM),
-        .lwData_from_MEM_in (load_data_DataMem_MEM),
-        .pc_from_LSU_in     (PC_LSQ_MEM),
-        .pc_from_MEM_in     (PC_DataMem_MEM),
-
-        .lwData_out         (load_data_DataMem_MEM),
-        .pc_out             (pc_ls_comp)
-
-    );
-
-
-    //complete 
-    always @(*) begin
-        is_store_r = 1'b0;
-        if(tunnel_MEM[0]) begin
-            dr_data_0_reg= destReg_data_ALU0_MEM;
-            complete_pc_0_reg = PC_issue0_MEM;
-        end
-        else begin
-            dr_data_0_reg= 32'd1;
-            complete_pc_0_reg= 32'd1;
-        end
-
-        if(tunnel_MEM[1]) begin
-            dr_data_1_reg= destReg_data_ALU1_MEM;
-            complete_pc_1_reg= PC_issue1_MEM;
-        end
-        else begin
-            dr_data_1_reg = 32'd1;
-            complete_pc_1_reg = 32'd1;
-        end
-        
-        if(tunnel_MEM[2]) begin
-            complete_pc_2_reg           = PC_issue2_MEM;
-            if (FU_write_flag_com && ~FU_read_flag_MEM_com) begin
-                is_store_r= 1'b1;
+    //MEM
+    
+    //COMPLETE 
+    /*
+        always @(*) begin
+            is_store_r = 1'b0;
+            if(tunnel_MEM[0]) begin
+                dr_data_0_reg= destReg_data_ALU0_MEM;
+                complete_pc_0_reg = PC_issue0_MEM;
             end
             else begin
-                dr_data_2_reg = destReg_data_ALU1_MEM;
+                dr_data_0_reg= 32'd1;
+                complete_pc_0_reg= 32'd1;
+            end
+
+            if(tunnel_MEM[1]) begin
+                dr_data_1_reg= destReg_data_ALU1_MEM;
+                complete_pc_1_reg= PC_issue1_MEM;
+            end
+            else begin
+                dr_data_1_reg = 32'd1;
+                complete_pc_1_reg = 32'd1;
+            end
+            
+            if(tunnel_MEM[2]) begin
+                complete_pc_2_reg           = PC_issue2_MEM;
+                if (FU_write_flag_com && ~FU_read_flag_MEM_com) begin
+                    is_store_r= 1'b1;
+                end
+                else begin
+                    dr_data_2_reg = destReg_data_ALU1_MEM;
+                end
+            end
+            else begin
+                dr_data_2_reg    = 32'd1;
+                complete_pc_2_reg           = 32'd1;
+            end
+
+            if(fromLSQ_MEM) begin
+                dr_data_3_reg    = load_data_DataMem_MEM;
+                complete_pc_3_reg           = pc_ls_comp;
+            end
+            else begin
+                dr_data_3_reg    = 32'd1;
+                complete_pc_3_reg           = 32'd1;
             end
         end
-        else begin
-            dr_data_2_reg    = 32'd1;
-            complete_pc_2_reg           = 32'd1;
-        end
-    
-
-        if(fromLSQ_MEM) begin
-            dr_data_3_reg    = load_data_DataMem_MEM;
-            complete_pc_3_reg           = pc_ls_comp;
-        end
-        else begin
-            dr_data_3_reg    = 32'd1;
-            complete_pc_3_reg           = 32'd1;
-        end
-    end
-
-    assign dr_data_0 = dr_data_0_reg;
-    assign complete_pc_0        = complete_pc_0_reg;
-    assign dr_data_1 = dr_data_1_reg;
-    assign complete_pc_1        = complete_pc_1_reg;
-    assign dr_data_2 = dr_data_2_reg;
-    assign complete_pc_2        = complete_pc_2_reg;
-    assign dr_data_3 = dr_data_3_reg;
-    assign complete_pc_3        = complete_pc_3_reg; 
-    assign is_store        = is_store_r;   
+        assign dr_data_0 = dr_data_0_reg;
+        assign complete_pc_0        = complete_pc_0_reg;
+        assign dr_data_1 = dr_data_1_reg;
+        assign complete_pc_1        = complete_pc_1_reg;
+        assign dr_data_2 = dr_data_2_reg;
+        assign complete_pc_2        = complete_pc_2_reg;
+        assign dr_data_3 = dr_data_3_reg;
+        assign complete_pc_3        = complete_pc_3_reg; 
+        assign is_store        = is_store_r;  
+    */ 
 
 endmodule

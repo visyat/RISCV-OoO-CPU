@@ -1,29 +1,22 @@
-//sr1 and sr2 take a place in rat
-//dr takes a space from the free pool but also the rat
-//Engineer: Paige Larson
 
 module rename(
-    input clk,
+    input rstn,
+
     //inputs: sr1, sr2, dr
-    input [4 : 0]   sr1, 
-    input [4 : 0]   sr2,
-    input [4 : 0]   dr,
-    input           rstn,
-    input [6 : 0]   opcode,
-    input           hasImm,
-    input [31 : 0]  imm,
-    
-    input [63:0] ROB_retire,
-    
+    input [4 : 0]           sr1, 
+    input [4 : 0]           sr2,
+    input [4 : 0]           dr,
+    input [6 : 0]           opcode,
+    input                   hasImm,
+    input [31 : 0]          imm,
+    input [63:0]            ROB_retire,
     
     //Output: Source registers, destination registers
-    //output reg [31 : 0]     imm,
     output reg [15 : 0]     ROB_num,
     output reg [5 : 0]      sr1_p,
     output reg [5 : 0]      sr2_p,
     output reg [5 : 0]      dr_p,
     output reg [5 : 0]      old_dr,
-    output reg [31:0] data,
     output reg              stall  
 );
 
@@ -88,10 +81,7 @@ module rename(
             end
 
            
-        end
-        else 
-            begin
-            data=0;
+        end else begin
             sr1_p = RAT[sr1][1]; //assign to whatever p-reg is in RAT
             
             if(hasImm == 1'b0)begin          

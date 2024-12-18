@@ -1,20 +1,16 @@
+
 `timescale 1ns / 1ps
-
-// Engineer: Paige Larson
-// 
-// Create Date: 11/25/2024 01:54:11 AM
-
 
 module reorder_buffer(
     input               clk, 
     input               rstn,
     input [31:0]        instr_PC_0, 
     
-    input [5:0]         old_dest_reg_0,       //from rename      
-    input [5:0]         dest_reg_0,           //from rename
-    input [31:0]        dest_data_0,          //from rename    
-    input               store_add_0,          //from rename
-    input               store_data_0,         //from rename             
+    input [5:0]         old_dest_reg_0,
+    input [5:0]         dest_reg_0,
+    input [31:0]        dest_data_0,
+    input               store_add_0,
+    input               store_data_0,   
 
     input [31:0]        complete_pc_0,
     input [31:0]        complete_pc_1,
@@ -39,11 +35,11 @@ module reorder_buffer(
     output reg [5:0]    old_reg_2,
 
     output reg          sr1_ready_flag,       
-    output reg [5:0]    sr1_reg_ready,   // ROB update and broadcast to UIQ
+    // output reg [5:0]    sr1_reg_ready,
     output reg [5:0]    sr2_reg_ready,
-    output reg          sr2_ready_flag,
-    output reg [31:0]   sr1_value_ready,
-    output reg [31:0]   sr2_value_ready,
+    // output reg          sr2_ready_flag,
+    // output reg [31:0]   sr1_value_ready,
+    // output reg [31:0]   sr2_value_ready,
 
     output reg [31:0]   pc_retire_1,
     output reg [31:0]   pc_retire_2
@@ -122,24 +118,24 @@ module reorder_buffer(
 
             //adding something new to rob
             //if (is_dispatching) begin
-                if(ROB[place_pointer][0] == 1'b0) begin
-                    ROB[place_pointer][0] <= 1'b1;           //valid
-                    ROB[place_pointer][1] <= dest_reg_0;     //dr
-                    ROB[place_pointer][2] <= old_dest_reg_0; //old dr
-                    ROB[place_pointer][3] <= dest_data_0;    //data at dr
-                    ROB[place_pointer][4] <= store_add_0;    //store address
-                    ROB[place_pointer][5] <= store_data_0;   //store data
-                    ROB[place_pointer][6] <= instr_PC_0;     //instr pc
-                    ROB[place_pointer][7] <= 1'b0;           //complete
-                            
-                    place_pointer = place_pointer + 1;
-                    if (place_pointer > 63) begin
-                        place_pointer = 0;
-                    end  
-                end
-                else begin
-                    stall <= 1'b1;
-                end
+            if(ROB[place_pointer][0] == 1'b0) begin
+                ROB[place_pointer][0] <= 1'b1;           //valid
+                ROB[place_pointer][1] <= dest_reg_0;     //dr
+                ROB[place_pointer][2] <= old_dest_reg_0; //old dr
+                ROB[place_pointer][3] <= dest_data_0;    //data at dr
+                ROB[place_pointer][4] <= store_add_0;    //store address
+                ROB[place_pointer][5] <= store_data_0;   //store data
+                ROB[place_pointer][6] <= instr_PC_0;     //instr pc
+                ROB[place_pointer][7] <= 1'b0;           //complete
+                        
+                place_pointer = place_pointer + 1;
+                if (place_pointer > 63) begin
+                    place_pointer = 0;
+                end  
+            end
+            else begin
+                stall <= 1'b1;
+            end
             //end            
         end
     end
@@ -238,6 +234,7 @@ module reorder_buffer(
         
     end
 
+    // this needs to be redone ...
     always @(UIQ_input_invalid) begin
         if(UIQ_input_invalid != 6'b0) begin
             ready_reg[UIQ_input_invalid] = 1'b0;
