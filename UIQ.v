@@ -172,7 +172,7 @@ module Unified_Issue_Queue (
                 ROB[i] = 'b0;
             end
         end else begin
-            if (~stall_in && optype != 0) begin 
+            if (~stall_in && op_type != 0) begin 
             // check first that a valid instruction is being entered and that processor is not stalled ...
                 for (i=0; i<64; i=i+1) begin
                     if (~VALID[i]) begin // find the first invalid (vacant) entry ...
@@ -200,12 +200,12 @@ module Unified_Issue_Queue (
 
                         // handling special cases: 
                         if (op_type == LUI) begin
-                            src1_ready[i]   = 1'b1;
-                            src1_data[i]    = 32'b0;
+                            SRC1READY[i]   = 1'b1;
+                            SRC1DATA[i]    = 32'b0;
                         end
                         if ((op_type == LUI) || (op_type == ORI) || (op_type == SRAI) || (op_type == ADDI)|| (op_type == LW) || (op_type == LB)) begin
-                            src2_ready[i]   = 1'b1;
-                            src2_data[i]    = 32'b0;
+                            SRC2READY[i]   = 1'b1;
+                            SRC2DATA[i]    = 32'b0;
                         end
                         
                         // assign functional units and ROB entries round robin ...
