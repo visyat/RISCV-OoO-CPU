@@ -23,35 +23,40 @@ module Cache(
     // output storeSize_out, 
     // output fromLSQ_out, 
 );
+    reg [127:0] VALID_WAY_1;
     reg [18:0] TAG_WAY_1 [0:127];
     reg [511:0] DATA_WAY_1 [0:127];
 
+    reg [127:0] VALID_WAY_2;
     reg [18:0] TAG_WAY_2 [0:127];
     reg [511:0] DATA_WAY_2 [0:127];
 
+    reg [127:0] VALID_WAY_3;
     reg [18:0] TAG_WAY_3 [0:127];
     reg [511:0] DATA_WAY_3 [0:127];
 
+    reg [127:0] VALID_WAY_4;
     reg [18:0] TAG_WAY_4 [0:127];
     reg [511:0] DATA_WAY_4 [0:127];
 
     integer i;
 
-    reg [511:0] search_1;
-    reg [511:0] search_2;
-    reg [511:0] search_3;
-    reg [511:0] search_4;
+    reg [31:0] search_1;
+    reg [31:0] search_2;
+    reg [31:0] search_3;
+    reg [31:0] search_4;
     
-    always @(posedge clk) begin
+    always @(posedge clk or negedge rstn) begin
         // search way 1 ...
         if (~rstn) begin
+            VALID_WAY_1 = 'b0;
             for (i=0; i<128; i=i+1) begin
                 TAG_WAY_1[i] = 'b0;
                 DATA_WAY_1[i] = 'b0;
             end 
             search_1 = 'b1;
         end else begin
-            if (TAG_WAY_1[address_in[12:6]] == address_in[31:13]) begin
+            if (TAG_WAY_1[address_in[12:6]] == address_in[31:13] && VALID_WAY_1[address[12:6]]) begin
                 if (memRead) begin
                     search_1 = {24'b0, DATA_WAY_1[address_in[12:6]][7:0]};
                 end
@@ -69,16 +74,17 @@ module Cache(
             end
         end
     end
-    always @(posedge clk) begin
+    always @(posedge clk or negedge rstn) begin
         // search way 2 ...
         if (~rstn) begin
+            VALID_WAY_2 = 'b0;
             for (i=0; i<128; i=i+1) begin
                 TAG_WAY_2[i] = 'b0;
                 DATA_WAY_2[i] = 'b0;
             end 
             search_2 = 'b1;
         end else begin
-            if (TAG_WAY_2[address_in[12:6]] == address_in[31:13]) begin
+            if (TAG_WAY_2[address_in[12:6]] == address_in[31:13] && VALID_WAY_2[address[12:6]]) begin
                 if (memRead) begin
                     search_2 = {24'b0, DATA_WAY_2[address_in[12:6]][7:0]};
                 end
@@ -96,16 +102,17 @@ module Cache(
             end
         end
     end
-    always @(posedge clk) begin
+    always @(posedge clk or negedge rstn) begin
         // search way 3 ...
         if (~rstn) begin
+            VALID_WAY_3 = 'b0;
             for (i=0; i<128; i=i+1) begin
                 TAG_WAY_3[i] = 'b0;
                 DATA_WAY_3[i] = 'b0;
             end 
             search_3 = 'b1;
         end else begin
-            if (TAG_WAY_3[address_in[12:6]] == address_in[31:13]) begin
+            if (TAG_WAY_3[address_in[12:6]] == address_in[31:13] && VALID_WAY_3[address[12:6]]) begin
                 if (memRead) begin
                     search_3 = {24'b0, DATA_WAY_3[address_in[12:6]][7:0]};
                 end
@@ -123,16 +130,17 @@ module Cache(
             end
         end
     end
-    always @(posedge clk) begin
+    always @(posedge clk or negedge rstn) begin
         // search way 4 ...
         if (~rstn) begin
+            VALID_WAY_4 = 'b0;
             for (i=0; i<128; i=i+1) begin
                 TAG_WAY_4[i] = 'b0;
                 DATA_WAY_4[i] = 'b0;
             end 
             search_4 = 'b1;
         end else begin
-            if (TAG_WAY_4[address_in[12:6]] == address_in[31:13]) begin
+            if (TAG_WAY_4[address_in[12:6]] == address_in[31:13] && VALID_WAY_4[address[12:6]]) begin
                 if (memRead) begin
                     search_4 = {24'b0, DATA_WAY_4[address_in[12:6]][7:0]};
                 end
