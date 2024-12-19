@@ -49,7 +49,7 @@ module Cache(
                 TAG_WAY_1[i] = 'b0;
                 DATA_WAY_1[i] = 'b0;
             end 
-            search_1 = 'b0;
+            search_1 = 'b1;
         end else begin
             if (TAG_WAY_1[address_in[12:6]] == address_in[31:13]) begin
                 if (memRead) begin
@@ -62,10 +62,10 @@ module Cache(
                         DATA_WAY_1[address_in[12:6]][15:8] = data_sw[15:8];
                         DATA_WAY_1[address_in[12:6]][7:0] = data_sw[7:0];
                     end
-                    // search_1 = 'b1;
+                    search_1 = 'b1;
                 end
             end else begin
-                search_1 = 'b0;
+                search_1 = 'b1;
             end
         end
     end
@@ -76,7 +76,7 @@ module Cache(
                 TAG_WAY_2[i] = 'b0;
                 DATA_WAY_2[i] = 'b0;
             end 
-            search_2 = 'b0;
+            search_2 = 'b1;
         end else begin
             if (TAG_WAY_2[address_in[12:6]] == address_in[31:13]) begin
                 if (memRead) begin
@@ -89,10 +89,10 @@ module Cache(
                         DATA_WAY_2[address_in[12:6]][15:8] = data_sw[15:8];
                         DATA_WAY_2[address_in[12:6]][7:0] = data_sw[7:0];
                     end
-                    // search_2 = 'b1;
+                    search_2 = 'b1;
                 end
             end else begin
-                search_2 = 'b0;
+                search_2 = 'b1;
             end
         end
     end
@@ -103,7 +103,7 @@ module Cache(
                 TAG_WAY_3[i] = 'b0;
                 DATA_WAY_3[i] = 'b0;
             end 
-            search_3 = 'b0;
+            search_3 = 'b1;
         end else begin
             if (TAG_WAY_3[address_in[12:6]] == address_in[31:13]) begin
                 if (memRead) begin
@@ -116,7 +116,7 @@ module Cache(
                         DATA_WAY_3[address_in[12:6]][15:8] = data_sw[15:8];
                         DATA_WAY_3[address_in[12:6]][7:0] = data_sw[7:0];
                     end
-                    // search_3 = 'b1;
+                    search_3 = 'b1;
                 end
             end else begin
                 search_3 = 'b0;
@@ -130,7 +130,7 @@ module Cache(
                 TAG_WAY_4[i] = 'b0;
                 DATA_WAY_4[i] = 'b0;
             end 
-            search_4 = 'b0;
+            search_4 = 'b1;
         end else begin
             if (TAG_WAY_4[address_in[12:6]] == address_in[31:13]) begin
                 if (memRead) begin
@@ -143,10 +143,10 @@ module Cache(
                         DATA_WAY_4[address_in[12:6]][15:8] = data_sw[15:8];
                         DATA_WAY_4[address_in[12:6]][7:0] = data_sw[7:0];
                     end
-                    // search_4 = 'b1;
+                    search_4 = 'b1;
                 end
             end else begin
-                search_4 = 'b0;
+                search_4 = 'b1;
             end
         end
     end
@@ -170,16 +170,16 @@ module Cache(
             // storeSize_out = storeSize;
             // fromLSQ_out = fromLSQ;
 
-            if (search_1 != 'b0) begin
+            if (search_1 != 'b1) begin
                 lw_data = search_1;
                 cacheMiss = 0;
-            end else if (search_2 != 'b0) begin
+            end else if (search_2 != 'b1) begin
                 lw_data = search_1;
                 cacheMiss = 0;
-            end else if (search_3 != 'b0) begin
+            end else if (search_3 != 'b1) begin
                 lw_data = search_1;
                 cacheMiss = 0;
-            end else if (search_4 != 'b0) begin
+            end else if (search_4 != 'b1) begin
                 lw_data = search_1;
                 cacheMiss = 0;
             end else begin
