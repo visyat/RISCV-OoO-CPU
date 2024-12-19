@@ -47,6 +47,7 @@ module Load_Store_Queue (
     reg [31:0] PC [15:0];
     reg [15:0] OP; // 0: load, 1: store
     reg [15:0] SIZE; // 0: word, 1: byte
+    reg [15:0] ADDR_LOADED;
     reg [31:0] ADDRESS [15:0];
     reg [31:0] LSQ_DATA [15:0];
     reg [15:0] ISSUED;
@@ -60,6 +61,7 @@ module Load_Store_Queue (
             OP = 16'b0;
             SIZE = 16'b0;
             ISSUED = 16'b0;
+            ADDR_LOADED = 16'b0;
             for (i=0; i<16; i=i+1) begin
                 PC[i] = 32'b0;
                 ADDRESS[i] = 32'b0;
@@ -88,19 +90,20 @@ module Load_Store_Queue (
         for (j=0; j<16; j=j+1) begin
             if (PC[j] == pcLsu) begin
                 ADDRESS[j] = addressLsu;
+                ADDR_LOADED[j] = 1;
                 index = j;
                 j = 17;
             end
         end
-        // execution logic ... if update address in LSQ entry; if load, scan LSQ to find matching addresses, provide data for latest store
-        if (~OP[index]) begin
-            for (j=15; j>=0; j=j-1) begin
-                if (ADDRESS[index] == ADDRESS[j] && j != index) begin
-                    LSQ_DATA[index] = LSQ_DATA[j]; // populate LW data with the most recent store to the same address
-                    j = -1;
-                end
-            end
-        end 
+        // // execution logic ... if update address in LSQ entry; if load, scan LSQ to find matching addresses, provide data for latest store
+        // if (~OP[index]) begin
+        //     for (j=15; j>=0; j=j-1) begin
+        //         if (ADDRESS[index] == ADDRESS[j] && j != index) begin
+        //             LSQ_DATA[index] = LSQ_DATA[j]; // populate LW data with the most recent store to the same address
+        //             j = -1;
+        //         end
+        //     end
+        // end 
     end
     always @(*) begin // handle broadcasted retirement instructions ...
         // retirement logic ... deallocate LSQ entry
@@ -111,6 +114,7 @@ module Load_Store_Queue (
                 OP[k] = 0;
                 SIZE[k] = 0;
                 ADDRESS[k] = 32'b0;
+                ADDR_LOADED[k] = 0;
                 LSQ_DATA[k] = 32'b0;
                 ISSUED[k] = 0;
                 k=16;
@@ -132,7 +136,7 @@ module Load_Store_Queue (
             fromLSQ = 'b0;
             // issue logic ... complete loads if data exists, else issue most recent available instruction 
             for (m=0; m<16; m=m+1) begin
-                if (VALID[m] && ~ISSUED[m] && ~OP[m] && LSQ_DATA[m] != 32'b0) begin
+                if (VALID[m] && ~ISSUED[m] && ~OP[m] && LSQ_DATA[m] != 32'b0 && ADDR_LOADED[m]) begin
                     pcOut = PC[m];
                     addressOut = ADDRESS[m];
                     lwData = LSQ_DATA[m];
@@ -146,7 +150,7 @@ module Load_Store_Queue (
             end
             if (~fromLSQ) begin
                 for (m=0; m<16; m=m+1) begin
-                    if (VALID[m] && ~ISSUED[m]) begin
+                    if (VALID[m] && ~ISSUED[m] && ADDR_LOADED[m]) begin
                         pcOut = PC[m];
                         addressOut = ADDRESS[m];
                         lwData = 'b0;
@@ -161,5 +165,5 @@ module Load_Store_Queue (
             end
         end
     end
-    
+
 endmodule
