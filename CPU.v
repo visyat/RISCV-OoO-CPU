@@ -654,17 +654,17 @@ module CPU(
         .PC_complete0_out(PC_complete0_C),
         .destReg_complete0_out(destReg_complete0_C),
         .destReg_data_complete0_out(destReg_data_complete0_C),
-        .ROBNum_complete0_in(ROBNum_complete0_C),
+        .ROBNum_complete0_out(ROBNum_complete0_C),
 
         .PC_complete1_out(PC_complete1_C),
         .destReg_complete1_out(destReg_complete1_C),
         .destReg_data_complete1_out(destReg_data_complete1_C),
-        .ROBNum_complete1_in(ROBNum_complete1_C),
+        .ROBNum_complete1_out(ROBNum_complete1_C),
 
         .PC_complete2_out(PC_complete2_C),
         .destReg_complete2_out(destReg_complete2_C),
         .destReg_data_complete2_out(destReg_data_complete2_C),
-        .ROBNum_complete2_in(ROBNum_complete2_C)
+        .ROBNum_complete2_out(ROBNum_complete2_C)
     );
 
     /*

@@ -6,18 +6,18 @@ module MEM_C_Reg (
     input rstn,
 
     input [31:0] PC_issue0_in,
-    input [31:0] aluOutput_issue0_in;
+    input [31:0] aluOutput_issue0_in,
     input [5:0] destReg_issue0_in,
     input [5:0] ROBNum_issue0_in,
 
     input [31:0] PC_issue1_in,
-    input [31:0] aluOutput_issue1_in;
+    input [31:0] aluOutput_issue1_in,
     input [5:0] destReg_issue1_in,
     input [5:0] ROBNum_issue1_in,
 
     input [31:0] PC_issue2_in,
     input [3:0] optype_issue2_in, 
-    input [31:0] aluOutput_issue2_in;
+    input [31:0] aluOutput_issue2_in,
     input [5:0] destReg_issue2_in,
     input [5:0] ROBNum_issue2_in,    
 

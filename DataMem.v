@@ -25,7 +25,7 @@ module dataMemory(
     reg [7:0] DATAMEM [0:1023];
     integer i;
 
-    always @(posedge clk) begin
+    always @(posedge clk or negedge rstn) begin
         if (~rstn) begin
             for (i = 0; i < 1024; i=i+1) begin
                 DATAMEM[i] = 8'b0;
