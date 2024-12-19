@@ -59,7 +59,7 @@ module Cache(
                     if (storeSize) begin
                         DATA_WAY_1[address_in[12:6]][7:0] = data_sw;
                     end else begin
-                        DATA_WAY_1[address_in[12:6]][(address_in[5:0]+1)*8+7:(address_in[5:0]+1)*8] = data_sw[15:8];
+                        DATA_WAY_1[address_in[12:6]][15:8] = data_sw[15:8];
                         DATA_WAY_1[address_in[12:6]][7:0] = data_sw[7:0];
                     end
                     // search_1 = 'b1;
@@ -86,7 +86,7 @@ module Cache(
                     if (storeSize) begin
                         DATA_WAY_2[address_in[12:6]][7:0] = data_sw;
                     end else begin
-                        DATA_WAY_2[address_in[12:6]][(address_in[5:0]+1)*8+7:(address_in[5:0]+1)*8] = data_sw[15:8];
+                        DATA_WAY_2[address_in[12:6]][15:8] = data_sw[15:8];
                         DATA_WAY_2[address_in[12:6]][7:0] = data_sw[7:0];
                     end
                     // search_2 = 'b1;
@@ -113,7 +113,7 @@ module Cache(
                     if (storeSize) begin
                         DATA_WAY_3[address_in[12:6]][7:0] = data_sw;
                     end else begin
-                        DATA_WAY_3[address_in[12:6]][(address_in[5:0]+1)*8+7:(address_in[5:0]+1)*8] = data_sw[15:8];
+                        DATA_WAY_3[address_in[12:6]][15:8] = data_sw[15:8];
                         DATA_WAY_3[address_in[12:6]][7:0] = data_sw[7:0];
                     end
                     // search_3 = 'b1;
@@ -140,7 +140,7 @@ module Cache(
                     if (storeSize) begin
                         DATA_WAY_4[address_in[12:6]][7:0] = data_sw;
                     end else begin
-                        DATA_WAY_4[address_in[12:6]][(address_in[5:0]+1)*8+7:(address_in[5:0]+1)*8] = data_sw[15:8];
+                        DATA_WAY_4[address_in[12:6]][15:8] = data_sw[15:8];
                         DATA_WAY_4[address_in[12:6]][7:0] = data_sw[7:0];
                     end
                     // search_4 = 'b1;
