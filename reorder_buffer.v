@@ -16,9 +16,9 @@ module reorder_buffer (
     input [5:0] srcReg2_in, 
 
     // outputs ...
-    output reg [5:0] ROBNum_out;
-    output reg srcReg1_ready;
-    output reg srcReg2_ready;
+    output reg [5:0] ROBNum_out,
+    output reg srcReg1_ready,
+    output reg srcReg2_ready
 );
 
     reg [63:0]  VALID;
@@ -38,9 +38,9 @@ module reorder_buffer (
             COMPLETE = 'b0;
             PREG_READY = 'b1;
             for (i=0; i<64; i=i+1) begin
-                DESTREG = 'b0;
-                OLD_DESTREG = 'b0;
-                PC = 'b0;
+                DESTREG[i] = 'b0;
+                OLD_DESTREG[i] = 'b0;
+                PC[i] = 'b0;
             end
             ROBNum_out = 'b0;
         end else begin
@@ -58,7 +58,7 @@ module reorder_buffer (
             end
         end
     end
-    always @(posedge clk or negedge rsn) begin
+    always @(posedge clk or negedge rstn) begin
         if (~rstn) begin
             srcReg1_ready = 0;
             srcReg2_ready = 0;

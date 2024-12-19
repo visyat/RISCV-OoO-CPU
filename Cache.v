@@ -14,7 +14,7 @@ module Cache(
     input fromLSQ,
 
     output reg [31:0] lw_data,
-    output cacheMiss
+    output reg cacheMiss
 
     // output reg [31:0] PC_out, 
     // output reg [31:0] address_out, 
@@ -41,7 +41,7 @@ module Cache(
     reg [511:0] search_2;
     reg [511:0] search_3;
     reg [511:0] search_4;
-
+    
     always @(posedge clk) begin
         // search way 1 ...
         if (~rstn) begin
