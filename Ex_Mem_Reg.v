@@ -59,11 +59,7 @@ module EX_MEM_Reg (
             aluOutput_issue2_out = 'b0;
             destReg_issue2_out = 'b0;
             ROBNum_issue2_out = 'b0;
-
-            PC_issue_LSQ_out = 'b0;
-            address_LSQ_out = 'b0;
-            destReg_lw_LSQ_out = 'b0;
-            ROBNum_issue_LSQ_out = 'b0;
+            
         end else begin
             PC_issue0_out = PC_issue0_in;
             aluOutput_issue0_out = aluOutput_issue0_in;

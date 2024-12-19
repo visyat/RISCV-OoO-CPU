@@ -372,7 +372,7 @@ module CPU(
         // ready flags from ROB ...
         .srcReg1_ready_ROB_in(srcReg1_ready_ROB_EX),
         .srcReg2_ready_ROB_in(srcReg2_ready_ROB_EX),
-        .ROBNUM_in(ROBNum_EX),
+        .ROBNum_in(ROBNum_EX),
 
         // ready flags from functional units ...
         .FU_ready_ALU0_in(ready_ALU0_EX),
