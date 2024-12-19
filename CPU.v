@@ -109,12 +109,21 @@ module CPU(
     // ALU ...
     wire [31:0] aluOutput_ALU0_EX;
     wire ready_ALU0_EX;
+    wire [31:0] PC_issue0_ALU_EX;
+    wire [5:0] destReg_issue0_ALU_EX;
+    wire [5:0] ROBNum_issue0_ALU_EX;
     
     wire [31:0] aluOutput_ALU1_EX;
     wire ready_ALU1_EX;
+    wire [31:0] PC_issue1_ALU_EX;
+    wire [5:0] destReg_issue1_ALU_EX;
+    wire [5:0] ROBNum_issue1_ALU_EX;
 
     wire [31:0] aluOutput_ALU2_EX;
     wire ready_ALU2_EX;
+    wire [31:0] PC_issue2_ALU_EX;
+    wire [5:0] destReg_issue2_ALU_EX;
+    wire [5:0] ROBNum_issue2_ALU_EX;
 
     // MEM stage signals 
     // Pipeline ...
@@ -415,6 +424,9 @@ module CPU(
         .clk(clk),
         .rstn(rstn),
         .ALU_NO(2'd0),
+        .PC_in(PC_issue0_EX),
+        .destReg_in(destReg_issue0_EX),
+        .ROBNum_in(ROBNum_issue0_EX),
         .optype(optype_issue0_EX),
         .alu_number(aluNum_issue0_EX),
         .data_in_sr1(srcReg1_data_issue0_EX),
@@ -423,6 +435,9 @@ module CPU(
 
         // outputs ...
         .data_out_dr(aluOutput_ALU0_EX),
+        .PC_out(PC_issue0_ALU_EX),
+        .destReg_out(destReg_issue0_ALU_EX),
+        .ROBNum_out(ROBNum_issue0_ALU_EX),
         .FU_ready(ready_ALU0_EX)
     );
     ALU ALU1 (
@@ -430,6 +445,9 @@ module CPU(
         .clk(clk),
         .rstn(rstn),
         .ALU_NO(2'd1),
+        .PC_in(PC_issue1_EX),
+        .destReg_in(destReg_issue1_EX),
+        .ROBNum_in(ROBNum_issue1_EX),
         .optype(optype_issue1_EX),
         .alu_number(aluNum_issue1_EX),
         .data_in_sr1(srcReg1_data_issue1_EX),
@@ -438,6 +456,9 @@ module CPU(
 
         // outputs ...
         .data_out_dr(aluOutput_ALU1_EX),
+        .PC_out(PC_issue1_ALU_EX),
+        .destReg_out(destReg_issue1_ALU_EX),
+        .ROBNum_out(ROBNum_issue1_ALU_EX),
         .FU_ready(ready_ALU1_EX)
     );
     ALU ALU2 (
@@ -445,6 +466,9 @@ module CPU(
         .clk(clk),
         .rstn(rstn),
         .ALU_NO(2'd2),
+        .PC_in(PC_issue2_EX),
+        .destReg_in(destReg_issue2_EX),
+        .ROBNum_in(ROBNum_issue2_EX),
         .optype(optype_issue2_EX),
         .alu_number(aluNum_issue2_EX),
         .data_in_sr1(srcReg1_data_issue2_EX),
@@ -453,6 +477,9 @@ module CPU(
 
         // outputs ...
         .data_out_dr(aluOutput_ALU2_EX),
+        .PC_out(PC_issue2_ALU_EX),
+        .destReg_out(destReg_issue2_ALU_EX),
+        .ROBNum_out(ROBNum_issue2_ALU_EX),
         .FU_ready(ready_ALU2_EX)
     );
 
@@ -461,20 +488,20 @@ module CPU(
         // inputs ...
         .clk(clk),
         .rstn(rstn),
-        .PC_issue0_in(PC_issue0_EX),
+        .PC_issue0_in(PC_issue0_ALU_EX),
         .aluOutput_issue0_in(aluOutput_ALU0_EX),
-        .destReg_issue0_in(destReg_issue0_EX),
-        .ROBNum_issue0_in(ROBNum_issue0_EX),
+        .destReg_issue0_in(destReg_issue0_ALU_EX),
+        .ROBNum_issue0_in(ROBNum_issue0_ALU_EX),
 
-        .PC_issue1_in(PC_issue1_EX),
+        .PC_issue1_in(PC_issue1_ALU_EX),
         .aluOutput_issue1_in(aluOutput_ALU1_EX),
-        .destReg_issue1_in(destReg_issue1_EX),
-        .ROBNum_issue1_in(ROBNum_issue1_EX),
+        .destReg_issue1_in(destReg_issue1_ALU_EX),
+        .ROBNum_issue1_in(ROBNum_issue1_ALU_EX),
 
-        .PC_issue2_in(PC_issue2_EX),
+        .PC_issue2_in(PC_issue2_ALU_EX),
         .aluOutput_issue2_in(aluOutput_ALU2_EX),
-        .destReg_issue2_in(destReg_issue2_EX),
-        .ROBNum_issue2_in(ROBNum_issue2_EX),
+        .destReg_issue2_in(destReg_issue2_ALU_EX),
+        .ROBNum_issue2_in(ROBNum_issue2_ALU_EX),
         
         // outputs ... 
         .PC_issue0_out(PC_issue0_MEM),
