@@ -53,7 +53,7 @@ module Load_Store_Queue (
 
     integer i,j;
     
-    always @(posedge clk) begin
+    always @(posedge clk or negedge rstn) begin
         if (~rstn) begin // on reset, set all LSQ entries to 0 ...
             VALID = 16'b0;
             OP = 16'b0;
