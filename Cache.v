@@ -177,24 +177,29 @@ module Cache(
             // memRead_out = memRead;
             // storeSize_out = storeSize;
             // fromLSQ_out = fromLSQ;
-
-            if (search_1 != 'b1) begin
-                lw_data = search_1;
-                cacheMiss = 0;
-            end else if (search_2 != 'b1) begin
-                lw_data = search_1;
-                cacheMiss = 0;
-            end else if (search_3 != 'b1) begin
-                lw_data = search_1;
-                cacheMiss = 0;
-            end else if (search_4 != 'b1) begin
-                lw_data = search_1;
-                cacheMiss = 0;
-            end else begin
-                lw_data = 'b0;
+            if (memRead) begin
+                if (search_1 != 'b1) begin
+                    lw_data = search_1;
+                    cacheMiss = 0;
+                end else if (search_2 != 'b1) begin
+                    lw_data = search_2;
+                    cacheMiss = 0;
+                end else if (search_3 != 'b1) begin
+                    lw_data = search_3;
+                    cacheMiss = 0;
+                end else if (search_4 != 'b1) begin
+                    lw_data = search_4;
+                    cacheMiss = 0;
+                end else begin
+                    lw_data = 'b0;
+                    cacheMiss = 1;
+                end
+            end
+            
+            if (memWrite) begin
+                lw_data = 'b1;
                 cacheMiss = 1;
             end
-
             if (fromLSQ) begin
                 lw_data = 'b0;
                 cacheMiss = 0;
