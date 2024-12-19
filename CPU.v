@@ -179,7 +179,7 @@ module CPU(
 
     always @(posedge clk or negedge rstn) begin
         if(~rstn) begin
-            PC_IF = 32'b0;
+            PC_IF = 32'hFFFFFFFC;
         end
         else begin
             PC_IF = PC_IF+ 4;
@@ -389,7 +389,7 @@ module CPU(
         .srcReg2_data_issue0(srcReg2_data_issue0_EX),
         .imm_issue0(imm_issue0_EX),
         .destReg_issue0(destReg_issue0_EX),
-        .ROBNum_issue0(ROBNum_issue1_EX),
+        .ROBNum_issue0(ROBNum_issue0_EX),
 
         .PC_issue1(PC_issue1_EX),
         .optype_issue1(optype_issue1_EX),

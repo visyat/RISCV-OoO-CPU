@@ -35,7 +35,7 @@ module ALU (
             // FU_occ = 1'b0;
         end 
         else begin
-            if (alu_number[ALU_NO] == 1) begin
+            if (alu_number == ALU_NO) begin
                 // dr_out = dr_in;
                 FU_ready = 1'b0;
                 // sr2_data_out_sw = data_in_sr2;
