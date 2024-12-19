@@ -278,7 +278,7 @@ module CPU(
         .srcReg2_out(srcReg2_EX),
         .destReg_out(destReg_EX),
         .imm_out(imm_EX),
-        .lwSw_out(lsSw_EX),
+        .lwSw_out(lwSw_EX),
         .regWrite_out(regWrite_EX),
         .memRead_out(memRead_EX),
         .memWrite_out(memWrite_EX),
@@ -370,8 +370,8 @@ module CPU(
         .srcReg2_data_ARF_in(srcReg2_data_ARF_EX),
 
         // ready flags from ROB ...
-        .srcReg1_ready_ROB_in(srcReg1_ready_ROB_EX),
-        .srcReg2_ready_ROB_in(srcReg2_ready_ROB_EX),
+        .srcReg1_ready_ROB_in (1'b1), // (srcReg1_ready_ROB_EX),
+        .srcReg2_ready_ROB_in (1'b1), // (srcReg2_ready_ROB_EX),
         .ROBNum_in(ROBNum_EX),
 
         // ready flags from functional units ...
