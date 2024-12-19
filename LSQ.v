@@ -87,23 +87,25 @@ module Load_Store_Queue (
     end
 
     always @(*) begin // handle broadcasted addresses ...
-        for (j=0; j<16; j=j+1) begin
-            if (PC[j] == pcLsu) begin
-                ADDRESS[j] = addressLsu;
-                ADDR_LOADED[j] = 1;
-                index = j;
-                j = 17;
+        if (pcLsu && addressLsu) begin
+            for (j=0; j<16; j=j+1) begin
+                if (PC[j] == pcLsu) begin
+                    ADDRESS[j] = addressLsu;
+                    ADDR_LOADED[j] = 1;
+                    index = j;
+                    j = 17;
+                end
             end
+             // execution logic ... if update address in LSQ entry; if load, scan LSQ to find matching addresses, provide data for latest store
+             if (~OP[index]) begin
+                 for (j=15; j>=0; j=j-1) begin
+                     if (ADDRESS[index] == ADDRESS[j] && j != index) begin
+                         LSQ_DATA[index] = LSQ_DATA[j]; // populate LW data with the most recent store to the same address
+                         j = -1;
+                     end
+                 end
+             end 
         end
-        // // execution logic ... if update address in LSQ entry; if load, scan LSQ to find matching addresses, provide data for latest store
-        // if (~OP[index]) begin
-        //     for (j=15; j>=0; j=j-1) begin
-        //         if (ADDRESS[index] == ADDRESS[j] && j != index) begin
-        //             LSQ_DATA[index] = LSQ_DATA[j]; // populate LW data with the most recent store to the same address
-        //             j = -1;
-        //         end
-        //     end
-        // end 
     end
     always @(*) begin // handle broadcasted retirement instructions ...
         // retirement logic ... deallocate LSQ entry
