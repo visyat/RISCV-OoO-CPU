@@ -2,47 +2,45 @@
 `timescale 1ns / 1ps
 
 module reorder_buffer(
-    input               clk, 
-    input               rstn,
-    input [31:0]        instr_PC_0, 
+    input clk, 
+    input rstn,
     
-    input [5:0]         old_dest_reg_0,
-    input [5:0]         dest_reg_0,
-    input [31:0]        dest_data_0,
-    input               store_add_0,
-    input               store_data_0,   
-
-    input [31:0]        complete_pc_0,
-    input [31:0]        complete_pc_1,
-    input [31:0]        complete_pc_2,
-    input [31:0]        complete_pc_3,
+    input src1,
+    input src2,
     
-    input [31:0]        new_dr_data_0,
-    input [31:0]        new_dr_data_1,
-    input [31:0]        new_dr_data_2,
-    input [31:0]        new_dr_data_3,
-    input               is_store,
-    input [5:0]         UIQ_input_invalid,
+    input dr,
+    input old_dr,
+    input dr_data,
+    input store_reg,
+    input store_data,
+    input instr_PC,
     
-    output reg [63:0]   ready_reg,
-    output reg [63:0]   retire_reg,
-    output reg          stall,
-    output reg [5:0]    reg_update_ARF_1,
-    output reg [5:0]    reg_update_ARF_2,
-    output reg [31:0]   value_update_ARF_1,
-    output reg [31:0]   value_update_ARF_2,
-    output reg [5:0]    old_reg_1,
-    output reg [5:0]    old_reg_2,
+    input store_instr,
+    
+    input [31:0] complete_pc_0,
+    input [31:0] complete_pc_1,
+    input [31:0] complete_pc_2,
+    input [31:0] complete_pc_3,
+    
+    input [31:0] new_dr_data_0,
+    input [31:0] new_dr_data_1,
+    input [31:0] new_dr_data_2,
+    input [31:0] new_dr_data_3,
+    
+    output reg [63:0] issue_ready,
+    output reg [63:0] retire,
+    output reg stall,
+    
+    output reg src1_ready,
+    output reg src2_ready,
+    output reg src1_reg_ready,
+    output reg src2_reg_ready,
+    
 
-    output reg          sr1_ready_flag,       
-    output reg [5:0]    sr1_reg_ready,   // ROB update and broadcast to UIQ
-    output reg [5:0]    sr2_reg_ready,
-    output reg          sr2_ready_flag,
-    output reg [31:0]   sr1_value_ready,
-    output reg [31:0]   sr2_value_ready,
-
-    output reg [31:0]   pc_retire_1,
-    output reg [31:0]   pc_retire_2
+    output reg [5:0] ARF_reg_1,
+    output reg [5:0] ARF_data_1,
+    output reg [5:0] ARF_reg_2,
+    output reg [5:0] ARF_data_2
 );
 
     // 1. multiple entries per cycle
@@ -62,23 +60,46 @@ module reorder_buffer(
         
         //go through ROB, starting from top, if complete=1 and all prior lines are retired, set reg is ready to 1
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
     reg [31:0] ROB [63:0] [7:0];
     reg [31:0] new_dr_data [3:0];
     reg [31:0] complete_pc [3:0];
-    reg [6:0]  retire_pointer;
-    reg [6:0]  place_pointer;
-
-    // insert into ROB
+    
+    reg retire_head;
+    reg ROB_head;
+    
     integer i;
     integer j;
     integer k;
-    integer max_retire = 0;
-    integer m;
     
-    always @(posedge clk or negedge rstn) begin
-        //reset ROB
-        if (~rstn)begin
-            for (i = 0; i < 64; i = i + 1) begin
+    
+    
+    //THINGS TO DO
+    //1. ADD TO ROB: When something is renamed, take that info and put it into ROB
+        //If a store, ROB is valid, store reg, imm val, instr pc, and complete status
+        //otherwise, ROB is valid, dest reg, old dest reg, dest data, instr pc, and complete status
+    
+    
+    //2. COMPLETE: When a complete reg pc is received, check that pc against the rob and when found, set to complete
+    
+    //3. SET REG AS READY FOR ISSUE: if an instruction is marked as complete, set its ready flag to 1
+        //a reg is ready if it is either not in ROB or if it is, if its completed
+        //use ready reg to manage this, should be ready by default and set to not ready if in ROB and not complete 
+    
+    //4. RETIRE: If we have two instructions in order that are completed, we can free them from ROB and rename
+        //send values to arf to keep track?? CHECK ON THIS
+    
+    always @(*) begin
+        if(~rstn)begin
+            for(i=0; i<64; i=i+1) begin
                 ROB[i][0] = 1'b0;    // whether or not slot is taken
                 ROB[i][1] = 0;       // dest reg
                 ROB[i][2] = 0;       // old dest reg
@@ -88,150 +109,162 @@ module reorder_buffer(
                 ROB[i][6] = 0;       // instr pc
                 ROB[i][7] = 0;       // complete
                 
-                retire_reg[i] = 1'b0;    // retire buffer
-                ready_reg[i]  = 1'b1;     // register ready array
+                retire[i] = 1'b0;    // retire buffer
+                issue_ready[i]  = 1'b1;     // register ready array           
             end
             
-            retire_pointer      = 6'd0;
-            place_pointer       = 6'd0;
-
-            reg_update_ARF_1    = 6'b0;
-            reg_update_ARF_2    = 6'b0;
-            value_update_ARF_1  = 32'b0;
-            value_update_ARF_2  = 32'b0;
-            old_reg_1           = 6'b0;
-            old_reg_2           = 6'b0;
-
-            sr1_reg_ready            = 6'b0;
-            sr2_reg_ready            = 6'b0;
-            sr1_value_ready          = 32'b0;
-            sr2_value_ready          = 32'b0;
-
-            pc_retire_1         = 32'b0;
-            pc_retire_2         = 32'b0;
-        end            
+            retire_head = 6'd0;
+            ROB_head = 6'd0;
+            src1_ready = 1'b0;
+            src2_ready = 1'b0;
+        end
         else begin
-            stall = 1'b0;
-            for (i = 0; i < 64; i = i + 1) begin
-                retire_reg[i]=1'b0;      // initialize retire buffer every cycle
+            stall=1'b0;
+        end
+    end
+    
+    //ADD TO ROB    
+    always @(posedge clk) begin
+        if(ROB[ROB_head][0]==1'b0) begin
+            ROB[ROB_head][0] <= 1'b1; //valid
+            ROB[ROB_head][1] <= dr; //dr
+            ROB[ROB_head][2] <= old_dr; //old_dr
+            ROB[ROB_head][3] <= dr_data; //dr_data
+            ROB[ROB_head][4] <= store_reg; //store_reg
+            ROB[ROB_head][5] <= store_data; //store_data
+            ROB[ROB_head][6] <= instr_PC; //instr_PC
+            ROB[ROB_head][7] <= 1'b0; //complete
+            
+            issue_ready[dr] <= 1'b0;
+            
+            ROB_head= ROB_head+1;
+            if(ROB_head > 63) begin
+                stall=1'b0;
             end
+        end
+    end
+    
+    //COMPLETE AND SET READY FOR ISSUE
+    always @(*) begin
+        new_dr_data[0] <= new_dr_data_0;
+        new_dr_data[1] <= new_dr_data_1;
+        new_dr_data[2] <= new_dr_data_2;
+        new_dr_data[3] <= new_dr_data_3;
+        
+        complete_pc[0] <= complete_pc_0;
+        complete_pc[1] <= complete_pc_1;
+        complete_pc[2] <= complete_pc_2;
+        complete_pc[3] <= complete_pc_3; 
+        
+        //SET COMPLETE
+        for (j=0; j<64; j=j+1) begin
+            if(ROB[j][0] == 1'b1) begin
+                for(k=0; k<4; k=k+1) begin
+                    if( ROB[j][6] == complete_pc[k]) begin
+                        ROB[j][7] <=1'b1; //set complete
+                        ROB[j][3] <= new_dr_data[k]; //write data to rob
+                    end
+                end
+            end
+        end
+        
+        //SET SRC1 and SRC2 READY FOR ISSUE
+        if(~store_instr) begin
+            if(issue_ready[src1] == 1'b1) begin
+                src1_ready <= 1'b1;
+                src1_reg_ready <=src1;
+            end
+            if(issue_ready[src2] == 1'b1) begin
+                src2_ready <= 1'b1;
+                src2_reg_ready <=src2;
+            end
+        end
+        else begin
+            src2_ready <= 1'b1;
+            if(issue_ready[src1] == 1'b1) begin
+                src1_ready <= 1'b1;
+            end
+        end
+        
+    end
+    
+    //RETIRE
+    
+    always @(posedge clk) begin
+        ARF_reg_1 = 5'b0;
+        ARF_data_1 = 32'b0;
+        ARF_reg_2 = 5'b0;
+        ARF_data_2 = 32'b0; 
+        
+        //first retire if possible
+        if(ROB[retire_head][7] == 1'b1) begin
+            //output to ARF
+            if(~store_instr) begin
+                ARF_reg_1 = ROB[retire_head][1];
+                ARF_data_1 = ROB[retire_head][3];
+                
+                retire[ROB[retire_head][2]] <= 1'b0;
 
-            //adding something new to rob
-            //if (is_dispatching) begin
-            if(ROB[place_pointer][0] == 1'b0) begin
-                ROB[place_pointer][0] <= 1'b1;           //valid
-                ROB[place_pointer][1] <= dest_reg_0;     //dr
-                ROB[place_pointer][2] <= old_dest_reg_0; //old dr
-                ROB[place_pointer][3] <= dest_data_0;    //data at dr
-                ROB[place_pointer][4] <= store_add_0;    //store address
-                ROB[place_pointer][5] <= store_data_0;   //store data
-                ROB[place_pointer][6] <= instr_PC_0;     //instr pc
-                ROB[place_pointer][7] <= 1'b0;           //complete
-                        
-                place_pointer = place_pointer + 1;
-                if (place_pointer > 63) begin
-                    place_pointer = 0;
-                end  
             end
             else begin
-                stall <= 1'b1;
+                ARF_reg_1 = ROB[retire_head][4];
+                ARF_data_1 = ROB[retire_head][5];
+                
+                retire[ROB[retire_head][2]] <= 1'b0;
             end
-            //end            
-        end
-    end
-
-    // complete and retire
-    always @(*) begin
-        //set up complete and data arrays
-        new_dr_data[0] = new_dr_data_0;
-        new_dr_data[1] = new_dr_data_1;
-        new_dr_data[2] = new_dr_data_2;
-        new_dr_data[3] = new_dr_data_3;
-        
-        complete_pc[0] = complete_pc_0;
-        complete_pc[1] = complete_pc_1;
-        complete_pc[2] = complete_pc_2;
-        complete_pc[3] = complete_pc_3;
-
-        //complete and update data
-        for (m = 0; m < 64; m = m + 1) begin
-            if (ROB[m][0] == 1'b1) begin
-                for(k = 0; k < 4; k = k + 1)begin
-                    if ((ROB[m][6] == complete_pc[k]) && (ROB[m][0] == 1'b1))begin
-                        ROB[m][7]  <= 1'b1;             //set to complete
-                        ROB[m][3]  <= new_dr_data[k];   //update data
-                    end
+            
+            //retire ROB line
+            ROB[retire_head][0] = 1'b0;    // whether or not slot is taken
+            ROB[retire_head][1] = 0;       // dest reg
+            ROB[retire_head][2] = 0;       // old dest reg
+            ROB[retire_head][3] = 0;       // current dest reg data
+            ROB[retire_head][4] = 0;       // store address in sw
+            ROB[retire_head][5] = 0;       // store imm val
+            ROB[retire_head][6] = 0;       // instr pc
+            ROB[retire_head][7] = 0;       // complete
+            
+            retire_head =  retire_head+1;
+            if(retire_head > 63) begin
+                retire_head <= 1'b0;
+            end
+            
+              
+            //second retire if possible
+            if(ROB[retire_head][7] == 1'b1) begin
+                //output to ARF
+                if(~store_instr) begin
+                    ARF_reg_2 = ROB[retire_head][1];
+                    ARF_data_2 = ROB[retire_head][3];
+                    
+                    //TODO: add in freeing old_dr?? or current dr??
+                end
+                else begin
+                    ARF_reg_2 = ROB[retire_head][4];
+                    ARF_data_2 = ROB[retire_head][5];
+                    
+                    //TODO: add in freeing old_dr?? or current dr??
+                end
+                
+                //retire ROB line
+                ROB[retire_head][0] = 1'b0;    // whether or not slot is taken
+                ROB[retire_head][1] = 0;       // dest reg
+                ROB[retire_head][2] = 0;       // old dest reg
+                ROB[retire_head][3] = 0;       // current dest reg data
+                ROB[retire_head][4] = 0;       // store address in sw
+                ROB[retire_head][5] = 0;       // store imm val
+                ROB[retire_head][6] = 0;       // instr pc
+                ROB[retire_head][7] = 0;       // complete
+                
+                retire_head =  retire_head+1;
+                if(retire_head > 63) begin
+                    retire_head <= 1'b0;
                 end
             end
-        end
-
-        // free retire if in order
-        // write back to ARF
-        reg_update_ARF_1    = 6'b0;
-        reg_update_ARF_2    = 6'b0;
-        value_update_ARF_1  = 32'b0;
-        value_update_ARF_2  = 32'b0;
-        sr1_ready_flag = 1'b0;
-        sr2_ready_flag = 1'b0;
-
-        max_retire = 0;
-
-        for (j = 0; j < 2; j = j + 1) begin //check to retire
-            if (ROB[retire_pointer][0] == 1'b1) begin
-                if((ROB[retire_pointer][7]==1'b1) && (max_retire == 0))begin
-                    //retire in ROB and retire buffer
-                    ready_reg[ROB[retire_pointer][1]]=1'b1;    //set reg as ready
-                    retire_reg[ROB[retire_pointer][2]]=1'b1;   //retire old dr
-
-                    ROB[retire_pointer][0] = 1'b0;           //set as invalid
-                            
-                    max_retire = 1;
-                    
-                    if (~is_store) begin
-                        reg_update_ARF_1    = ROB[retire_pointer][1];
-                        value_update_ARF_1  = ROB[retire_pointer][3];
-                        old_reg_1           = ROB[retire_pointer][2];
-                        sr1_ready_flag                = 1'b1;
-                    end
-
-                    retire_pointer = retire_pointer + 1;
-                    if(retire_pointer > 63)begin
-                        retire_pointer = 0;
-                    end
-                end
-                else if((ROB[retire_pointer][7]==1'b1) && (max_retire == 1))begin
-                    //retire in ROB and retire buffer
-                    ready_reg[ROB[retire_pointer][1]]=1'b1;    //set reg as ready
-                    retire_reg[ROB[retire_pointer][2]]=1'b1;   //retire old dr
-
-                    ROB[retire_pointer][0] = 1'b0;           //set as invalid
-                            
-                    max_retire = 0;
-
-                    if (~is_store) begin
-                        reg_update_ARF_2    = ROB[retire_pointer][1];
-                        value_update_ARF_2  = ROB[retire_pointer][3];
-                        old_reg_2           = ROB[retire_pointer][2];
-                        sr2_ready_flag                = 1'b1;
-                    end
-                    
-                    retire_pointer = retire_pointer + 1;
-                    if(retire_pointer > 63)begin
-                        retire_pointer = 0;
-                    end
-                end       
-            end
-        end 
-
-        if (sr1_ready_flag) begin
-            sr1_reg_ready    = reg_update_ARF_1;
-            sr1_value_ready  = value_update_ARF_1;
-        end
-        if (sr2_ready_flag) begin
-            sr2_reg_ready    = reg_update_ARF_2;
-            sr2_value_ready  = value_update_ARF_2;
+            
         end
         
     end
+    
+    
 
 endmodule

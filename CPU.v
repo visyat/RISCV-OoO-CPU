@@ -276,13 +276,21 @@ module CPU(
         // inputs ...
         .clk(clk),
         .rstn(rstn),
-        .instr_PC_0(PC_EX),
-        .old_dest_reg_0(oldDestReg_rename_EX),
-        .dest_reg_0(destReg_p_EX),
         
-        .dest_data_0(),
-        .store_add_0(),
-        .store_data_0(),
+        .src1(srcReg1_p_EX),
+        .src2(srcReg2_p_EX),
+        .src1_reg_ready(),
+        .src2_reg_ready(),
+        
+        .dr(destReg_p_EX),
+        .old_dr(oldDestReg_rename_EX),
+        .dr_data(),
+        .store_reg(),
+        .store_data(),
+        .instr_PC(PC_EX),
+
+        .store_instr(1'b0), //CHANGE BEFORE FINAL
+
 
         .complete_pc_0(),
         .complete_pc_1(),
@@ -292,31 +300,25 @@ module CPU(
         .new_dr_data_1(),
         .new_dr_data_2(),
         .new_dr_data_3(),
-        .is_store(),
-        .UIQ_input_invalid(),
-        
+         
         //outputs ...
-        .ready_reg(),
-        .retire_reg(),
+        .issue_ready(),
+        .retire(),
         .stall(),
-        .reg_update_ARF_1(),
-        .reg_update_ARF_2(),
-        .value_update_ARF_1(),
-        .value_update_ARF_2(),
-        .old_reg_1(),
-        .old_reg_2(),
-
-        .sr1_ready_flag(srcReg1_ready_ROB_EX),
-
-        .sr1_reg_ready(),
-        .sr2_reg_ready(),
-
-        .sr2_ready_flag(srcReg2_ready_ROB_EX),
-
-        .sr1_value_ready(),
-        .sr2_value_ready(),
-        .pc_retire_1(),
-        .pc_retire_2()
+        
+        .src1_ready(srcReg1_ready_ROB_EX),
+        .src2_ready(srcReg2_ready_ROB_EX),
+        
+        .ARF_reg_1(),
+        .ARF_data_1(),
+        .ARF_reg_2(),
+        .ARF_data_2()
+        
+        //.old_reg_1(),
+        //.old_reg_2(),
+       
+        //.pc_retire_1(),
+        //.pc_retire_2()
     );
 
     ARF ARF (
@@ -360,8 +362,8 @@ module CPU(
         .srcReg2_data_ARF_in(srcReg2_data_ARF_EX),
 
         // ready flags from ROB ...
-        .srcReg1_ready_ROB_in(1'b1),
-        .srcReg2_ready_ROB_in(1'b1),
+        .srcReg1_ready_ROB_in(srcReg1_ready_ROB_EX),
+        .srcReg2_ready_ROB_in(srcReg1_ready_ROB_EX),
 
         // ready flags from functional units ...
         .FU_ready_ALU0_in(ready_ALU0_EX),
