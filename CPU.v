@@ -124,6 +124,7 @@ module CPU(
     wire [31:0] PC_issue2_ALU_EX;
     wire [5:0] destReg_issue2_ALU_EX;
     wire [5:0] ROBNum_issue2_ALU_EX;
+    wire [3:0] optype_issue2_ALU_EX;
 
     // MEM stage signals 
     // Pipeline ...
@@ -141,9 +142,12 @@ module CPU(
     wire [31:0] aluOutput_issue2_MEM;
     wire [5:0] destReg_issue2_MEM;
     wire [5:0] ROBNum_issue2_MEM;
+    wire [3:0] optype_issue2_MEM;
 
     // LSQ ...
     wire [31:0] PC_LSQ_MEM;
+    wire [5:0] ROBNum_LSQ_MEM;
+    wire [5:0] destReg_LSQ_MEM;
     wire [31:0] lwData_LSQ_MEM;
     wire fromLSQ_MEM;
 
@@ -160,6 +164,22 @@ module CPU(
     wire [31:0] lwData_datamem_MEM;
 
     // COMPLETE stage signals
+    wire [31:0] PC_complete0_C; 
+    wire [5:0] destReg_complete0_C;
+    wire [31:0] destReg_data_complete0_C;
+    wire [5:0] ROBNum_complete0_C;
+
+    wire [31:0] PC_complete1_C; 
+    wire [5:0] destReg_complete1_C;
+    wire [31:0] destReg_data_complete1_C;
+    wire [5:0] ROBNum_complete1_C;
+
+    wire [31:0] PC_complete2_C; 
+    wire [5:0] destReg_complete2_C;
+    wire [31:0] destReg_data_complete2_C;
+    wire [5:0] ROBNum_complete2_C;
+
+    /*
     wire [31 : 0]   dr_data_0;
     wire [31 : 0]   complete_pc_0;
     wire [31 : 0]   dr_data_1;
@@ -185,6 +205,7 @@ module CPU(
     wire            is_store;   
     wire [31 : 0]   data_check;
     wire            FU_read_flag_MEM_com;
+    */
 
     always @(posedge clk or negedge rstn) begin
         if(~rstn) begin
@@ -438,6 +459,7 @@ module CPU(
         .PC_out(PC_issue0_ALU_EX),
         .destReg_out(destReg_issue0_ALU_EX),
         .ROBNum_out(ROBNum_issue0_ALU_EX),
+        .optype_out(),
         .FU_ready(ready_ALU0_EX)
     );
     ALU ALU1 (
@@ -459,6 +481,7 @@ module CPU(
         .PC_out(PC_issue1_ALU_EX),
         .destReg_out(destReg_issue1_ALU_EX),
         .ROBNum_out(ROBNum_issue1_ALU_EX),
+        .optype_out(),
         .FU_ready(ready_ALU1_EX)
     );
     ALU ALU2 (
@@ -480,6 +503,7 @@ module CPU(
         .PC_out(PC_issue2_ALU_EX),
         .destReg_out(destReg_issue2_ALU_EX),
         .ROBNum_out(ROBNum_issue2_ALU_EX),
+        .optype_out(optype_issue2_ALU_EX),
         .FU_ready(ready_ALU2_EX)
     );
 
@@ -502,6 +526,7 @@ module CPU(
         .aluOutput_issue2_in(aluOutput_ALU2_EX),
         .destReg_issue2_in(destReg_issue2_ALU_EX),
         .ROBNum_issue2_in(ROBNum_issue2_ALU_EX),
+        .optype_issue2_in(optype_issue2_ALU_EX),
         
         // outputs ... 
         .PC_issue0_out(PC_issue0_MEM),
@@ -517,7 +542,8 @@ module CPU(
         .PC_issue2_out(PC_issue2_MEM),
         .aluOutput_issue2_out(aluOutput_issue2_MEM),
         .destReg_issue2_out(destReg_issue2_MEM),
-        .ROBNum_issue2_out(ROBNum_issue2_MEM)
+        .ROBNum_issue2_out(ROBNum_issue2_MEM),
+        .optype_issue2_out(optype_issue2_MEM)
     );
 
     Load_Store_Queue LSQ(
@@ -535,6 +561,8 @@ module CPU(
         // from LSU ...
         .pcLsu(PC_issue2_MEM),
         .addressLsu(aluOutput_issue2_MEM),
+        .ROBNumLsu(ROBNum_issue2_MEM),
+        .destRegLsu(destReg_issue2_MEM),
 
         // from retirement ...
         .pcRet1(),
@@ -542,6 +570,8 @@ module CPU(
         
         // outputs ...
         .pcOut(PC_LSQ_MEM),
+        .ROBNumOut(ROBNum_LSQ_MEM),
+        .destRegOut(destReg_LSQ_MEM),
         
         // if retrieving data from a speculative store ...
         .lwData(lwData_LSQ_MEM),
@@ -590,6 +620,53 @@ module CPU(
     );
 
     //COMPLETE 
+    MEM_C_Reg MEM_C_Reg (
+        // inputs ...
+        .clk(clk),
+        .rstn(rstn),
+
+        .PC_issue0_in(PC_issue0_MEM),
+        .aluOutput_issue0_in(aluOutput_issue0_MEM),
+        .destReg_issue0_in(destReg_issue0_MEM),
+        .ROBNum_issue0_in(ROBNum_issue0_MEM),
+
+        .PC_issue1_in(PC_issue1_MEM),
+        .aluOutput_issue1_in(aluOutput_issue0_MEM),
+        .destReg_issue1_in(destReg_issue1_MEM),
+        .ROBNum_issue1_in(ROBNum_issue1_MEM),
+
+        .PC_issue2_in(PC_issue2_MEM),
+        .optype_issue2_in(optype_issue2_MEM),
+        .aluOutput_issue2_in(aluOutput_issue2_MEM),
+        .destReg_issue2_in(destReg_issue2_MEM),
+        .ROBNum_issue2_in(ROBNum_issue2_MEM),
+
+        .PC_issue_LSQ_in(PC_LSQ_MEM),
+        .fromLSQ_in(fromLSQ_MEM), // control signals to determine LW source ...
+        .cacheMiss_in(cacheMiss_MEM),
+        .lwData_LSQ_in(lwData_LSQ_MEM),
+        .lwData_cache_in(lwData_cache_MEM),
+        .lwData_datamem_in(lwData_datamem_MEM),
+        .destReg_issue_LSQ_in(destReg_LSQ_MEM),
+        .ROBNum_issue_LSQ_in(ROBNum_LSQ_MEM),
+
+        // outputs ...
+        .PC_complete0_out(PC_complete0_C),
+        .destReg_complete0_out(destReg_complete0_C),
+        .destReg_data_complete0_out(destReg_data_complete0_C),
+        .ROBNum_complete0_in(ROBNum_complete0_C),
+
+        .PC_complete1_out(PC_complete1_C),
+        .destReg_complete1_out(destReg_complete1_C),
+        .destReg_data_complete1_out(destReg_data_complete1_C),
+        .ROBNum_complete1_in(ROBNum_complete1_C),
+
+        .PC_complete2_out(PC_complete2_C),
+        .destReg_complete2_out(destReg_complete2_C),
+        .destReg_data_complete2_out(destReg_data_complete2_C),
+        .ROBNum_complete2_in(ROBNum_complete2_C)
+    );
+
     /*
         always @(*) begin
             is_store_r = 1'b0;

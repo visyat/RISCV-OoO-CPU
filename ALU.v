@@ -23,7 +23,8 @@ module ALU (
     output reg [31:0]   data_out_dr,
     output reg [31:0]    PC_out, 
     output reg [5:0]     destReg_out,
-    output reg [5:0]     ROBNum_out, 
+    output reg [5:0]     ROBNum_out,
+    output reg [3:0]    optype_out,
     // output reg [5:0]    dr_out,
     // output reg [31:0]   sr2_data_out_sw,
     output reg          FU_ready
@@ -81,7 +82,7 @@ module ALU (
                         //SW
                         data_out_dr = data_in_sr1 + data_in_imm;
                 endcase 
-                // optype_out = optype;
+                optype_out = optype;
                 PC_out = PC_in;
                 destReg_out = destReg_in;
                 ROBNum_out = ROBNum_in;

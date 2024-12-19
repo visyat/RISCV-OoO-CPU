@@ -22,6 +22,7 @@ module EX_MEM_Reg (
     input [31:0] aluOutput_issue2_in,
     input [5:0] destReg_issue2_in,
     input [5:0] ROBNum_issue2_in,
+    input [3:0] optype_issue2_in,
 
     // outputs ...
     // issue 1 ...
@@ -40,7 +41,8 @@ module EX_MEM_Reg (
     output reg [31:0] PC_issue2_out,
     output reg [31:0] aluOutput_issue2_out,
     output reg [5:0] destReg_issue2_out,
-    output reg [5:0] ROBNum_issue2_out
+    output reg [5:0] ROBNum_issue2_out,
+    output reg [3:0] optype_issue2_out
 );
     
     always @(posedge clk or negedge rstn) begin
@@ -59,6 +61,7 @@ module EX_MEM_Reg (
             aluOutput_issue2_out = 'b0;
             destReg_issue2_out = 'b0;
             ROBNum_issue2_out = 'b0;
+            optype_issue2_out = 'b0;
             
         end else begin
             PC_issue0_out = PC_issue0_in;
@@ -75,6 +78,7 @@ module EX_MEM_Reg (
             aluOutput_issue2_out = aluOutput_issue2_in;
             destReg_issue2_out = destReg_issue2_in;
             ROBNum_issue2_out = ROBNum_issue2_in;
+            optype_issue2_out = optype_issue2_in;
         end
     end
 

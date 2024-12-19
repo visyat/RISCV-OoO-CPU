@@ -26,6 +26,8 @@ module Load_Store_Queue (
     // from LSU ... recieves instruction address (to match) & computed address: rs1+offset
     input [31:0] pcLsu,
     input [31:0] addressLsu,
+    input [5:0] ROBNumLsu,
+    input [5:0] destRegLsu,
 
     // from retirement ... deallocate space in LSQ
     input [31:0] pcRet1,
@@ -33,6 +35,8 @@ module Load_Store_Queue (
 
     // outputs ... issues instruction; completes LW instruction if store seen in LSQ
     output reg [31:0] pcOut,
+    output reg [5:0] ROBNumOut,
+    output reg [5:0] destRegOut,
     output reg [31:0] addressOut,
     output reg [31:0] lwData,
     output reg fromLSQ, 
@@ -52,6 +56,9 @@ module Load_Store_Queue (
     reg [31:0] LSQ_DATA [15:0];
     reg [15:0] ISSUED;
 
+    reg [5:0] ROBNUM [15:0];
+    reg [5:0] DESTREG [15:0];
+
     integer i, j, k, m;
     reg [3:0] index = 0;
 
@@ -66,6 +73,8 @@ module Load_Store_Queue (
                 PC[i] = 32'b0;
                 ADDRESS[i] = 32'b0;
                 LSQ_DATA[i] = 32'b0;
+                ROBNUM[i] = 'b0;
+                DESTREG[i] = 'b0;
             end
         end else begin
             // dispatch logic ... if read/write, reserve space in LSQ
@@ -92,6 +101,8 @@ module Load_Store_Queue (
                 if (PC[j] == pcLsu) begin
                     ADDRESS[j] = addressLsu;
                     ADDR_LOADED[j] = 1;
+                    ROBNUM[j] = ROBNumLsu;
+                    DESTREG[j] = destRegLsu;
                     index = j;
                     j = 17;
                 end
@@ -117,6 +128,8 @@ module Load_Store_Queue (
                 SIZE[k] = 0;
                 ADDRESS[k] = 32'b0;
                 ADDR_LOADED[k] = 0;
+                ROBNUM[k] = 'b0;
+                DESTREG[k] = 'b0;
                 LSQ_DATA[k] = 32'b0;
                 ISSUED[k] = 0;
                 k=16;
@@ -132,6 +145,8 @@ module Load_Store_Queue (
             fromLSQ = 'b0;
             loadStore = 'b0;
             storeSizeOut = 'b0;
+            ROBNumOut = 'b0;
+            destRegOut = 'b0;
             swDataOut = 'b0;
             complete = 'b0;
         end else begin
@@ -145,6 +160,8 @@ module Load_Store_Queue (
                     fromLSQ = 1;
                     loadStore = 0;
                     storeSizeOut = SIZE[m];
+                    ROBNumOut = ROBNUM[m];
+                    destRegOut = DESTREG[m];
                     swDataOut = 32'b0;
                     ISSUED[m] = 1;
                     i=16;
@@ -155,6 +172,8 @@ module Load_Store_Queue (
                     if (VALID[m] && ~ISSUED[m] && ADDR_LOADED[m]) begin
                         pcOut = PC[m];
                         addressOut = ADDRESS[m];
+                        ROBNumOut = ROBNUM[m];
+                        destRegOut = DESTREG[m];
                         lwData = 'b0;
                         fromLSQ = 0;
                         loadStore = OP[m];
