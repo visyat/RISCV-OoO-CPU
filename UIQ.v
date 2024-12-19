@@ -212,7 +212,11 @@ module Unified_Issue_Queue (
                         // assign functional units and ROB entries round robin ...
                         ROB[i] = ROBNum_in;
                         // ROB[i] = rob_round_robin;
-                        FU[i] = alu_round_robin;
+                        if ( op_type == LW || op_type == LB || op_type == SW || op_type == SB) begin
+                            FU[i] = 2'd2;
+                        end else begin
+                            FU[i] = alu_round_robin;
+                        end
 
                         alu_round_robin = alu_round_robin + 1;
                         if (alu_round_robin == 2'd3) begin
@@ -278,7 +282,7 @@ module Unified_Issue_Queue (
                 if(VALID[k])begin
                     $display("%d, %d, %d ,%d ,%d, %d", SRC1READY[k], SRCREG1[k], SRC2READY[k],SRCREG2[k], FU_READY[k], FU[k]);
                 end
-                if (VALID[k] && SRC1READY[k] && SRC2READY[k] && FU_READY[k]) begin
+                if (VALID[k] && SRC1READY[k] && SRC2READY[k] && FU_READY[k] && ~fu_taken[FU[k]]) begin
                     PC_issue[FU[k]] = PC[k];
                     optype_issue[FU[k]] = OP[k];
                     aluNum_issue[FU[k]] = FU[k];
@@ -292,6 +296,7 @@ module Unified_Issue_Queue (
                     fu_taken[FU[k]] = 1'b1;
                     if (issued == 2'd2) begin
                         issued = 0;
+                        fu_taken = 'b0;
                         k = 65; 
                     end else begin
                         issued = issued+1;
