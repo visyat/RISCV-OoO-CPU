@@ -56,7 +56,7 @@ module Cache(
             end 
             search_1 = 'b1;
         end else begin
-            if (TAG_WAY_1[address_in[12:6]] == address_in[31:13] && VALID_WAY_1[address[12:6]]) begin
+            if (TAG_WAY_1[address_in[12:6]] == address_in[31:13] && VALID_WAY_1[address_in[12:6]]) begin
                 if (memRead) begin
                     search_1 = {24'b0, DATA_WAY_1[address_in[12:6]][7:0]};
                 end
@@ -84,7 +84,7 @@ module Cache(
             end 
             search_2 = 'b1;
         end else begin
-            if (TAG_WAY_2[address_in[12:6]] == address_in[31:13] && VALID_WAY_2[address[12:6]]) begin
+            if (TAG_WAY_2[address_in[12:6]] == address_in[31:13] && VALID_WAY_2[address_in[12:6]]) begin
                 if (memRead) begin
                     search_2 = {24'b0, DATA_WAY_2[address_in[12:6]][7:0]};
                 end
@@ -112,7 +112,7 @@ module Cache(
             end 
             search_3 = 'b1;
         end else begin
-            if (TAG_WAY_3[address_in[12:6]] == address_in[31:13] && VALID_WAY_3[address[12:6]]) begin
+            if (TAG_WAY_3[address_in[12:6]] == address_in[31:13] && VALID_WAY_3[address_in[12:6]]) begin
                 if (memRead) begin
                     search_3 = {24'b0, DATA_WAY_3[address_in[12:6]][7:0]};
                 end
@@ -140,7 +140,7 @@ module Cache(
             end 
             search_4 = 'b1;
         end else begin
-            if (TAG_WAY_4[address_in[12:6]] == address_in[31:13] && VALID_WAY_4[address[12:6]]) begin
+            if (TAG_WAY_4[address_in[12:6]] == address_in[31:13] && VALID_WAY_4[address_in[12:6]]) begin
                 if (memRead) begin
                     search_4 = {24'b0, DATA_WAY_4[address_in[12:6]][7:0]};
                 end
