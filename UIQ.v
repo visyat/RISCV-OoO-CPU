@@ -199,16 +199,10 @@ module Unified_Issue_Queue (
 
                         SRCREG1[i] = srcReg1_p_in;
                         SRCREG2[i] = srcReg2_p_in;
-
-                        if (srcReg1_ready_ROB_in) begin
-                            SRC1READY[i] = 1'b1;
-                            SRC1DATA[i] = srcReg1_data_ARF_in;
-                        end
-                        if (srcReg2_ready_ROB_in) begin
-                            SRC2READY[i] = 1'b1;
-                            SRC2DATA[i] = srcReg2_data_ARF_in;
-                        end
-
+                        
+                        SRC1DATA[i] = srcReg1_data_ARF_in;
+                        SRC2DATA[i] = srcReg2_data_ARF_in;
+                        
                         // handling special cases: 
                         if (op_type == LUI) begin
                             SRC1READY[i]   = 1'b1;

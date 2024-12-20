@@ -19,7 +19,7 @@ module ARF (
     input [31:0] write_data2,
 
     output reg [31:0] read_srcReg1_data,
-    output reg [31:0] read_srcReg1_data
+    output reg [31:0] read_srcReg2_data
 );
 
     reg [31:0] REGISTER_FILE [63:0];
@@ -45,8 +45,8 @@ module ARF (
             read_srcReg1_data = 'b0;
             read_srcReg2_data = 'b0;
         end else begin
-            read_data1 = REGISTER_FILE[read_addr1];
-            read_data2 = REGISTER_FILE[read_addr2];
+            read_srcReg1_data = REGISTER_FILE[read_srcReg1];
+            read_srcReg2_data = REGISTER_FILE[read_srcReg2];
         end
     end
 
