@@ -216,18 +216,5 @@ module Cache(
             end
         end
     end
-
-/*
-    if (memWrite) begin
-        if (storeSize) begin
-            DATA_WAY_4[address_in[12:6]][7:0] = data_sw;
-        end else begin
-            DATA_WAY_4[address_in[12:6]][15:8] = data_sw[15:8];
-            DATA_WAY_4[address_in[12:6]][7:0] = data_sw[7:0];
-        end
-        search_4 = 'b1;
-    end
-*/
-
 endmodule
 
