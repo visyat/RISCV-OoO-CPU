@@ -23,6 +23,7 @@ module Unified_Issue_Queue (
     // ROB ...
     input srcReg1_ready_ROB_in,
     input srcReg2_ready_ROB_in,
+    input [5:0] ROBNum_in,
 
     // from functional units ...
     // READY FLAGS FROM FUNCTIONAL UNITS ...
@@ -46,7 +47,7 @@ module Unified_Issue_Queue (
     output reg [31:0] srcReg2_data_issue0,
     output reg [31:0] imm_issue0,
     output reg [5:0] destReg_issue0,
-    output reg [15:0] ROBNum_issue0,
+    output reg [5:0] ROBNum_issue0,
 
     // issue no 2 ...
     output reg [31:0] PC_issue1,
@@ -56,7 +57,7 @@ module Unified_Issue_Queue (
     output reg [31:0] srcReg2_data_issue1,
     output reg [31:0] imm_issue1,
     output reg [5:0] destReg_issue1,
-    output reg [15:0] ROBNum_issue1,
+    output reg [5:0] ROBNum_issue1,
 
     // issue no 3 ...
     output reg [31:0] PC_issue2,
@@ -66,7 +67,7 @@ module Unified_Issue_Queue (
     output reg [31:0] srcReg2_data_issue2,
     output reg [31:0] imm_issue2,
     output reg [5:0] destReg_issue2,
-    output reg [15:0] ROBNum_issue2
+    output reg [5:0] ROBNum_issue2
 );
 
     reg [63:0]  VALID;
@@ -82,15 +83,16 @@ module Unified_Issue_Queue (
     reg [31:0]  IMM [63:0];
     reg [1:0]   FU [63:0];
     reg [63:0]  FU_READY;
-    reg [4:0]   ROB [63:0];
+    reg [5:0]   ROB [63:0];
 
     integer i;
     integer j;
     integer k;
     reg [1:0] issued = 0;
-    reg [1:0] fu_taken;
+    reg [2:0] fu_taken;
     reg [1:0] alu_round_robin = 0;
-    reg [5:0] rob_round_robin = 0;
+    reg inc_round_robin = 0;
+    // reg [5:0] rob_round_robin = 0;
 
     // output group registers ...
     reg [31:0] PC_issue [2:0];
@@ -100,7 +102,7 @@ module Unified_Issue_Queue (
     reg [31:0] srcReg2_data_issue [2:0];
     reg [31:0] imm_issue [2:0];
     reg [5:0] destReg_issue [2:0];
-    reg [15:0] ROBNum_issue [2:0];
+    reg [5:0] ROBNum_issue [2:0];
 
     // operation parameter
     parameter ADD   =  4'd1;
@@ -209,19 +211,31 @@ module Unified_Issue_Queue (
                         end
                         
                         // assign functional units and ROB entries round robin ...
-                        ROB[i] = rob_round_robin;
-                        FU[i] = alu_round_robin;
-
-                        alu_round_robin = alu_round_robin + 1;
-                        if (alu_round_robin == 2'd3) begin
-                            alu_round_robin = 2'b0;
+                        ROB[i] = ROBNum_in;
+                        // ROB[i] = rob_round_robin;
+                        if (op_type == LW || op_type == LB || op_type == SW || op_type == SB) begin
+                            FU[i] = 2'd2;
+                            inc_round_robin = 1'b0;
+                            if (alu_round_robin == 2'd2) begin
+                                alu_round_robin = 2'd0;
+                            end
+                        end else begin
+                            FU[i] = alu_round_robin;
+                            inc_round_robin = 1'b1;
                         end
-                        rob_round_robin = rob_round_robin + 1;
-                        if (rob_round_robin == 'd64) begin
-                            rob_round_robin = 'd0;
-                        end
-                        // need to confirm that the FU is ready before issuing ...
                         
+                        if (inc_round_robin) begin
+                            alu_round_robin = alu_round_robin+1;
+                            if (alu_round_robin == 2'd3) begin
+                                alu_round_robin = 2'd0;
+                            end
+                        end
+                        $display("PC: %0h ==> assigned to ALU: %0d", PC[i], FU[i]);
+                        // rob_round_robin = rob_round_robin + 1;
+                        // if (rob_round_robin == 'd64) begin
+                        //     rob_round_robin = 'd0;
+                        // end
+                        // need to confirm that the FU is ready before issuing ...
                         i = 65; // break once entered ... 
                     end
                 end
@@ -270,18 +284,16 @@ module Unified_Issue_Queue (
                 imm_issue[k] = 'b0;
                 destReg_issue[k] = 'b0;
                 ROBNum_issue[k] = 'b0;
-                fu_taken[k] = 'b0;
             end
+            fu_taken = 'b0;
         end else begin
+            issued = 0;
+            fu_taken = 'b0;
             for (k=0; k<64; k=k+1) begin
-                
                 if(VALID[k])begin
-                $display("%d, %d, %d ,%d ,%d, %d", SRC1READY[k], SRCREG1[k], SRC2READY[k],SRCREG2[k], FU_READY[k], FU[k]);
-                
+                    $display("%0h, %0b, %0b, %0d, %0b, %0b", PC[k], SRC1READY[k], SRC2READY[k], FU[k], FU_READY[k], fu_taken[FU[k]]);
                 end
-                
-               
-                if (VALID[k] && SRC1READY[k] && SRC2READY[k] && FU_READY[k]) begin
+                if (VALID[k] && SRC1READY[k] && SRC2READY[k] && FU_READY[k] && ~fu_taken[FU[k]]) begin
                     PC_issue[FU[k]] = PC[k];
                     optype_issue[FU[k]] = OP[k];
                     aluNum_issue[FU[k]] = FU[k];
@@ -294,7 +306,6 @@ module Unified_Issue_Queue (
                     VALID[k] = 1'b0;
                     fu_taken[FU[k]] = 1'b1;
                     if (issued == 2'd2) begin
-                        issued = 0;
                         k = 65; 
                     end else begin
                         issued = issued+1;

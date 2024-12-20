@@ -5,47 +5,33 @@
     * memoryHierarchy needs to handle calling to cache first (returning in one cycle), if Miss -> call to DataMemory
 */
 module dataMemory(
-    clk,
-    rstn,
-    PC_in,
-    address, 
-    dataSw,
-    memRead,
-    memWrite,
-    storeSize,
-    cacheMiss,
-    fromLSQ,
-    lwData,
-    PC_out
-);
-    input clk;
-    input rstn;
+    input clk,
+    input rstn,
 
-    input [31:0] PC_in;
-    input [31:0] address;
-    input [31:0] dataSw;
+    input [31:0] PC_in,
+    input [31:0] address,
+    input [31:0] dataSw,
 
-    input memRead;
-    input memWrite;
-    input storeSize; // 0: Word (16 bit), 1: Byte (8 bit)
-    input cacheMiss;
-    input fromLSQ;
+    input memRead,
+    input memWrite,
+    input storeSize, // 0: Word (16 bit), 1: Byte (8 bit)
+    input cacheMiss,
+    input fromLSQ,
     
-    output reg [31:0] lwData;
-    output reg [31:0] PC_out;
+    output reg [31:0] lwData
+    // output reg [31:0] PC_out,
+);
 
-    reg [0:7] DATAMEM [1023:0]; 
-
+    reg [7:0] DATAMEM [0:1023];
     integer i;
 
-    always @(posedge clk) begin
+    always @(posedge clk or negedge rstn) begin
         if (~rstn) begin
             for (i = 0; i < 1024; i=i+1) begin
                 DATAMEM[i] = 8'b0;
             end
             lwData = 'b0;
-            PC_out = 'b0;
-            
+            // PC_out = 'b0;
         end else begin
             if ((memRead || memWrite) && cacheMiss && ~fromLSQ) begin
                 if (memRead) begin
@@ -58,7 +44,7 @@ module dataMemory(
                     end else
                         DATAMEM[address] = dataSw[7:0];
                 end
-                PC_out = PC_in;
+                // PC_out = PC_in;
             end
         end
     end

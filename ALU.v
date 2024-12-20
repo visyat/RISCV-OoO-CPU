@@ -7,6 +7,9 @@ module ALU (
     input           clk, 
     input           rstn,
     input [1:0]     ALU_NO,
+    input [31:0]    PC_in, 
+    input [5:0]     destReg_in,
+    input [5:0]     ROBNum_in, 
     input [3:0]     optype,
     input [1:0]     alu_number,
 
@@ -18,6 +21,10 @@ module ALU (
     //outputs: data for dest reg
     // output reg [3:0]    optype_out,
     output reg [31:0]   data_out_dr,
+    output reg [31:0]    PC_out, 
+    output reg [5:0]     destReg_out,
+    output reg [5:0]     ROBNum_out,
+    output reg [3:0]    optype_out,
     // output reg [5:0]    dr_out,
     // output reg [31:0]   sr2_data_out_sw,
     output reg          FU_ready
@@ -35,7 +42,7 @@ module ALU (
             // FU_occ = 1'b0;
         end 
         else begin
-            if (alu_number[ALU_NO] == 1) begin
+            if (alu_number == ALU_NO) begin
                 // dr_out = dr_in;
                 FU_ready = 1'b0;
                 // sr2_data_out_sw = data_in_sr2;
@@ -75,7 +82,10 @@ module ALU (
                         //SW
                         data_out_dr = data_in_sr1 + data_in_imm;
                 endcase 
-                // optype_out = optype;
+                optype_out = optype;
+                PC_out = PC_in;
+                destReg_out = destReg_in;
+                ROBNum_out = ROBNum_in;
                 FU_ready = 1'b1;
             end 
         end
