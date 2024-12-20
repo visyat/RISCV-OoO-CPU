@@ -7,6 +7,7 @@ module dataMem_tb;
     reg rstn;
 
     reg [31:0] PC;
+    reg [5:0] ROB = 0;
     reg [31:0] address;
     reg [31:0] store_data;
 
@@ -24,6 +25,7 @@ module dataMem_tb;
         .clk(clk),
         .rstn(rstn),
         .PC_in(PC),
+        .ROB_in(ROB),
         .address(address),
         .dataSw(store_data),
         .memRead(memRead),
@@ -33,7 +35,8 @@ module dataMem_tb;
         .fromLSQ(fromLSQ),
 
         .lwData(lwData),
-        .PC_out(PC_out)
+        .PC_out(PC_out),
+        .ROB_out()
     );
 
     initial begin
