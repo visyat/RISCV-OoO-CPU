@@ -53,7 +53,7 @@ module rename(
     integer j;
     integer old_index;
 
-    always @(posedge clk) begin
+    always @(*) begin
         if(~rstn) begin
             sr1_p       = 6'd0;
             sr2_p       = 6'd0;

@@ -18,8 +18,8 @@ module dataMemory(
     input cacheMiss,
     input fromLSQ,
     
-    output reg [31:0] lwData
-    output reg [31:0] PC_out,
+    output reg [31:0] lwData,
+    output reg [31:0] PC_out
 );
 
     reg [7:0] DATAMEM [0:1023];
@@ -35,7 +35,7 @@ module dataMemory(
     reg [9:0] fromLSQ_delay; 
 
     always @(posedge clk or negedge rstn) begin
-        if (~rsnt) begin
+        if (~rstn) begin
             for (j=0; j<10; j=j+1) begin
                 PC_delay[i] = 'b0;
                 address_delay[i] = 'b0;

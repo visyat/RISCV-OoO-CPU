@@ -66,16 +66,22 @@ module CPU(
     wire [5:0] destReg_p_EX;
     wire [5:0] oldDestReg_rename_EX;
     wire stall_rename_EX;
+    wire [31:0] destReg_p_data_EX;
     
     // ARF ...
     wire [31:0] srcReg1_data_ARF_EX;
     wire [31:0] srcReg2_data_ARF_EX;
+    wire [5:0] srcReg1_reg_ARF_EX;
+    wire [5:0] srcReg2_reg_ARF_EX;
 
     // ROB ...
     wire srcReg1_ready_ROB_EX;
     wire srcReg2_ready_ROB_EX;
     wire [5:0] ROBNum_EX;
-
+    wire [63:0] ready_for_issue_EX;
+    wire [63:0] ready_for_retire_EX;
+    wire stall_ROB_EX;
+    
     // UIQ ...
     wire stall_UIQ_EX;
     
@@ -179,23 +185,15 @@ module CPU(
     wire [31:0] destReg_data_complete2_C;
     wire [5:0] ROBNum_complete2_C;
 
-    /*
+    
     wire [31 : 0]   dr_data_0;
     wire [31 : 0]   complete_pc_0;
     wire [31 : 0]   dr_data_1;
     wire [31 : 0]   complete_pc_1;
     wire [31 : 0]   dr_data_2;
     wire [31 : 0]   complete_pc_2;
-    wire [31 : 0]   dr_data_3;
-    wire [31 : 0]   complete_pc_3;
-    reg  [31 : 0]   dr_data_0_reg;
-    reg  [31 : 0]   complete_pc_0_reg;
-    reg  [31 : 0]   dr_data_1_reg;
-    reg  [31 : 0]   complete_pc_1_reg;
-    reg  [31 : 0]   dr_data_2_reg;
-    reg  [31 : 0]   complete_pc_2_reg;
-    reg  [31 : 0]   dr_data_3_reg;
-    reg  [31 : 0]   complete_pc_3_reg;
+
+/*
 
     wire [5:0]      set_rob_reg_invaild;
     wire [5:0]      regout_from_lsu;
@@ -349,35 +347,33 @@ module CPU(
         
         .dr(destReg_p_EX),
         .old_dr(oldDestReg_rename_EX),
-        .dr_data(),
-        .store_reg(),
-        .store_data(),
+        .dr_data(destReg_p_data_EX),
+        .store_reg(), //srcReg1_p_EX
+        .store_data(),//destReg_p_data_EX
         .instr_PC(PC_EX),
 
-        .store_instr(1'b0), //CHANGE BEFORE FINAL
+        .opcode(opcode_EX),
 
 
-        .complete_pc_0(),
-        .complete_pc_1(),
-        .complete_pc_2(),
-        .complete_pc_3(),
-        .new_dr_data_0(),
-        .new_dr_data_1(),
-        .new_dr_data_2(),
-        .new_dr_data_3(),
+        .complete_pc_0(PC_complete0_C),
+        .complete_pc_1(PC_complete1_C),
+        .complete_pc_2(PC_complete2_C),
+        .new_dr_data_0(destReg_data_complete0_C),
+        .new_dr_data_1(destReg_data_complete1_C),
+        .new_dr_data_2(destReg_data_complete2_C),
          
         //outputs ...
-        .issue_ready(),
-        .retire(),
-        .stall(),
+        .issue_ready(ready_for_issue_EX),
+        .retire(ready_for_retire_EX),
+        .stall(stall_ROB_EX),
         
         .src1_ready(srcReg1_ready_ROB_EX),
         .src2_ready(srcReg2_ready_ROB_EX),
         
-        .ARF_reg_1(),
-        .ARF_data_1(),
-        .ARF_reg_2(),
-        .ARF_data_2()
+        .ARF_reg_1(srcReg1_reg_ARF_EX),
+        .ARF_data_1(srcReg1_data_ARF_EX),
+        .ARF_reg_2(srcReg2_reg_ARF_EX),
+        .ARF_data_2(srcReg2_data_ARF_EX)
         
         //.old_reg_1(),
         //.old_reg_2(),
@@ -397,13 +393,13 @@ module CPU(
         .read_en(1'b1), // if an instruction is dispatching ... stalled??
         
         // retiring instructions ...
-        .write_en(1'b1),
+     
         // retire 1 ...
-        .write_addr1(),
-        .write_data1(),
+        .write_addr1(srcReg1_reg_ARF_EX),
+        .write_data1(srcReg1_data_ARF_EX),
         // retire 2 ...
-        .write_addr2(),
-        .write_data2(),
+        .write_addr2(srcReg1_reg_ARF_EX),
+        .write_data2(srcReg2_data_ARF_EX),
 
         // outputs ...
         .read_data1(srcReg1_data_ARF_EX),
@@ -692,6 +688,47 @@ module CPU(
         .destReg_complete2_out(destReg_complete2_C),
         .destReg_data_complete2_out(destReg_data_complete2_C),
         .ROBNum_complete2_out(ROBNum_complete2_C)
+    );
+    
+    Complete complete(
+        .clk(clk),
+        .rstn(rstn),
+        
+        //inputs
+        .PC_complete0_out(PC_complete0_C),
+        .destReg_complete0_out(destReg_complete0_C), 
+        .destReg_data_complete0_out(destReg_data_complete0_C),
+        .ROBNum_complete0_out(ROBNum_complete1_C), 
+    
+        .PC_complete1_out(PC_complete1_C),
+        .destReg_complete1_out(destReg_complete1_C), 
+        .destReg_data_complete1_out(destReg_data_complete1_C),
+        .ROBNum_complete1_out(ROBNum_complete1_C), 
+    
+        .PC_complete2_out(PC_complete2_C),
+        .destReg_complete2_out(destReg_complete2_C), 
+        .destReg_data_complete2_out(destReg_data_complete2_C),
+        .ROBNum_complete2_out(ROBNum_complete2_C), 
+        
+        
+        //outputs
+        .complete_pc_0(PC_complete0_C),
+        .complete_pc_1(PC_complete1_C),
+        .complete_pc_2(PC_complete2_C),
+        
+        .new_dr_data_0(destReg_data_complete0_C),
+        .new_dr_data_1(destReg_data_complete1_C),
+        .new_dr_data_2(destReg_data_complete2_C),
+        
+        .complete_dr_0(destReg_complete0_C),
+        .complete_dr_1(destReg_complete1_C),
+        .complete_dr_2(destReg_complete2_C),
+        
+        .ROB_complete_0(ROBNum_complete0_C),
+        .ROB_complete_1(ROBNum_complete1_C),
+        .ROB_complete_2(ROBNum_complete2_C)
+
+    
     );
 
     /*

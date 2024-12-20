@@ -5,27 +5,25 @@ module reorder_buffer(
     input clk, 
     input rstn,
     
-    input src1,
-    input src2,
+    input [5:0] src1,
+    input [5:0] src2,
     
-    input dr,
-    input old_dr,
-    input dr_data,
-    input store_reg,
-    input store_data,
-    input instr_PC,
+    input [5:0] dr,
+    input [5:0] old_dr,
+    input [31:0] dr_data,
+    input [5:0] store_reg,
+    input [31:0] store_data,
+    input [31:0] instr_PC,
     
-    input store_instr,
+    input [6:0] opcode,
     
     input [31:0] complete_pc_0,
     input [31:0] complete_pc_1,
     input [31:0] complete_pc_2,
-    input [31:0] complete_pc_3,
     
     input [31:0] new_dr_data_0,
     input [31:0] new_dr_data_1,
     input [31:0] new_dr_data_2,
-    input [31:0] new_dr_data_3,
     
     output reg [63:0] issue_ready,
     output reg [63:0] retire,
@@ -74,8 +72,8 @@ module reorder_buffer(
     
     
     reg [31:0] ROB [63:0] [7:0];
-    reg [31:0] new_dr_data [3:0];
-    reg [31:0] complete_pc [3:0];
+    reg [31:0] new_dr_data [2:0];
+    reg [31:0] complete_pc [2:0];
     
     reg retire_head;
     reg ROB_head;
@@ -155,12 +153,10 @@ module reorder_buffer(
         new_dr_data[0] <= new_dr_data_0;
         new_dr_data[1] <= new_dr_data_1;
         new_dr_data[2] <= new_dr_data_2;
-        new_dr_data[3] <= new_dr_data_3;
         
         complete_pc[0] <= complete_pc_0;
         complete_pc[1] <= complete_pc_1;
         complete_pc[2] <= complete_pc_2;
-        complete_pc[3] <= complete_pc_3; 
         
         //SET COMPLETE
         for (j=0; j<64; j=j+1) begin
@@ -175,7 +171,7 @@ module reorder_buffer(
         end
         
         //SET SRC1 and SRC2 READY FOR ISSUE
-        if(~store_instr) begin
+        if((opcode!=7'b0100011) && (opcode!=7'b0010011) && (opcode!=7'b0110111)) begin //not store or imm or lui
             if(issue_ready[src1] == 1'b1) begin
                 src1_ready <= 1'b1;
                 src1_reg_ready <=src1;
@@ -208,7 +204,7 @@ module reorder_buffer(
         //first retire if possible
         if(ROB[retire_head][7] == 1'b1) begin
             //output to ARF
-            if(~store_instr) begin
+            if(opcode!=7'b0100011) begin //not store
                 ARF_reg_1 = ROB[retire_head][1];
                 ARF_data_1 = ROB[retire_head][3];
                 write_back <= 1'b1;
@@ -242,7 +238,7 @@ module reorder_buffer(
             //second retire if possible
             if(ROB[retire_head][7] == 1'b1) begin
                 //output to ARF
-                if(~store_instr) begin
+                if(opcode!=7'b0100011) begin //not store
                     ARF_reg_2 = ROB[retire_head][1];
                     ARF_data_2 = ROB[retire_head][3];
                     retire2=1'b1;

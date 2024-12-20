@@ -11,7 +11,7 @@
 // Tool Versions: 
 // Description: 
 
-module complete(
+module Complete(
     input clk,
     input rstn,
     
