@@ -31,8 +31,8 @@ module reorder_buffer(
     
     output reg src1_ready,
     output reg src2_ready,
-    output reg src1_reg_ready,
-    output reg src2_reg_ready,
+    output reg [5:0] src1_reg_ready,
+    output reg [5:0] src2_reg_ready,
     
     
 

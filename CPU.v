@@ -77,11 +77,14 @@ module CPU(
     // ROB ...
     wire srcReg1_ready_ROB_EX;
     wire srcReg2_ready_ROB_EX;
-    wire srcReg1_ready_EX;
-    wire srcReg2_ready_EX;
+    wire srcReg1_reg_ready_EX;
+    wire srcReg2_reg_ready_EX;
     wire [5:0] ROBNum_EX;
     wire [63:0] ready_for_issue_EX;
     wire [63:0] ready_for_retire_EX;
+    wire retire1_EX;
+    wire retire2_EX;
+    wire write_back_EX;
     wire stall_ROB_EX;
     wire [31:0] retire_pc1_EX;
     wire [31:0] retire_pc2_EX;
@@ -337,7 +340,8 @@ module CPU(
         .sr2_p(srcReg2_p_EX),
         .dr_p(destReg_p_EX),
         .old_dr(oldDestReg_rename_EX),
-        .stall(stall_rename_EX)
+        .stall(stall_rename_EX),
+        .dr_p_data(destReg_p_data_EX)
     );
 
     // simplified ROB interface ...
@@ -348,8 +352,8 @@ module CPU(
         
         .src1(srcReg1_p_EX),
         .src2(srcReg2_p_EX),
-        .src1_reg_ready(srcReg1_ready_EX),
-        .src2_reg_ready(srcReg2_ready_EX),
+        .src1_reg_ready(srcReg1_reg_ready_EX),
+        .src2_reg_ready(srcReg2_reg_ready_EX),
         
         .dr(destReg_p_EX),
         .old_dr(oldDestReg_rename_EX),
@@ -359,6 +363,9 @@ module CPU(
         .instr_PC(PC_EX),
 
         .opcode(opcode_EX),
+        .write_back(write_back_EX),
+        .retire1(retire1_EX),
+        .retire2(retire2_EX),
 
 
         .complete_pc_0(PC_complete0_C),
@@ -399,6 +406,10 @@ module CPU(
         .read_en(1'b1), // if an instruction is dispatching ... stalled??
         
         // retiring instructions ...
+        
+        .write_back(write_back_EX),
+        .retire1(retire1_EX),
+        .retire2(retire2_EX),
      
         // retire 1 ...
         .write_addr1(srcReg1_reg_ARF_EX),
@@ -429,9 +440,9 @@ module CPU(
         .srcReg2_data_ARF_in(srcReg2_data_ARF_EX),
 
         // ready flags from ROB ...
-        .srcReg1_reg_ready_ROB_in(),
+        .srcReg1_reg_ready_ROB_in(srcReg1_reg_ready_EX),
         .srcReg1_ready_ROB_in (srcReg1_ready_ROB_EX), // (srcReg1_ready_ROB_EX),
-        .srcReg2_reg_ready_ROB_in(),
+        .srcReg2_reg_ready_ROB_in(srcReg2_reg_ready_EX),
         .srcReg2_ready_ROB_in (srcReg1_ready_ROB_EX), // (srcReg2_ready_ROB_EX),
         .ROBNum_in(ROBNum_EX),
 
@@ -704,46 +715,7 @@ module CPU(
         .ROBNum_complete2_out(ROBNum_complete2_C)
     );
     
-    Complete complete(
-        .clk(clk),
-        .rstn(rstn),
-        
-        //inputs
-        .PC_complete0_out(PC_complete0_C),
-        .destReg_complete0_out(destReg_complete0_C), 
-        .destReg_data_complete0_out(destReg_data_complete0_C),
-        .ROBNum_complete0_out(ROBNum_complete1_C), 
-    
-        .PC_complete1_out(PC_complete1_C),
-        .destReg_complete1_out(destReg_complete1_C), 
-        .destReg_data_complete1_out(destReg_data_complete1_C),
-        .ROBNum_complete1_out(ROBNum_complete1_C), 
-    
-        .PC_complete2_out(PC_complete2_C),
-        .destReg_complete2_out(destReg_complete2_C), 
-        .destReg_data_complete2_out(destReg_data_complete2_C),
-        .ROBNum_complete2_out(ROBNum_complete2_C), 
-        
-        
-        //outputs
-        .complete_pc_0(PC_complete0_C),
-        .complete_pc_1(PC_complete1_C),
-        .complete_pc_2(PC_complete2_C),
-        
-        .new_dr_data_0(destReg_data_complete0_C),
-        .new_dr_data_1(destReg_data_complete1_C),
-        .new_dr_data_2(destReg_data_complete2_C),
-        
-        .complete_dr_0(destReg_complete0_C),
-        .complete_dr_1(destReg_complete1_C),
-        .complete_dr_2(destReg_complete2_C),
-        
-        .ROB_complete_0(ROBNum_complete0_C),
-        .ROB_complete_1(ROBNum_complete1_C),
-        .ROB_complete_2(ROBNum_complete2_C)
-
-    
-    );
+  
 
     /*
         always @(*) begin

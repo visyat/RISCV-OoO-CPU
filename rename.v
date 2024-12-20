@@ -18,7 +18,8 @@ module rename(
     output reg [5 : 0]      sr2_p,
     output reg [5 : 0]      dr_p,
     output reg [5 : 0]      old_dr,
-    output reg              stall  
+    output reg              stall, 
+    output reg [31:0] dr_p_data
 );
 
     // TODO: 
@@ -55,9 +56,10 @@ module rename(
 
     always @(*) begin
         if(~rstn) begin
-            sr1_p       = 6'd0;
-            sr2_p       = 6'd0;
-            dr_p        = 6'd0;
+            sr1_p       = 5'd0;
+            sr2_p       = 5'd0;
+            dr_p        = 5'd0;
+            dr_p_data= 0;
             ROB_num     = 16'd0;   // Default ROB number
             stall       = 1'b0;    // Default no stall
             
@@ -122,6 +124,7 @@ module rename(
             end
             else begin // S_type or NOP
                 dr_p=RAT[dr][1];
+                
                 old_dr=64;
             end
             
