@@ -185,6 +185,8 @@ module Cache(
                 lw_data = 'b0;
                 // find first way at the designated index that is available ...
                 // addresses with the same tag & index, but with different offsets (bytes within the same block) written to the same entry
+                
+                // search through ways to check if matching block already written to cache ...
                 if (VALID_WAY_1[address_in[12:6]] && TAG_WAY_1[address_in[12:6]] == address_in[31:13]) begin
                     if (storeSize) begin
                         DATA_WAY_1[address_in[12:6]][address_in[5:0]] = data_sw[7:0];
@@ -213,7 +215,10 @@ module Cache(
                         DATA_WAY_4[address_in[12:6]][address_in[5:0]+1] = data_sw[15:8];
                         DATA_WAY_4[address_in[12:6]][address_in[5:0]] = data_sw[7:0];
                     end
-                end else if (~VALID_WAY_1[address_in[12:6]]) begin
+                end 
+
+                // if not, find the first vacant entry to write cache block ...
+                else if (~VALID_WAY_1[address_in[12:6]]) begin
                     VALID_WAY_1[address_in[12:6]] = 1;
                     TAG_WAY_1[address_in[12:6]] = address_in[31:13];
                     if (storeSize) begin
@@ -249,7 +254,10 @@ module Cache(
                         DATA_WAY_4[address_in[12:6]][address_in[5:0]+1] = data_sw[15:8];
                         DATA_WAY_4[address_in[12:6]][address_in[5:0]] = data_sw[7:0];
                     end
-                end else begin // randomly evict a cache entry ...
+                end
+                
+                // if no vacant entries, randomly evict ... 
+                else begin 
                     TAG_WAY_1[address_in[12:6]] = address_in[31:13];
                     if (storeSize) begin
                         DATA_WAY_1[address_in[12:6]][address_in[5:0]] = data_sw[7:0];
