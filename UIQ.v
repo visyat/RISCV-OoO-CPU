@@ -22,7 +22,7 @@ module Unified_Issue_Queue (
     input [31:0] srcReg2_data_ARF_in,
     
     // ROB ...
-    input [63:0] ROB_issue_ready_in;
+    input [63:0] ROB_issue_ready_in,
     input [5:0] reg0_ROB_in,
     // input reg0_ready_ROB_in,
     input [31:0] reg0_data_ROB_in,
