@@ -70,7 +70,7 @@ module cache_tb;
             storeSize = 0;
             fromLSQ = 0;
         end
-        #(5*Cycle) $stop
+        #(5*Cycle) $stop;
     end
     initial clk = 1'b0;
     always #(HalfCycle) clk = ~clk;
