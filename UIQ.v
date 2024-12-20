@@ -22,16 +22,17 @@ module Unified_Issue_Queue (
     input [31:0] srcReg2_data_ARF_in,
     
     // ROB ...
+    input [63:0] ROB_issue_ready_in;
     input [5:0] reg0_ROB_in,
-    input reg0_ready_ROB_in,
+    // input reg0_ready_ROB_in,
     input [31:0] reg0_data_ROB_in,
 
     input [5:0] reg1_ROB_in,
-    input reg1_ready_ROB_in,
+    // input reg1_ready_ROB_in,
     input [31:0] reg1_data_ROB_in,
 
     input [5:0] reg2_ROB_in,
-    input reg2_ready_ROB_in,
+    // input reg2_ready_ROB_in,
     input [31:0] reg2_data_ROB_in,
 
     input [5:0] ROBNum_in,
@@ -96,7 +97,7 @@ module Unified_Issue_Queue (
     reg [63:0]  FU_READY;
     reg [5:0]   ROB [63:0];
 
-    integer i, j, k, m;
+    integer i, j, k, m, n;
     reg [1:0] issued = 0;
     reg [2:0] fu_taken;
     reg [1:0] alu_round_robin = 0;
@@ -270,31 +271,37 @@ module Unified_Issue_Queue (
     always @(*) begin
         for (m=0; m<64; m=m+1) begin
             if (VALID[m]) begin
-                if (SRCREG1[m] == reg0_ROB_in && reg0_ready_ROB_in) begin
+                if (SRCREG1[m] == reg0_ROB_in) begin
                     SRC1DATA[m] = reg0_data_ROB_in;
-                    SRC1READY[m] = 1'b1;
                 end
-                if (SRCREG1[m] == reg1_ROB_in && reg1_ready_ROB_in) begin
+                if (SRCREG1[m] == reg1_ROB_in) begin
                     SRC1DATA[m] = reg1_data_ROB_in;
-                    SRC1READY[m] = 1'b1;
                 end
-                if (SRCREG1[m] == reg2_ROB_in && reg2_ready_ROB_in) begin
+                if (SRCREG1[m] == reg2_ROB_in) begin
                     SRC1DATA[m] = reg2_data_ROB_in;
-                    SRC1READY[m] = 1'b1;
                 end
-                if (SRCREG2[m] == reg0_ROB_in && reg0_ready_ROB_in) begin
+                if (SRCREG2[m] == reg0_ROB_in) begin
                     SRC2DATA[m] = reg0_data_ROB_in;
-                    SRC2READY[m] = 1'b1;
                 end
-                if (SRCREG2[m] == reg1_ROB_in && reg1_ready_ROB_in) begin
+                if (SRCREG2[m] == reg1_ROB_in) begin
                     SRC2DATA[m] = reg1_data_ROB_in;
-                    SRC2READY[m] = 1'b1;
                 end
-                if (SRCREG2[m] == reg2_ROB_in && reg2_ready_ROB_in) begin
+                if (SRCREG2[m] == reg2_ROB_in) begin
                     SRC2DATA[m] = reg2_data_ROB_in;
-                    SRC2READY[m] = 1'b1;
                 end
             end 
+        end
+    end
+    always @(*) begin
+        for (n=0; n<64; n=n+1) begin
+            if (VALID[n]) begin
+                if (ROB_issue_ready_in[SRCREG1[n]]) begin
+                    SRC1READY[n] = 1'b1;
+                end
+                if (ROB_issue_ready_in[SRCREG2[n]]) begin
+                    SRC2READY[n] = 1'b1;
+                end
+            end
         end
     end
 

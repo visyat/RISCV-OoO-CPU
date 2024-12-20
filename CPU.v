@@ -73,15 +73,16 @@ module CPU(
     wire [31:0] srcReg2_data_ARF_EX;
 
     // ROB ...
-    wire reg0_ready_ROB_UIQ_EX;
+    wire [63:0] ROB_UIQ_issue_ready_EX;
+    // wire reg0_ready_ROB_UIQ_EX;
     wire [5:0] reg0_ROB_UIQ_EX;
     wire [31:0] reg0_data_ROB_UIQ_EX;
 
-    wire reg1_ready_ROB_UIQ_EX;
+    // wire reg1_ready_ROB_UIQ_EX;
     wire [5:0] reg1_ROB_UIQ_EX;
     wire [31:0] reg1_data_ROB_UIQ_EX;
 
-    wire reg2_ready_ROB_UIQ_EX;
+    // wire reg2_ready_ROB_UIQ_EX;
     wire [5:0] reg2_ROB_UIQ_EX;
     wire [31:0] reg2_data_ROB_UIQ_EX;
     
@@ -429,16 +430,17 @@ module CPU(
         .srcReg2_data_ARF_in(srcReg2_data_ARF_EX),
 
         // ready flags from ROB ...
+        .ROB_issue_ready_in(ROB_UIQ_issue_ready_EX),
         .reg0_ROB_in(reg0_ROB_UIQ_EX),
-        .reg0_ready_ROB_in(reg0_ready_ROB_UIQ_EX),
+        // .reg0_ready_ROB_in(reg0_ready_ROB_UIQ_EX),
         .reg0_data_ROB_in(reg0_data_ROB_UIQ_EX),
         
         .reg1_ROB_in(reg1_ROB_UIQ_EX),
-        .reg1_ready_ROB_in(reg1_ready_ROB_UIQ_EX),
+        // .reg1_ready_ROB_in(reg1_ready_ROB_UIQ_EX),
         .reg1_data_ROB_in(reg1_data_ROB_UIQ_EX),
 
         .reg2_ROB_in(reg2_ROB_UIQ_EX),
-        .reg2_ready_ROB_in(reg2_ready_ROB_UIQ_EX),
+        // .reg2_ready_ROB_in(reg2_ready_ROB_UIQ_EX),
         .reg2_data_ROB_in(reg2_data_ROB_UIQ_EX),
         .ROBNum_in(ROBNum_EX),
 
