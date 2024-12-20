@@ -5,12 +5,9 @@ module reorder_buffer(
     input clk, 
     input rstn,
     
-    input [5:0] src1,
-    input [5:0] src2,
     
     input [5:0] dr,
     input [5:0] old_dr,
-    input [31:0] dr_data,
     input [5:0] store_reg,
     input [31:0] store_data,
     input [31:0] instr_PC,
@@ -25,28 +22,27 @@ module reorder_buffer(
     input [31:0] new_dr_data_1,
     input [31:0] new_dr_data_2,
     
-    output reg [63:0] issue_ready,
     output reg [63:0] retire,
     output reg stall,
     
-    output reg src0_ready,
+    //output reg src0_ready,
     output reg [5:0] src0_reg_ready,
     output reg [31:0] src0_data_ready,
     
-    output reg src1_ready,
+    //output reg src1_ready,
     output reg [5:0] src1_reg_ready,
     output reg [31:0] src1_data_ready,
     
-    output reg src2_ready,
+    //output reg src2_ready,
     output reg [5:0] src2_reg_ready,
     output reg [31:0] src2_data_ready,
     
-    
+    output reg [63:0] issue_ready,
 
     output reg [5:0] ARF_reg_1,
-    output reg [5:0] ARF_data_1,
+    output reg [31:0] ARF_data_1,
     output reg [5:0] ARF_reg_2,
-    output reg [5:0] ARF_data_2,
+    output reg [31:0] ARF_data_2,
     output reg retire1,
     output reg retire2,
     
@@ -54,32 +50,7 @@ module reorder_buffer(
     output reg [31:0] pc_retire2
 );
 
-    // 1. multiple entries per cycle
-    // 2. ROB_reg_ready determination
-    // 3. signals like "complete", how to update
-    
-    //cases in which ROB needs to update:
-    //  1: we add one item into the ROB, mark as 1 in retire (dispatch stage) 
-    //  2: we add more than one item into the ROB (dispatch stage)
-    //  3: update complete when complete, set 0 in retire (complete stage)
-    //  4: remove entire line from ROB (retire)
-    
-    //general plan
-        //whenever anything is renamed (2 at a time max) add a row in ROB
-        
-        //when an instr leaves ALU, we send its info back and check its cpu. Match it with its ROB row, set complete to 1, update data, and set retire at the dr to 0
-        
-        //go through ROB, starting from top, if complete=1 and all prior lines are retired, set reg is ready to 1
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
     reg [31:0] ROB [63:0] [7:0];
     
     reg retire_head;
@@ -124,10 +95,15 @@ module reorder_buffer(
             
             retire_head = 6'd0;
             ROB_head = 6'd0;
-            src1_ready = 1'b0;
-            src2_ready = 1'b0;
-            src1_reg_ready= 1'b0;
-            src2_reg_ready=1'b0; 
+           // src0_ready = 1'b0;
+            //src1_ready = 1'b0;
+           // src2_ready = 1'b0;
+            src0_reg_ready =6'b0;
+            src0_data_ready =32'b0;
+            src1_reg_ready= 6'b0;
+            src1_data_ready=32'b0; 
+            src2_reg_ready =6'b0;
+            src2_data_ready =32'b0;
         end
         else begin
             stall=1'b0;
@@ -140,7 +116,7 @@ module reorder_buffer(
             ROB[ROB_head][0] <= 1'b1; //valid
             ROB[ROB_head][1] <= dr; //dr
             ROB[ROB_head][2] <= old_dr; //old_dr
-            ROB[ROB_head][3] <= dr_data; //dr_data
+            ROB[ROB_head][3] <= 1'b0; //dr_data
             ROB[ROB_head][4] <= store_reg; //store_reg
             ROB[ROB_head][5] <= store_data; //store_data
             ROB[ROB_head][6] <= instr_PC; //instr_PC
@@ -162,15 +138,13 @@ module reorder_buffer(
     
     //COMPLETE AND SET READY FOR ISSUE
     always @(*) begin
-
-        
         //SET COMPLETE
         for (j=0; j<64; j=j+1) begin
             if(ROB[j][0] == 1'b1) begin
                 if(ROB[j][6] == complete_pc_0) begin
                     ROB[j][7] <=1'b1; //set complete
                     ROB[j][3] <= new_dr_data_0; //write data to rob
-                    src0_ready <= 1'b1;
+                    issue_ready[ROB[j][1]]= 1'b1;
                     src0_reg_ready <=ROB[j][1];
                     src0_data_ready <= ROB[j][3];
                 end
@@ -178,7 +152,7 @@ module reorder_buffer(
                 if(ROB[j][6] == complete_pc_1) begin
                     ROB[j][7] <=1'b1; //set complete
                     ROB[j][3] <= new_dr_data_1; //write data to rob
-                    src1_ready <= 1'b1;
+                   
                     src1_reg_ready <=ROB[j][1];
                     src1_data_ready <= ROB[j][3];
                 end
@@ -186,17 +160,13 @@ module reorder_buffer(
                 if(ROB[j][6] == complete_pc_2) begin
                     ROB[j][7] <=1'b1; //set complete
                     ROB[j][3] <= new_dr_data_2; //write data to rob
-                    src2_ready <= 1'b1;
+                
                     src2_reg_ready <=ROB[j][1];
                     src2_data_ready <= ROB[j][3];
                 end
                 
             end
-        end
-        
-        
-       
-        
+        end    
     end
     
     //RETIRE
@@ -280,7 +250,5 @@ module reorder_buffer(
         end
         
     end
-    
-    
 
 endmodule
