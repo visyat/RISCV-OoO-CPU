@@ -402,10 +402,10 @@ module CPU(
         // retirement ... written from ROB ...
         .retire1(retire1_ROB_C),
         .write_addr1(destReg1_ROB_C),
-        .write_data1(destReg2_data_ROB_C),
+        .write_data1(destReg1_data_ROB_C),
 
         .retire2(retire2_ROB_C),
-        .write_addr2(destReg1_ROB_C),
+        .write_addr2(destReg2_ROB_C),
         .write_data2(destReg2_data_ROB_C),
 
         // outputs ...
