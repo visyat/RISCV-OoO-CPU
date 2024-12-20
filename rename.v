@@ -87,12 +87,9 @@ module rename(
         end else begin
             sr1_p = RAT[sr1][1]; //assign to whatever p-reg is in RAT
             
-            if(hasImm == 1'b0)begin          
+            //if(hasImm == 1'b0)begin          
             sr2_p = RAT[sr2][1]; //assign to whatever p-reg is in RAT             
-            end
-            else begin
-            sr2_p=imm;
-            end
+            
             // Find a free physical register for the destination register
 
             if(opcode != 7'b0100011 && opcode!=7'b0000000)begin

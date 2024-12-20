@@ -336,7 +336,7 @@ module CPU(
         .dr_p_data(destReg_p_data_EX)
     );
 
-    // simplified ROB interface ...
+    //ROB interface ...
     reorder_buffer ROB(
         // inputs ..
         .clk(clk),
