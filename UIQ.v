@@ -22,10 +22,18 @@ module Unified_Issue_Queue (
     input [31:0] srcReg2_data_ARF_in,
     
     // ROB ...
-    input [5:0] srcReg1_reg_ready_ROB_in,
-    input srcReg1_ready_ROB_in,
-    input [5:0] srcReg2_reg_ready_ROB_in,
-    input srcReg2_ready_ROB_in,
+    input [5:0] reg0_ROB_in,
+    input reg0_ready_ROB_in,
+    input [31:0] reg0_data_ROB_in,
+
+    input [5:0] reg1_ROB_in,
+    input reg1_ready_ROB_in,
+    input [31:0] reg1_data_ROB_in,
+
+    input [5:0] reg2_ROB_in,
+    input reg2_ready_ROB_in,
+    input [31:0] reg2_data_ROB_in,
+
     input [5:0] ROBNum_in,
 
     // from functional units ...
@@ -88,9 +96,7 @@ module Unified_Issue_Queue (
     reg [63:0]  FU_READY;
     reg [5:0]   ROB [63:0];
 
-    integer i;
-    integer j;
-    integer k;
+    integer i, j, k, m;
     reg [1:0] issued = 0;
     reg [2:0] fu_taken;
     reg [1:0] alu_round_robin = 0;
@@ -193,16 +199,10 @@ module Unified_Issue_Queue (
 
                         SRCREG1[i] = srcReg1_p_in;
                         SRCREG2[i] = srcReg2_p_in;
-
-                        if (srcReg1_ready_ROB_in) begin
-                            SRC1READY[i] = 1'b1;
-                            SRC1DATA[i] = srcReg1_data_ARF_in;
-                        end
-                        if (srcReg2_ready_ROB_in) begin
-                            SRC2READY[i] = 1'b1;
-                            SRC2DATA[i] = srcReg2_data_ARF_in;
-                        end
-
+                        
+                        SRC1DATA[i] = srcReg1_data_ARF_in;
+                        SRC2DATA[i] = srcReg2_data_ARF_in;
+                        
                         // handling special cases: 
                         if (op_type == LUI) begin
                             SRC1READY[i]   = 1'b1;
@@ -264,15 +264,37 @@ module Unified_Issue_Queue (
                 if (FU[j] == 2'd2 && FU_ready_ALU2_in) begin
                     FU_READY[j] = 1'b1;
                 end
-                // add additional forwards from MEM and ALU ... 
-
-                if (SRCREG1[j] == srcReg1_reg_ready_ROB_in && ~SRC1READY[j] && srcReg1_ready_ROB_in) begin
-                    SRC1READY[j] = 1'b1;
-                end
-                if (SRCREG2[j] == srcReg2_reg_ready_ROB_in && ~SRC2READY[j] && srcReg2_ready_ROB_in) begin
-                    SRC2READY[j] = 1'b1;
-                end
             end
+        end
+    end
+    always @(*) begin
+        for (m=0; m<64; m=m+1) begin
+            if (VALID[m]) begin
+                if (SRCREG1[m] == reg0_ROB_in && reg0_ready_ROB_in) begin
+                    SRC1DATA[m] = reg0_data_ROB_in;
+                    SRC1READY[m] = 1'b1;
+                end
+                if (SRCREG1[m] == reg1_ROB_in && reg1_ready_ROB_in) begin
+                    SRC1DATA[m] = reg1_data_ROB_in;
+                    SRC1READY[m] = 1'b1;
+                end
+                if (SRCREG1[m] == reg2_ROB_in && reg2_ready_ROB_in) begin
+                    SRC1DATA[m] = reg2_data_ROB_in;
+                    SRC1READY[m] = 1'b1;
+                end
+                if (SRCREG2[m] == reg0_ROB_in && reg0_ready_ROB_in) begin
+                    SRC2DATA[m] = reg0_data_ROB_in;
+                    SRC2READY[m] = 1'b1;
+                end
+                if (SRCREG2[m] == reg1_ROB_in && reg1_ready_ROB_in) begin
+                    SRC2DATA[m] = reg1_data_ROB_in;
+                    SRC2READY[m] = 1'b1;
+                end
+                if (SRCREG2[m] == reg2_ROB_in && reg2_ready_ROB_in) begin
+                    SRC2DATA[m] = reg2_data_ROB_in;
+                    SRC2READY[m] = 1'b1;
+                end
+            end 
         end
     end
 

@@ -71,23 +71,19 @@ module CPU(
     // ARF ...
     wire [31:0] srcReg1_data_ARF_EX;
     wire [31:0] srcReg2_data_ARF_EX;
-    wire [5:0] srcReg1_reg_ARF_EX;
-    wire [5:0] srcReg2_reg_ARF_EX;
 
     // ROB ...
-    wire srcReg1_ready_ROB_EX;
-    wire srcReg2_ready_ROB_EX;
-    wire srcReg1_reg_ready_EX;
-    wire srcReg2_reg_ready_EX;
-    wire [5:0] ROBNum_EX;
-    wire [63:0] ready_for_issue_EX;
-    wire [63:0] ready_for_retire_EX;
-    wire retire1_EX;
-    wire retire2_EX;
-    wire write_back_EX;
-    wire stall_ROB_EX;
-    wire [31:0] retire_pc1_EX;
-    wire [31:0] retire_pc2_EX;
+    wire reg0_ready_ROB_UIQ_EX;
+    wire [5:0] reg0_ROB_UIQ_EX;
+    wire [31:0] reg0_data_ROB_UIQ_EX;
+
+    wire reg1_ready_ROB_UIQ_EX;
+    wire [5:0] reg1_ROB_UIQ_EX;
+    wire [31:0] reg1_data_ROB_UIQ_EX;
+
+    wire reg2_ready_ROB_UIQ_EX;
+    wire [5:0] reg2_ROB_UIQ_EX;
+    wire [31:0] reg2_data_ROB_UIQ_EX;
     
     // UIQ ...
     wire stall_UIQ_EX;
@@ -179,6 +175,7 @@ module CPU(
     wire [5:0] ROB_dataMem_MEM;
 
     // COMPLETE stage signals
+    // Pipeline ...
     wire [31:0] PC_complete0_C; 
     wire [5:0] destReg_complete0_C;
     wire [31:0] destReg_data_complete0_C;
@@ -194,25 +191,19 @@ module CPU(
     wire [31:0] destReg_data_complete2_C;
     wire [5:0] ROBNum_complete2_C;
 
-    
-    wire [31 : 0]   dr_data_0;
-    wire [31 : 0]   complete_pc_0;
-    wire [31 : 0]   dr_data_1;
-    wire [31 : 0]   complete_pc_1;
-    wire [31 : 0]   dr_data_2;
-    wire [31 : 0]   complete_pc_2;
+    // ROB ...
+    wire [63:0] renameRetire_ROB_C;
 
-/*
+    wire retire1_ROB_C;
+    wire [5:0] destReg1_ROB_C;
+    wire [31:0] destReg1_data_ROB_C; 
 
-    wire [5:0]      set_rob_reg_invaild;
-    wire [5:0]      regout_from_lsu;
-    wire [5:0]      regout_from_lsu2;
-    wire [5:0]      regout_from_dm;
-    reg             is_store_r;
-    wire            is_store;   
-    wire [31 : 0]   data_check;
-    wire            FU_read_flag_MEM_com;
-    */
+    wire retire2_ROB_C;
+    wire [5:0] destReg2_ROB_C;
+    wire [31:0] destReg2_data_ROB_C; 
+
+    wire [31:0] PC_retire1_ROB_LSQ_C;
+    wire [31:0] PC_retire2_ROB_LSQ_C;
 
     always @(posedge clk or negedge rstn) begin
         if(~rstn) begin
@@ -333,7 +324,7 @@ module CPU(
         .opcode(opcode_EX),
         .hasImm(hasImm_EX),
         .imm(imm_EX),
-        .ROB_retire(ready_for_retire_EX), // need to add retirement to rename module ...
+        .ROB_retire(renameRetire_ROB_C), // need to add retirement to rename module ...
         
         // outputs ...
         .sr1_p(srcReg1_p_EX),
@@ -346,53 +337,56 @@ module CPU(
 
     // simplified ROB interface ...
     reorder_buffer ROB(
-        // inputs ...
+        // inputs ..
         .clk(clk),
         .rstn(rstn),
         
-        .src1(srcReg1_p_EX),
-        .src2(srcReg2_p_EX),
-        .src1_reg_ready(srcReg1_reg_ready_EX),
-        .src2_reg_ready(srcReg2_reg_ready_EX),
-        
+        // dispatch ...
         .dr(destReg_p_EX),
         .old_dr(oldDestReg_rename_EX),
-        .dr_data(destReg_p_data_EX),
-        .store_reg(), //srcReg1_p_EX
-        .store_data(),//destReg_p_data_EX
         .instr_PC(PC_EX),
-
         .opcode(opcode_EX),
-        .write_back(write_back_EX),
-        .retire1(retire1_EX),
-        .retire2(retire2_EX),
 
-
+        // retire ...
         .complete_pc_0(PC_complete0_C),
-        .complete_pc_1(PC_complete1_C),
-        .complete_pc_2(PC_complete2_C),
         .new_dr_data_0(destReg_data_complete0_C),
+
+        .complete_pc_1(PC_complete1_C),
         .new_dr_data_1(destReg_data_complete1_C),
+
+        .complete_pc_2(PC_complete2_C),
         .new_dr_data_2(destReg_data_complete2_C),
-         
-        //outputs ...
-        .issue_ready(ready_for_issue_EX),
-        .retire(ready_for_retire_EX),
-        .stall(stall_ROB_EX),
+
+        .retire(renameRetire_ROB_C), // for rename ...
+        .stall(),
+
+        // outputs ...
+        // issue ready flags ...
+        .src0_ready(reg0_ready_ROB_UIQ_EX),
+        .src0_reg_ready(reg0_ROB_UIQ_EX),
+        .src0_data_ready(reg0_data_ROB_UIQ_EX),
+
+        .src1_ready(reg1_ready_ROB_UIQ_EX),
+        .src1_reg_ready(reg1_ROB_UIQ_EX),
+        .src1_data_ready(reg1_data_ROB_UIQ_EX),
+
+        .src2_ready(reg2_ready_ROB_UIQ_EX),
+        .src2_reg_ready(reg2_ROB_UIQ_EX),
+        .src2_data_ready(reg2_data_ROB_UIQ_EX),
         
-        .src1_ready(srcReg1_ready_ROB_EX),
-        .src2_ready(srcReg2_ready_ROB_EX),
-        
-        .ARF_reg_1(srcReg1_reg_ARF_EX),
-        .ARF_data_1(srcReg1_data_ARF_EX),
-        .ARF_reg_2(srcReg2_reg_ARF_EX),
-        .ARF_data_2(srcReg2_data_ARF_EX),
-        
-        //.old_reg_1(),
-        //.old_reg_2(),
-       
-        .pc_retire1(retire_pc1_EX),
-        .pc_retire2(retire_pc2_EX)
+        // retire ...
+        // write to ARF ...
+        .retire1(retire1_ROB_C),
+        .ARF_reg_1(destReg1_ROB_C),
+        .ARF_data_1(destReg1_data_ROB_C),
+
+        .retire2(retire2_ROB_C),
+        .ARF_reg_2(destReg2_ROB_C),
+        .ARF_data_2(destReg2_data_ROB_C),
+
+        // deallocate in LSQ ...
+        .pc_retire1(PC_retire1_ROB_LSQ_C),
+        .pc_retire2(PC_retire2_ROB_LSQ_C)
     );
 
     ARF ARF (
@@ -401,26 +395,21 @@ module CPU(
         .rstn(rstn),
         
         // reading rs1 and rs2 ...
-        .read_addr1(srcReg1_p_EX),
-        .read_addr2(srcReg2_p_EX),
-        .read_en(1'b1), // if an instruction is dispatching ... stalled??
-        
-        // retiring instructions ...
-        
-        .write_back(write_back_EX),
-        .retire1(retire1_EX),
-        .retire2(retire2_EX),
-     
-        // retire 1 ...
-        .write_addr1(srcReg1_reg_ARF_EX),
-        .write_data1(srcReg1_data_ARF_EX),
-        // retire 2 ...
-        .write_addr2(srcReg1_reg_ARF_EX),
-        .write_data2(srcReg2_data_ARF_EX),
+        .read_srcReg1(srcReg1_p_EX),
+        .read_srcReg2(srcReg2_p_EX),
+
+        // retirement ... written from ROB ...
+        .retire1(retire1_ROB_C),
+        .write_addr1(destReg1_ROB_C),
+        .write_data1(destReg2_data_ROB_C),
+
+        .retire2(retire2_ROB_C),
+        .write_addr2(destReg1_ROB_C),
+        .write_data2(destReg2_data_ROB_C),
 
         // outputs ...
-        .read_data1(srcReg1_data_ARF_EX),
-        .read_data2(srcReg2_data_ARF_EX)
+        .read_srcReg1_data(srcReg1_data_ARF_EX),
+        .read_srcReg2_data(srcReg2_data_ARF_EX)
     );
 
     Unified_Issue_Queue UIQ (
@@ -440,10 +429,17 @@ module CPU(
         .srcReg2_data_ARF_in(srcReg2_data_ARF_EX),
 
         // ready flags from ROB ...
-        .srcReg1_reg_ready_ROB_in(srcReg1_reg_ready_EX),
-        .srcReg1_ready_ROB_in (srcReg1_ready_ROB_EX), // (srcReg1_ready_ROB_EX),
-        .srcReg2_reg_ready_ROB_in(srcReg2_reg_ready_EX),
-        .srcReg2_ready_ROB_in (srcReg1_ready_ROB_EX), // (srcReg2_ready_ROB_EX),
+        .reg0_ROB_in(reg0_ROB_UIQ_EX),
+        .reg0_ready_ROB_in(reg0_ready_ROB_UIQ_EX),
+        .reg0_data_ROB_in(reg0_data_ROB_UIQ_EX),
+        
+        .reg1_ROB_in(reg1_ROB_UIQ_EX),
+        .reg1_ready_ROB_in(reg1_ready_ROB_UIQ_EX),
+        .reg1_data_ROB_in(reg1_data_ROB_UIQ_EX),
+
+        .reg2_ROB_in(reg2_ROB_UIQ_EX),
+        .reg2_ready_ROB_in(reg2_ready_ROB_UIQ_EX),
+        .reg2_data_ROB_in(reg2_data_ROB_UIQ_EX),
         .ROBNum_in(ROBNum_EX),
 
         // ready flags from functional units ...
@@ -607,8 +603,8 @@ module CPU(
         .destRegLsu(destReg_issue2_MEM),
 
         // from retirement ...
-        .pcRet1(retire_pc1_EX), // PENDING FROM ROB ...
-        .pcRet2(retire_pc2_EX),
+        .pcRet1(PC_retire1_ROB_LSQ_C), // PENDING FROM ROB ...
+        .pcRet2(PC_retire2_ROB_LSQ_C),
         
         // outputs ...
         .pcOut(PC_LSQ_MEM),
@@ -714,62 +710,4 @@ module CPU(
         .destReg_data_complete2_out(destReg_data_complete2_C),
         .ROBNum_complete2_out(ROBNum_complete2_C)
     );
-    
-  
-
-    /*
-        always @(*) begin
-            is_store_r = 1'b0;
-            if(tunnel_MEM[0]) begin
-                dr_data_0_reg= destReg_data_ALU0_MEM;
-                complete_pc_0_reg = PC_issue0_MEM;
-            end
-            else begin
-                dr_data_0_reg= 32'd1;
-                complete_pc_0_reg= 32'd1;
-            end
-
-            if(tunnel_MEM[1]) begin
-                dr_data_1_reg= destReg_data_ALU1_MEM;
-                complete_pc_1_reg= PC_issue1_MEM;
-            end
-            else begin
-                dr_data_1_reg = 32'd1;
-                complete_pc_1_reg = 32'd1;
-            end
-            
-            if(tunnel_MEM[2]) begin
-                complete_pc_2_reg           = PC_issue2_MEM;
-                if (FU_write_flag_com && ~FU_read_flag_MEM_com) begin
-                    is_store_r= 1'b1;
-                end
-                else begin
-                    dr_data_2_reg = destReg_data_ALU1_MEM;
-                end
-            end
-            else begin
-                dr_data_2_reg    = 32'd1;
-                complete_pc_2_reg           = 32'd1;
-            end
-
-            if(fromLSQ_MEM) begin
-                dr_data_3_reg    = load_data_DataMem_MEM;
-                complete_pc_3_reg           = pc_ls_comp;
-            end
-            else begin
-                dr_data_3_reg    = 32'd1;
-                complete_pc_3_reg           = 32'd1;
-            end
-        end
-        assign dr_data_0 = dr_data_0_reg;
-        assign complete_pc_0        = complete_pc_0_reg;
-        assign dr_data_1 = dr_data_1_reg;
-        assign complete_pc_1        = complete_pc_1_reg;
-        assign dr_data_2 = dr_data_2_reg;
-        assign complete_pc_2        = complete_pc_2_reg;
-        assign dr_data_3 = dr_data_3_reg;
-        assign complete_pc_3        = complete_pc_3_reg; 
-        assign is_store        = is_store_r;  
-    */ 
-
 endmodule
