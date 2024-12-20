@@ -1,6 +1,7 @@
 
 module rename(
     input rstn,
+    input clk,
 
     //inputs: sr1, sr2, dr
     input [4 : 0]           sr1, 
@@ -52,7 +53,7 @@ module rename(
     integer j;
     integer old_index;
 
-    always @(*) begin
+    always @(posedge clk) begin
         if(~rstn) begin
             sr1_p       = 6'd0;
             sr2_p       = 6'd0;
@@ -130,6 +131,21 @@ module rename(
         end
         //$display("sr1P: %b, src2P: %b, destP: %b ", sr1_p, sr2_p, dr_p);
         //$display("finish rename");
+    end
+    
+    integer ret_h;
+    integer in_free;
+    always @(posedge clk) begin
+        for (ret_h=0; ret_h <64; ret_h=ret_h+1) begin
+            if(ROB_retire[ret_h]==1) begin
+                for(in_free=0; in_free<32; in_free=in_free+1) begin
+                    if (free_pool[in_free][0] == 1'b1) begin // if this p_reg is used
+                        free_pool[in_free][1] = ret_h;  // update
+                        in_free = 32;
+                    end
+                end
+            end
+        end
     end
 
 endmodule

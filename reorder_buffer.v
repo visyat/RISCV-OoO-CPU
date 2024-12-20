@@ -117,6 +117,8 @@ module reorder_buffer(
             ROB_head = 6'd0;
             src1_ready = 1'b0;
             src2_ready = 1'b0;
+            src1_reg_ready= 1'b0;
+            src2_reg_ready=1'b0; 
         end
         else begin
             stall=1'b0;
