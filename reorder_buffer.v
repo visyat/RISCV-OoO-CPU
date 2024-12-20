@@ -152,7 +152,7 @@ module reorder_buffer(
                 if(ROB[j][6] == complete_pc_1) begin
                     ROB[j][7] <=1'b1; //set complete
                     ROB[j][3] <= new_dr_data_1; //write data to rob
-                   
+                    issue_ready[ROB[j][1]]= 1'b1;
                     src1_reg_ready <=ROB[j][1];
                     src1_data_ready <= ROB[j][3];
                 end
@@ -160,7 +160,7 @@ module reorder_buffer(
                 if(ROB[j][6] == complete_pc_2) begin
                     ROB[j][7] <=1'b1; //set complete
                     ROB[j][3] <= new_dr_data_2; //write data to rob
-                
+                    issue_ready[ROB[j][1]]= 1'b1;
                     src2_reg_ready <=ROB[j][1];
                     src2_data_ready <= ROB[j][3];
                 end
