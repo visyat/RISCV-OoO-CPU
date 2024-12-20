@@ -45,7 +45,7 @@ module EX_MEM_Reg (
     output reg [3:0] optype_issue2_out
 );
     
-    always @(posedge clk or negedge rstn) begin
+    always @(*) begin
         if (~rstn) begin
             PC_issue0_out = 'b0;
             aluOutput_issue0_out = 'b0;

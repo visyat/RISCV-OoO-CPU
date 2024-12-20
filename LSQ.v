@@ -62,7 +62,7 @@ module Load_Store_Queue (
     integer i, j, k, m;
     reg [3:0] index = 0;
 
-    always @(posedge clk or negedge rstn) begin // initialize LSQ entries, reserve entries on dispatch ...
+    always @(*) begin // initialize LSQ entries, reserve entries on dispatch ...
         if (~rstn) begin // on reset, set all LSQ entries to 0 ...
             VALID = 16'b0;
             OP = 16'b0;
@@ -137,7 +137,7 @@ module Load_Store_Queue (
         end
     end
 
-    always @(posedge clk or negedge rstn) begin // handle issue logic ...
+    always @(*) begin // handle issue logic ...
         if (~rstn) begin
             pcOut = 'b0;
             addressOut = 'b0;

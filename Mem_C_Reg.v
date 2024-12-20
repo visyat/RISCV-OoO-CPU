@@ -88,7 +88,7 @@ module MEM_C_Reg (
             end
         end
     end
-    always @(*) begin
+    always @(posedge clk or negedge rstn) begin
         if (PC_issue_LSQ_in) begin
             PC_complete2_out = PC_issue_LSQ_in; 
             destReg_complete2_out = destReg_issue_LSQ_in;

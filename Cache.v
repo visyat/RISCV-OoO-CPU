@@ -37,14 +37,14 @@ module Cache(
     reg found_1;
     reg found_2;
     reg found_3;
-    reg found_3;
+    reg found_4;
 
     reg [31:0] search_1;
     reg [31:0] search_2;
     reg [31:0] search_3;
     reg [31:0] search_4;
     
-    always @(posedge clk or negedge rstn) begin
+    always @(*) begin
         // search way 1 ...
         if (~rstn) begin
             VALID_WAY_1 = 'b0;
@@ -66,7 +66,7 @@ module Cache(
             end 
         end
     end
-    always @(posedge clk or negedge rstn) begin
+    always @(*) begin
         // search way 2 ...
         if (~rstn) begin
             VALID_WAY_2 = 'b0;
@@ -88,7 +88,7 @@ module Cache(
             end 
         end
     end
-    always @(posedge clk or negedge rstn) begin
+    always @(*) begin
         // search way 3 ...
         if (~rstn) begin
             VALID_WAY_3 = 'b0;
@@ -110,7 +110,7 @@ module Cache(
             end 
         end
     end
-    always @(posedge clk or negedge rstn) begin
+    always @(*) begin
         // search way 4 ...
         if (~rstn) begin
             VALID_WAY_4 = 'b0;
@@ -133,7 +133,7 @@ module Cache(
         end
     end
 
-    always @(posedge clk or negedge rstn) begin
+    always @(*) begin
         // output ... 
         if (~rstn) begin
             lw_data = 'b0;

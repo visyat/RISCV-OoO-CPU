@@ -631,7 +631,7 @@ module CPU(
         .ROBNum_issue0_in(ROBNum_issue0_MEM),
 
         .PC_issue1_in(PC_issue1_MEM),
-        .aluOutput_issue1_in(aluOutput_issue0_MEM),
+        .aluOutput_issue1_in(aluOutput_issue1_MEM),
         .destReg_issue1_in(destReg_issue1_MEM),
         .ROBNum_issue1_in(ROBNum_issue1_MEM),
 
