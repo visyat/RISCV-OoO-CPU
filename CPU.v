@@ -77,8 +77,8 @@ module CPU(
     // ROB ...
     wire srcReg1_ready_ROB_EX;
     wire srcReg2_ready_ROB_EX;
-    wire srcReg1_ready_EX;
-    wire srcReg2_ready_EX;
+    wire [5:0] srcReg1_ready_EX;
+    wire [5:0] srcReg2_ready_EX;
     wire [5:0] ROBNum_EX;
     wire [63:0] ready_for_issue_EX;
     wire [63:0] ready_for_retire_EX;
@@ -429,9 +429,9 @@ module CPU(
         .srcReg2_data_ARF_in(srcReg2_data_ARF_EX),
 
         // ready flags from ROB ...
-        .srcReg1_reg_ready_ROB_in(),
+        .srcReg1_reg_ready_ROB_in(srcReg1_ready_EX),
         .srcReg1_ready_ROB_in (srcReg1_ready_ROB_EX), // (srcReg1_ready_ROB_EX),
-        .srcReg2_reg_ready_ROB_in(),
+        .srcReg2_reg_ready_ROB_in(srcReg2_ready_EX),
         .srcReg2_ready_ROB_in (srcReg1_ready_ROB_EX), // (srcReg2_ready_ROB_EX),
         .ROBNum_in(ROBNum_EX),
 

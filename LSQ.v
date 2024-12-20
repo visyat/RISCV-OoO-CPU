@@ -137,7 +137,7 @@ module Load_Store_Queue (
         end
     end
 
-    always @(*) begin // handle issue logic ...
+    always @(posedge clk or negedge rstn) begin // handle issue logic ...
         if (~rstn) begin
             pcOut = 'b0;
             addressOut = 'b0;
@@ -164,7 +164,7 @@ module Load_Store_Queue (
                     destRegOut = DESTREG[m];
                     swDataOut = 32'b0;
                     ISSUED[m] = 1;
-                    i=16;
+                    m=16;
                 end
             end
             if (~fromLSQ) begin
@@ -180,7 +180,7 @@ module Load_Store_Queue (
                         storeSizeOut = SIZE[m];
                         swDataOut = LSQ_DATA[m];
                         ISSUED[m] = 1;
-                        i=16;
+                        m=16;
                     end
                 end
             end
