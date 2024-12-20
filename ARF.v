@@ -14,9 +14,13 @@ module ARF #(
     // can retire 2 instructions at the same time at max
     input [AR_SIZE - 1 : 0]     write_addr1,
     input [31 : 0]              write_data1,
+    input [5 : 0]               old_addr1,
     input [AR_SIZE - 1 : 0]     write_addr2,
     input [31 : 0]              write_data2,
-    input                       write_en,
+    input [5 : 0]               old_addr2,
+    input write_back,
+    input retire1,
+    input retire2,
 
     output reg [31 : 0]         read_data1,
     output reg [31 : 0]         read_data2
@@ -33,12 +37,14 @@ module ARF #(
             end
         end
         else begin
-            if (write_en) begin
-                if (write_addr1 != 0) begin // p0 is always 0
+            if (write_back) begin
+                if (retire1) begin 
                     ar_file[write_addr1] = write_data1;
+                    $display("reg p%d = %05d,   renamed reg is p%d,   Cycle NO: %04d", old_addr1, write_data1, write_addr1, ($time-5)/10);
                 end
-                if (write_addr2 != 0) begin
+                if (retire2) begin
                     ar_file[write_addr2] = write_data2;
+                    $display("reg p%d = %05d,   renamed reg is p%d,   Cycle NO: %04d", old_addr2, write_data2, write_addr2, ($time-5)/10);
                 end
                 // every time there is a update to the ARF, print the updated reg and value
             end

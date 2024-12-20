@@ -45,7 +45,7 @@ module complete(
     output reg [5:0] complete_dr_2,
     
     output reg [5:0] ROB_complete_0,
-    output reg [5:0] ROB_complete_1.
+    output reg [5:0] ROB_complete_1,
     output reg [5:0] ROB_complete_2
     
     );
@@ -63,9 +63,10 @@ module complete(
         complete_dr_1 <=destReg_complete1_out;
         complete_dr_2 <=destReg_complete2_out;
         
-        ROB_complete_0 <=ROBNum_complete_0;
-        ROB_complete_1 <=ROBNum_complete_1;
-        ROB_complete_2 <=ROBNum_complete_2;
+        
+        ROB_complete_0 <=ROBNum_complete0_out;
+        ROB_complete_1 <=ROBNum_complete1_out;
+        ROB_complete_2 <=ROBNum_complete2_out;
     end
     
     
