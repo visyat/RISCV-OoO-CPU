@@ -51,7 +51,7 @@ module dataMemory(
             for (j=8; j>=0; j=j-1) begin
                 PC_delay[j+1] = PC_delay[j];
                 address_delay[j+1] = address_delay[j];
-                dataSw_delay[j+1] = address_delay[j];
+                dataSw_delay[j+1] = dataSw_delay[j];
                 memRead_delay[j+1] = memRead_delay[j];
                 memWrite_delay[j+1] = memWrite_delay[j];
                 storeSize_delay[j+1] = storeSize_delay[j];
