@@ -42,7 +42,10 @@ module reorder_buffer(
     output reg [5:0] ARF_data_2,
     output reg write_back,
     output reg retire1,
-    output reg retire2
+    output reg retire2,
+    
+    output reg [31:0] pc_retire1,
+    output reg [31:0] pc_retire2
 );
 
     // 1. multiple entries per cycle
@@ -200,6 +203,8 @@ module reorder_buffer(
         write_back = 1'b0;
         retire1=1'b0;
         retire2=1'b0;
+        pc_retire1=1'b0;
+        pc_retire2=1'b0;
         
         //first retire if possible
         if(ROB[retire_head][7] == 1'b1) begin
@@ -215,7 +220,7 @@ module reorder_buffer(
             else begin
                 ARF_reg_1 = ROB[retire_head][4];
                 ARF_data_1 = ROB[retire_head][5];
-                 
+                pc_retire1 = ROB[retire_head][6];
                 retire[ROB[retire_head][2]] <= 1'b1;
             end
             
@@ -248,8 +253,8 @@ module reorder_buffer(
                 else begin
                     ARF_reg_2 = ROB[retire_head][4];
                     ARF_data_2 = ROB[retire_head][5];
-                    
-                    //TODO: add in freeing old_dr?? or current dr??
+                    pc_retire2 = ROB[retire_head][6];
+                    retire[ROB[retire_head][2]] <= 1'b1;
                 end
                 
                 //retire ROB line

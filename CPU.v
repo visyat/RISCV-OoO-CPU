@@ -77,10 +77,14 @@ module CPU(
     // ROB ...
     wire srcReg1_ready_ROB_EX;
     wire srcReg2_ready_ROB_EX;
+    wire srcReg1_ready_EX;
+    wire srcReg2_ready_EX;
     wire [5:0] ROBNum_EX;
     wire [63:0] ready_for_issue_EX;
     wire [63:0] ready_for_retire_EX;
     wire stall_ROB_EX;
+    wire [31:0] retire_pc1_EX;
+    wire [31:0] retire_pc2_EX;
     
     // UIQ ...
     wire stall_UIQ_EX;
@@ -326,7 +330,7 @@ module CPU(
         .opcode(opcode_EX),
         .hasImm(hasImm_EX),
         .imm(imm_EX),
-        .ROB_retire(), // need to add retirement to rename module ...
+        .ROB_retire(ready_for_retire_EX), // need to add retirement to rename module ...
         
         // outputs ...
         .sr1_p(srcReg1_p_EX),
@@ -344,8 +348,8 @@ module CPU(
         
         .src1(srcReg1_p_EX),
         .src2(srcReg2_p_EX),
-        .src1_reg_ready(),
-        .src2_reg_ready(),
+        .src1_reg_ready(srcReg1_ready_EX),
+        .src2_reg_ready(srcReg2_ready_EX),
         
         .dr(destReg_p_EX),
         .old_dr(oldDestReg_rename_EX),
@@ -375,13 +379,13 @@ module CPU(
         .ARF_reg_1(srcReg1_reg_ARF_EX),
         .ARF_data_1(srcReg1_data_ARF_EX),
         .ARF_reg_2(srcReg2_reg_ARF_EX),
-        .ARF_data_2(srcReg2_data_ARF_EX)
+        .ARF_data_2(srcReg2_data_ARF_EX),
         
         //.old_reg_1(),
         //.old_reg_2(),
        
-        //.pc_retire_1(),
-        //.pc_retire_2()
+        .pc_retire1(retire_pc1_EX),
+        .pc_retire2(retire_pc2_EX)
     );
 
     ARF ARF (
@@ -592,8 +596,8 @@ module CPU(
         .destRegLsu(destReg_issue2_MEM),
 
         // from retirement ...
-        .pcRet1(), // PENDING FROM ROB ...
-        .pcRet2(),
+        .pcRet1(retire_pc1_EX), // PENDING FROM ROB ...
+        .pcRet2(retire_pc2_EX),
         
         // outputs ...
         .pcOut(PC_LSQ_MEM),
