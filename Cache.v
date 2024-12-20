@@ -184,7 +184,36 @@ module Cache(
             end else if (memWrite) begin
                 lw_data = 'b0;
                 // find first way at the designated index that is available ...
-                if (~VALID_WAY_1[address_in[12:6]]) begin
+                // addresses with the same tag & index, but with different offsets (bytes within the same block) written to the same entry
+                if (VALID_WAY_1[address_in[12:6]] && TAG_WAY_1[address_in[12:6]] == address_in[31:13]) begin
+                    if (storeSize) begin
+                        DATA_WAY_1[address_in[12:6]][address_in[5:0]] = data_sw[7:0];
+                    end else begin
+                        DATA_WAY_1[address_in[12:6]][address_in[5:0]+1] = data_sw[15:8];
+                        DATA_WAY_1[address_in[12:6]][address_in[5:0]] = data_sw[7:0];
+                    end
+                end else if (VALID_WAY_2[address_in[12:6]] && TAG_WAY_2[address_in[12:6]] == address_in[31:13]) begin
+                    if (storeSize) begin
+                        DATA_WAY_2[address_in[12:6]][address_in[5:0]] = data_sw[7:0];
+                    end else begin
+                        DATA_WAY_2[address_in[12:6]][address_in[5:0]+1] = data_sw[15:8];
+                        DATA_WAY_2[address_in[12:6]][address_in[5:0]] = data_sw[7:0];
+                    end
+                end else if (VALID_WAY_3[address_in[12:6]] && TAG_WAY_3[address_in[12:6]] == address_in[31:13]) begin
+                    if (storeSize) begin
+                        DATA_WAY_3[address_in[12:6]][address_in[5:0]] = data_sw[7:0];
+                    end else begin
+                        DATA_WAY_3[address_in[12:6]][address_in[5:0]+1] = data_sw[15:8];
+                        DATA_WAY_3[address_in[12:6]][address_in[5:0]] = data_sw[7:0];
+                    end
+                end else if (VALID_WAY_4[address_in[12:6]] = 1 && TAG_WAY_4[address_in[12:6]] == address_in[31:13]) begin
+                    if (storeSize) begin
+                        DATA_WAY_4[address_in[12:6]][address_in[5:0]] = data_sw[7:0];
+                    end else begin
+                        DATA_WAY_4[address_in[12:6]][address_in[5:0]+1] = data_sw[15:8];
+                        DATA_WAY_4[address_in[12:6]][address_in[5:0]] = data_sw[7:0];
+                    end
+                end else if (~VALID_WAY_1[address_in[12:6]]) begin
                     VALID_WAY_1[address_in[12:6]] = 1;
                     TAG_WAY_1[address_in[12:6]] = address_in[31:13];
                     if (storeSize) begin
@@ -193,7 +222,6 @@ module Cache(
                         DATA_WAY_1[address_in[12:6]][address_in[5:0]+1] = data_sw[15:8];
                         DATA_WAY_1[address_in[12:6]][address_in[5:0]] = data_sw[7:0];
                     end
-
                 end else if (~VALID_WAY_2[address_in[12:6]]) begin
                     VALID_WAY_2[address_in[12:6]] = 1;
                     TAG_WAY_2[address_in[12:6]] = address_in[31:13];
@@ -203,7 +231,6 @@ module Cache(
                         DATA_WAY_2[address_in[12:6]][address_in[5:0]+1] = data_sw[15:8];
                         DATA_WAY_2[address_in[12:6]][address_in[5:0]] = data_sw[7:0];
                     end
-
                 end else if (~VALID_WAY_3[address_in[12:6]]) begin
                     VALID_WAY_3[address_in[12:6]] = 1;
                     TAG_WAY_2[address_in[12:6]] = address_in[31:13];
@@ -213,7 +240,6 @@ module Cache(
                         DATA_WAY_3[address_in[12:6]][address_in[5:0]+1] = data_sw[15:8];
                         DATA_WAY_3[address_in[12:6]][address_in[5:0]] = data_sw[7:0];
                     end
-
                 end else if (~VALID_WAY_4[address_in[12:6]]) begin
                     VALID_WAY_4[address_in[12:6]] = 1;
                     TAG_WAY_2[address_in[12:6]] = address_in[31:13];
@@ -223,8 +249,7 @@ module Cache(
                         DATA_WAY_4[address_in[12:6]][address_in[5:0]+1] = data_sw[15:8];
                         DATA_WAY_4[address_in[12:6]][address_in[5:0]] = data_sw[7:0];
                     end
-
-                end else begin // need to evict a cache entry ... implement random eviction!
+                end else begin // randomly evict a cache entry ...
                     TAG_WAY_1[address_in[12:6]] = address_in[31:13];
                     if (storeSize) begin
                         DATA_WAY_1[address_in[12:6]][address_in[5:0]] = data_sw[7:0];
