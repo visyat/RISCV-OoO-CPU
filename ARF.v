@@ -22,11 +22,13 @@ module ARF #(
     input retire1,
     input retire2,
 
-    output reg [31 : 0]         read_data1,
-    output reg [31 : 0]         read_data2
+    output reg [31 : 0] read_data1,
+    output reg [31 : 0] read_data2,
+    output reg [31:0] a0,
+    output reg [31:0] a1
 );
 
-    reg [31 : 0]    ar_file [AR_ARRAY - 1 : 0];
+    reg [31 : 0] ar_file [31 : 0];
     integer         i;
     always @(posedge clk or negedge rstn) begin
         if (~rstn) begin
@@ -37,7 +39,7 @@ module ARF #(
             end
         end
         else begin
-            if (write_back) begin
+       
                 if (retire1) begin 
                     ar_file[write_addr1] = write_data1;
                    // $display("reg p%d = %05d,   renamed reg is p%d,   Cycle NO: %04d", old_addr1, write_data1, write_addr1, ($time-5)/10);
@@ -47,7 +49,10 @@ module ARF #(
                     //$display("reg p%d = %05d,   renamed reg is p%d,   Cycle NO: %04d", old_addr2, write_data2, write_addr2, ($time-5)/10);
                 end
                 // every time there is a update to the ARF, print the updated reg and value
-            end
+                
+                a1=ar_file[1];
+                a0=ar_file[0];
+           
         end
     end
 
