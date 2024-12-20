@@ -85,7 +85,6 @@ module LSQ_tb;
             memRead = 1;
             memWrite = 0;
             storeSize = 0;
-            fromLSQ = 0;
         end
         
         #(2*Cycle) begin
