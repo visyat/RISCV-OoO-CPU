@@ -342,21 +342,48 @@ module CPU(
         .clk(clk),
         .rstn(rstn),
         
-        // dispatch ...
-        .PC_dispatch_in(PC_EX),
-        .destReg_in(destReg_EX),
-        .oldDestReg_in(oldDestReg_rename_EX),
-        .srcReg1_in(srcReg1_p_EX),
-        .srcReg2_in(srcReg2_p_EX),
-
-        // complete ...
-
-        // retire ...
+        .src1(srcReg1_p_EX),
+        .src2(srcReg2_p_EX),
+        .src1_reg_ready(),
+        .src2_reg_ready(),
         
-        // outputs ...
-        .ROBNum_out(ROBNum_EX),
-        .srcReg1_ready(srcReg1_ready_ROB_EX),
-        .srcReg2_ready(srcReg2_ready_ROB_EX)
+        .dr(destReg_p_EX),
+        .old_dr(oldDestReg_rename_EX),
+        .dr_data(),
+        .store_reg(),
+        .store_data(),
+        .instr_PC(PC_EX),
+
+        .store_instr(1'b0), //CHANGE BEFORE FINAL
+
+
+        .complete_pc_0(),
+        .complete_pc_1(),
+        .complete_pc_2(),
+        .complete_pc_3(),
+        .new_dr_data_0(),
+        .new_dr_data_1(),
+        .new_dr_data_2(),
+        .new_dr_data_3(),
+         
+        //outputs ...
+        .issue_ready(),
+        .retire(),
+        .stall(),
+        
+        .src1_ready(srcReg1_ready_ROB_EX),
+        .src2_ready(srcReg2_ready_ROB_EX),
+        
+        .ARF_reg_1(),
+        .ARF_data_1(),
+        .ARF_reg_2(),
+        .ARF_data_2()
+        
+        //.old_reg_1(),
+        //.old_reg_2(),
+       
+        //.pc_retire_1(),
+        //.pc_retire_2()
     );
 
     ARF ARF (
@@ -400,8 +427,8 @@ module CPU(
         .srcReg2_data_ARF_in(srcReg2_data_ARF_EX),
 
         // ready flags from ROB ...
-        .srcReg1_ready_ROB_in (1'b1), // (srcReg1_ready_ROB_EX),
-        .srcReg2_ready_ROB_in (1'b1), // (srcReg2_ready_ROB_EX),
+        .srcReg1_ready_ROB_in (srcReg1_ready_ROB_EX), // (srcReg1_ready_ROB_EX),
+        .srcReg2_ready_ROB_in (srcReg1_ready_ROB_EX), // (srcReg2_ready_ROB_EX),
         .ROBNum_in(ROBNum_EX),
 
         // ready flags from functional units ...
