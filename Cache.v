@@ -64,7 +64,7 @@ module Cache(
                     if (storeSize) begin
                         search_1 = {24'b0, DATA_WAY_1[address_in[12:6]][address_in[5:0]]};
                     end else begin
-                        search_1 = {16'b0, DATA_WAY_1[address_in[12:6]][address_in[5:0]+1], DATA_WAY_1[address_in[12:6]][address_in[5:0]]}
+                        search_1 = {16'b0, DATA_WAY_1[address_in[12:6]][address_in[5:0]+1], DATA_WAY_1[address_in[12:6]][address_in[5:0]]};
                     end
                 end else begin
                     found_1 = 'b0;
@@ -92,7 +92,7 @@ module Cache(
                     if (storeSize) begin
                         search_2 = {24'b0, DATA_WAY_2[address_in[12:6]][address_in[5:0]]};
                     end else begin
-                        search_2 = {16'b0, DATA_WAY_2[address_in[12:6]][address_in[5:0]+1], DATA_WAY_2[address_in[12:6]][address_in[5:0]]}
+                        search_2 = {16'b0, DATA_WAY_2[address_in[12:6]][address_in[5:0]+1], DATA_WAY_2[address_in[12:6]][address_in[5:0]]};
                     end
                 end else begin
                     found_2 = 'b0;
@@ -120,7 +120,7 @@ module Cache(
                     if (storeSize) begin
                         search_3 = {24'b0, DATA_WAY_3[address_in[12:6]][address_in[5:0]]};
                     end else begin
-                        search_3 = {16'b0, DATA_WAY_3[address_in[12:6]][address_in[5:0]+1], DATA_WAY_3[address_in[12:6]][address_in[5:0]]}
+                        search_3 = {16'b0, DATA_WAY_3[address_in[12:6]][address_in[5:0]+1], DATA_WAY_3[address_in[12:6]][address_in[5:0]]};
                     end
                 end else begin
                     found_3 = 'b0;
@@ -148,7 +148,7 @@ module Cache(
                     if (storeSize) begin
                         search_4 = {24'b0, DATA_WAY_4[address_in[12:6]][address_in[5:0]]};
                     end else begin
-                        search_4 = {16'b0, DATA_WAY_4[address_in[12:6]][address_in[5:0]+1], DATA_WAY_4[address_in[12:6]][address_in[5:0]]}
+                        search_4 = {16'b0, DATA_WAY_4[address_in[12:6]][address_in[5:0]+1], DATA_WAY_4[address_in[12:6]][address_in[5:0]]};
                     end
                 end else begin
                     found_4 = 'b0;
@@ -158,7 +158,7 @@ module Cache(
         end
     end
 
-    always @(*) begin
+    always @(posedge clk or negedge rstn) begin
         // output ... 
         if (~rstn) begin
             lw_data = 'b0;
