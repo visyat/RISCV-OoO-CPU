@@ -703,47 +703,6 @@ module CPU(
         .destReg_data_complete2_out(destReg_data_complete2_C),
         .ROBNum_complete2_out(ROBNum_complete2_C)
     );
-    
-    Complete complete(
-        .clk(clk),
-        .rstn(rstn),
-        
-        //inputs
-        .PC_complete0_out(PC_complete0_C),
-        .destReg_complete0_out(destReg_complete0_C), 
-        .destReg_data_complete0_out(destReg_data_complete0_C),
-        .ROBNum_complete0_out(ROBNum_complete1_C), 
-    
-        .PC_complete1_out(PC_complete1_C),
-        .destReg_complete1_out(destReg_complete1_C), 
-        .destReg_data_complete1_out(destReg_data_complete1_C),
-        .ROBNum_complete1_out(ROBNum_complete1_C), 
-    
-        .PC_complete2_out(PC_complete2_C),
-        .destReg_complete2_out(destReg_complete2_C), 
-        .destReg_data_complete2_out(destReg_data_complete2_C),
-        .ROBNum_complete2_out(ROBNum_complete2_C), 
-        
-        
-        //outputs
-        .complete_pc_0(PC_complete0_C),
-        .complete_pc_1(PC_complete1_C),
-        .complete_pc_2(PC_complete2_C),
-        
-        .new_dr_data_0(destReg_data_complete0_C),
-        .new_dr_data_1(destReg_data_complete1_C),
-        .new_dr_data_2(destReg_data_complete2_C),
-        
-        .complete_dr_0(destReg_complete0_C),
-        .complete_dr_1(destReg_complete1_C),
-        .complete_dr_2(destReg_complete2_C),
-        
-        .ROB_complete_0(ROBNum_complete0_C),
-        .ROB_complete_1(ROBNum_complete1_C),
-        .ROB_complete_2(ROBNum_complete2_C)
-
-    
-    );
 
     /*
         always @(*) begin
