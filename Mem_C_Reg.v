@@ -115,8 +115,8 @@ module MEM_C_Reg (
                     for (i=0; i<16; i=i+1) begin
                         if (~storeBuffer[i]) begin
                             storeBuffer[i] = PC_issue_LSQ_in;
+                            i=17;
                         end
-                        i=17;
                     end
                 end
             end 
