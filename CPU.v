@@ -363,15 +363,15 @@ module CPU(
 
         // outputs ...
         // issue ready flags ...
-        .src0_ready(reg0_ready_ROB_UIQ_EX),
+        .issue_ready(ROB_UIQ_issue_ready_EX),
+
+        // forward data from  completed instructions ...
         .src0_reg_ready(reg0_ROB_UIQ_EX),
         .src0_data_ready(reg0_data_ROB_UIQ_EX),
 
-        .src1_ready(reg1_ready_ROB_UIQ_EX),
         .src1_reg_ready(reg1_ROB_UIQ_EX),
         .src1_data_ready(reg1_data_ROB_UIQ_EX),
 
-        .src2_ready(reg2_ready_ROB_UIQ_EX),
         .src2_reg_ready(reg2_ROB_UIQ_EX),
         .src2_data_ready(reg2_data_ROB_UIQ_EX),
         
