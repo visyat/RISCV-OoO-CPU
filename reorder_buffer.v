@@ -65,7 +65,7 @@ module reorder_buffer(
     reg [63:0] COMPLETE; 
     
     // group retire registers ...
-    reg [1:0] retireSignals
+    reg [1:0] retireSignals;
     reg [5:0] ARF_reg [1:0];
     reg [31:0] ARF_data [1:0];
     reg [31:0] pc_retire [1:0];
