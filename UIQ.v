@@ -323,7 +323,7 @@ module Unified_Issue_Queue (
             fu_taken = 'b0;
             for (k=0; k<64; k=k+1) begin
                 if(VALID[k])begin
-                    $display("%0h, %0b, %0b, %0d, %0b, %0b", PC[k], SRC1READY[k], SRC2READY[k], FU[k], FU_READY[k], fu_taken[FU[k]]);
+                    $display("%0h, %h,%0b,%h, %0b, %0d, %0b, %0b", PC[k],SRCREG1[k] ,SRC1READY[k],SRCREG2[k], SRC2READY[k], FU[k], FU_READY[k], fu_taken[FU[k]]);
                 end
                 if (VALID[k] && SRC1READY[k] && SRC2READY[k] && FU_READY[k] && ~fu_taken[FU[k]]) begin
                     PC_issue[FU[k]] = PC[k];
