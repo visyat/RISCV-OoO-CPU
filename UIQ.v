@@ -20,8 +20,11 @@ module Unified_Issue_Queue (
     input [5:0] destReg_p_in,
     input [31:0] srcReg1_data_ARF_in,
     input [31:0] srcReg2_data_ARF_in,
+    
     // ROB ...
+    input [5:0] srcReg1_reg_ready_ROB_in,
     input srcReg1_ready_ROB_in,
+    input [5:0] srcReg2_reg_ready_ROB_in,
     input srcReg2_ready_ROB_in,
     input [5:0] ROBNum_in,
 
@@ -263,10 +266,10 @@ module Unified_Issue_Queue (
                 end
                 // add additional forwards from MEM and ALU ... 
 
-                if (~SRC1READY[j] && srcReg1_ready_ROB_in) begin
+                if (SRCREG1[j] == srcReg1_reg_ready_ROB_in && ~SRC1READY[j] && srcReg1_ready_ROB_in) begin
                     SRC1READY[j] = 1'b1;
                 end
-                if (~SRC2READY[j] && srcReg2_ready_ROB_in) begin
+                if (SRCREG2[j] == srcReg2_reg_ready_ROB_in && ~SRC2READY[j] && srcReg2_ready_ROB_in) begin
                     SRC2READY[j] = 1'b1;
                 end
             end

@@ -28,7 +28,10 @@ module MEM_C_Reg (
     input [31:0] lwData_cache_in,
     input [31:0] lwData_datamem_in,
     input [5:0] destReg_issue_LSQ_in,
-    input [5:0] ROBNum_issue_LSQ_in, 
+    input [5:0] ROBNum_issue_LSQ_in,
+
+    input [31:0] PC_issue_dataMem_in,
+    input [5:0] ROBNum_issue_dataMem_in, 
 
     // outputs ...
     output reg [31:0] PC_complete0_out,
@@ -46,6 +49,8 @@ module MEM_C_Reg (
     output reg [31:0] destReg_data_complete2_out,
     output reg [5:0] ROBNum_complete2_out 
 );
+    reg [31:0] storeBuffer [0:15];
+    integer i, j;
 
     // operation parameter
     parameter LB    =  4'd7;
@@ -89,16 +94,44 @@ module MEM_C_Reg (
         end
     end
     always @(posedge clk or negedge rstn) begin
-        if (PC_issue_LSQ_in) begin
-            PC_complete2_out = PC_issue_LSQ_in; 
-            destReg_complete2_out = destReg_issue_LSQ_in;
-            ROBNum_complete2_out = ROBNum_issue_LSQ_in;
-            if (fromLSQ_in) begin
-                destReg_data_complete2_out = lwData_LSQ_in;
-            end else if (~cacheMiss_in) begin
-                destReg_data_complete2_out = lwData_cache_in;
-            end else begin
-                destReg_data_complete2_out = lwData_datamem_in;
+        if (~rstn) begin
+            for (i=0; i<16; i=i+1) begin
+                storeBuffer[i] = 'b0;
+            end 
+        end else begin
+            if (PC_issue_LSQ_in) begin
+                if (optype_issue2_in == LB || optype_issue2_in == LW) begin
+                    PC_complete2_out = PC_issue_LSQ_in; 
+                    destReg_complete2_out = destReg_issue_LSQ_in;
+                    ROBNum_complete2_out = ROBNum_issue_LSQ_in;
+                    if (fromLSQ_in) begin
+                        destReg_data_complete2_out = lwData_LSQ_in;
+                    end else if (~cacheMiss_in) begin
+                        destReg_data_complete2_out = lwData_cache_in;
+                    end else begin
+                        destReg_data_complete2_out = lwData_datamem_in;
+                    end
+                end else begin
+                    for (i=0; i<16; i=i+1) begin
+                        if (~storeBuffer[i]) begin
+                            storeBuffer[i] = PC_issue_LSQ_in;
+                            i=17;
+                        end
+                    end
+                end
+            end 
+        end
+    end
+    always @(posedge clk or negedge rstn) begin
+        if (PC_issue_dataMem_in) begin
+            for (j=0; j<16; j=j+1) begin
+                if (storeBuffer[j] == PC_issue_dataMem_in) begin
+                    PC_complete2_out = PC_issue_dataMem_in;
+                    ROBNum_complete2_out = ROBNum_issue_dataMem_in;
+                    destReg_complete2_out = 'b0;
+                    destReg_data_complete2_out = 'b0;
+                    j=17;
+                end
             end
         end
     end

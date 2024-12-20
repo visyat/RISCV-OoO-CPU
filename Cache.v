@@ -208,7 +208,7 @@ module Cache(
                         DATA_WAY_3[address_in[12:6]][address_in[5:0]+1] = data_sw[15:8];
                         DATA_WAY_3[address_in[12:6]][address_in[5:0]] = data_sw[7:0];
                     end
-                end else if (VALID_WAY_4[address_in[12:6]] == 1 && TAG_WAY_4[address_in[12:6]] == address_in[31:13]) begin
+                end else if (VALID_WAY_4[address_in[12:6]] && TAG_WAY_4[address_in[12:6]] == address_in[31:13]) begin
                     if (storeSize) begin
                         DATA_WAY_4[address_in[12:6]][address_in[5:0]] = data_sw[7:0];
                     end else begin

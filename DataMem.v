@@ -1,3 +1,4 @@
+
 `timescale 1ns/1ps
 
 /*
@@ -9,6 +10,7 @@ module dataMemory(
     input rstn,
 
     input [31:0] PC_in,
+    input [5:0] ROB_in,
     input [31:0] address,
     input [31:0] dataSw,
 
@@ -19,13 +21,15 @@ module dataMemory(
     input fromLSQ,
     
     output reg [31:0] lwData,
-    output reg [31:0] PC_out
+    output reg [31:0] PC_out,
+    output reg [5:0] ROB_out
 );
 
     reg [7:0] DATAMEM [0:1023];
     integer i, j;
 
     reg [31:0] PC_delay [0:9];
+    reg [5:0] ROB_delay [0:9];
     reg [31:0] address_delay [0:9];
     reg [31:0] dataSw_delay [0:9];
     reg [9:0] memRead_delay;
@@ -37,27 +41,30 @@ module dataMemory(
     always @(posedge clk or negedge rstn) begin
         if (~rstn) begin
             for (j=0; j<10; j=j+1) begin
-                PC_delay[i] = 'b0;
-                address_delay[i] = 'b0;
-                dataSw_delay[i] = 'b0;
-                memRead_delay[i] = 'b0;
-                memWrite_delay[i] = 'b0;
-                storeSize_delay[i] = 'b0;
-                cacheMiss_delay[i] = 'b0; 
-                fromLSQ_delay[i] = 'b0; 
+                PC_delay[j] = 'b0;
+                ROB_delay[j] = 'b0;
+                address_delay[j] = 'b0;
+                dataSw_delay[j] = 'b0;
+                memRead_delay[j] = 'b0;
+                memWrite_delay[j] = 'b0;
+                storeSize_delay[j] = 'b0;
+                cacheMiss_delay[j] = 'b0; 
+                fromLSQ_delay[j] = 'b0; 
             end
         end else begin
-            for (j=0; j<9; j=j+1) begin
-                PC_delay[i+1] = PC_delay[i];
-                address_delay[i+1] = address_delay[i];
-                dataSw_delay[i+1] = address_delay[i];
-                memRead_delay[i+1] = memRead_delay[i];
-                memWrite_delay[i+1] = memWrite_delay[i];
-                storeSize_delay[i+1] = storeSize_delay[i];
-                cacheMiss_delay[i+1] = cacheMiss_delay[i]; 
-                fromLSQ_delay[i+1] = fromLSQ_delay[i];
+            for (j=8; j>=0; j=j-1) begin
+                PC_delay[j+1] = PC_delay[j];
+                ROB_delay[j+1] = ROB_delay[j];
+                address_delay[j+1] = address_delay[j];
+                dataSw_delay[j+1] = dataSw_delay[j];
+                memRead_delay[j+1] = memRead_delay[j];
+                memWrite_delay[j+1] = memWrite_delay[j];
+                storeSize_delay[j+1] = storeSize_delay[j];
+                cacheMiss_delay[j+1] = cacheMiss_delay[j]; 
+                fromLSQ_delay[j+1] = fromLSQ_delay[j];
             end
             PC_delay[0] = PC_in;
+            ROB_delay[0] = ROB_in;
             address_delay[0] = address;
             dataSw_delay[0] = dataSw;
             memRead_delay[0] = memRead;
@@ -75,6 +82,7 @@ module dataMemory(
             end
             lwData = 'b0;
             PC_out = 'b0;
+            ROB_out = 'b0;
         end else begin
             if ((memRead_delay[9] || memWrite_delay[9]) && cacheMiss_delay[9] && ~fromLSQ_delay[9]) begin
                 if (memRead_delay[9]) begin
@@ -88,7 +96,12 @@ module dataMemory(
                         DATAMEM[address_delay[9]] = dataSw_delay[9][7:0];
                 end
                 PC_out = PC_delay[9];
-            end
+                ROB_out = ROB_delay[9];
+            end else begin
+                PC_out = 'b0;
+                lwData = 'b0;
+                ROB_out = 'b0;
+            end 
         end
     end
 endmodule

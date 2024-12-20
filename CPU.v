@@ -168,6 +168,8 @@ module CPU(
 
     // Data Memory ...
     wire [31:0] lwData_datamem_MEM;
+    wire [31:0] PC_dataMem_MEM;
+    wire [5:0] ROB_dataMem_MEM;
 
     // COMPLETE stage signals
     wire [31:0] PC_complete0_C; 
@@ -423,7 +425,9 @@ module CPU(
         .srcReg2_data_ARF_in(srcReg2_data_ARF_EX),
 
         // ready flags from ROB ...
+        .srcReg1_reg_ready_ROB_in(),
         .srcReg1_ready_ROB_in (srcReg1_ready_ROB_EX), // (srcReg1_ready_ROB_EX),
+        .srcReg2_reg_ready_ROB_in(),
         .srcReg2_ready_ROB_in (srcReg1_ready_ROB_EX), // (srcReg2_ready_ROB_EX),
         .ROBNum_in(ROBNum_EX),
 
@@ -588,7 +592,7 @@ module CPU(
         .destRegLsu(destReg_issue2_MEM),
 
         // from retirement ...
-        .pcRet1(),
+        .pcRet1(), // PENDING FROM ROB ...
         .pcRet2(),
         
         // outputs ...
@@ -630,6 +634,7 @@ module CPU(
         .clk(clk),
         .rstn(rstn),
         .PC_in(PC_LSQ_MEM),
+        .ROB_in(ROBNum_LSQ_MEM),
         .address(address_issue_LSQ_MEM),
         .dataSw(swData_issue_LSQ_MEM),
         .memRead(~loadStore_issue_LSQ_MEM),
@@ -639,7 +644,9 @@ module CPU(
         .fromLSQ(fromLSQ_MEM),
 
         // outputs ...
-        .lwData(lwData_datamem_MEM)
+        .lwData(lwData_datamem_MEM),
+        .PC_out(PC_dataMem_MEM),
+        .ROB_out(ROB_dataMem_MEM)
     );
 
     //COMPLETE 
@@ -672,6 +679,9 @@ module CPU(
         .lwData_datamem_in(lwData_datamem_MEM),
         .destReg_issue_LSQ_in(destReg_LSQ_MEM),
         .ROBNum_issue_LSQ_in(ROBNum_LSQ_MEM),
+
+        .PC_issue_dataMem_in(PC_dataMem_MEM),
+        .ROBNum_issue_dataMem_in(ROB_dataMem_MEM),
 
         // outputs ...
         .PC_complete0_out(PC_complete0_C),
