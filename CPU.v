@@ -71,23 +71,9 @@ module CPU(
     // ARF ...
     wire [31:0] srcReg1_data_ARF_EX;
     wire [31:0] srcReg2_data_ARF_EX;
-    wire [5:0] srcReg1_reg_ARF_EX;
-    wire [5:0] srcReg2_reg_ARF_EX;
 
     // ROB ...
-    wire srcReg1_ready_ROB_EX;
-    wire srcReg2_ready_ROB_EX;
-    wire srcReg1_reg_ready_EX;
-    wire srcReg2_reg_ready_EX;
-    wire [5:0] ROBNum_EX;
-    wire [63:0] ready_for_issue_EX;
-    wire [63:0] ready_for_retire_EX;
-    wire retire1_EX;
-    wire retire2_EX;
-    wire write_back_EX;
-    wire stall_ROB_EX;
-    wire [31:0] retire_pc1_EX;
-    wire [31:0] retire_pc2_EX;
+    
     
     // UIQ ...
     wire stall_UIQ_EX;
@@ -193,26 +179,6 @@ module CPU(
     wire [5:0] destReg_complete2_C;
     wire [31:0] destReg_data_complete2_C;
     wire [5:0] ROBNum_complete2_C;
-
-    
-    wire [31 : 0]   dr_data_0;
-    wire [31 : 0]   complete_pc_0;
-    wire [31 : 0]   dr_data_1;
-    wire [31 : 0]   complete_pc_1;
-    wire [31 : 0]   dr_data_2;
-    wire [31 : 0]   complete_pc_2;
-
-/*
-
-    wire [5:0]      set_rob_reg_invaild;
-    wire [5:0]      regout_from_lsu;
-    wire [5:0]      regout_from_lsu2;
-    wire [5:0]      regout_from_dm;
-    reg             is_store_r;
-    wire            is_store;   
-    wire [31 : 0]   data_check;
-    wire            FU_read_flag_MEM_com;
-    */
 
     always @(posedge clk or negedge rstn) begin
         if(~rstn) begin
@@ -333,7 +299,7 @@ module CPU(
         .opcode(opcode_EX),
         .hasImm(hasImm_EX),
         .imm(imm_EX),
-        .ROB_retire(ready_for_retire_EX), // need to add retirement to rename module ...
+        .ROB_retire(), // need to add retirement to rename module ...
         
         // outputs ...
         .sr1_p(srcReg1_p_EX),
@@ -401,26 +367,19 @@ module CPU(
         .rstn(rstn),
         
         // reading rs1 and rs2 ...
-        .read_addr1(srcReg1_p_EX),
-        .read_addr2(srcReg2_p_EX),
-        .read_en(1'b1), // if an instruction is dispatching ... stalled??
-        
-        // retiring instructions ...
-        
-        .write_back(write_back_EX),
-        .retire1(retire1_EX),
-        .retire2(retire2_EX),
-     
-        // retire 1 ...
-        .write_addr1(srcReg1_reg_ARF_EX),
-        .write_data1(srcReg1_data_ARF_EX),
-        // retire 2 ...
-        .write_addr2(srcReg1_reg_ARF_EX),
-        .write_data2(srcReg2_data_ARF_EX),
+        .read_srcReg1(srcReg1_p_EX),
+        .read_srcReg2(srcReg2_p_EX),
+
+        .retire1(retire1_C),
+        .write_addr1(srcReg1_ROB_C),
+        .write_data1(srcReg1_data_ROB_C),
+        .retire2(retire2_C),
+        .write_addr2(srcReg1_ROB_C),
+        .write_data2(srcReg1_data_ROB_C),
 
         // outputs ...
-        .read_data1(srcReg1_data_ARF_EX),
-        .read_data2(srcReg2_data_ARF_EX)
+        .read_srcReg1_data(srcReg1_data_ARF_EX),
+        .read_srcReg2_data(srcReg2_data_ARF_EX)
     );
 
     Unified_Issue_Queue UIQ (
@@ -714,62 +673,4 @@ module CPU(
         .destReg_data_complete2_out(destReg_data_complete2_C),
         .ROBNum_complete2_out(ROBNum_complete2_C)
     );
-    
-  
-
-    /*
-        always @(*) begin
-            is_store_r = 1'b0;
-            if(tunnel_MEM[0]) begin
-                dr_data_0_reg= destReg_data_ALU0_MEM;
-                complete_pc_0_reg = PC_issue0_MEM;
-            end
-            else begin
-                dr_data_0_reg= 32'd1;
-                complete_pc_0_reg= 32'd1;
-            end
-
-            if(tunnel_MEM[1]) begin
-                dr_data_1_reg= destReg_data_ALU1_MEM;
-                complete_pc_1_reg= PC_issue1_MEM;
-            end
-            else begin
-                dr_data_1_reg = 32'd1;
-                complete_pc_1_reg = 32'd1;
-            end
-            
-            if(tunnel_MEM[2]) begin
-                complete_pc_2_reg           = PC_issue2_MEM;
-                if (FU_write_flag_com && ~FU_read_flag_MEM_com) begin
-                    is_store_r= 1'b1;
-                end
-                else begin
-                    dr_data_2_reg = destReg_data_ALU1_MEM;
-                end
-            end
-            else begin
-                dr_data_2_reg    = 32'd1;
-                complete_pc_2_reg           = 32'd1;
-            end
-
-            if(fromLSQ_MEM) begin
-                dr_data_3_reg    = load_data_DataMem_MEM;
-                complete_pc_3_reg           = pc_ls_comp;
-            end
-            else begin
-                dr_data_3_reg    = 32'd1;
-                complete_pc_3_reg           = 32'd1;
-            end
-        end
-        assign dr_data_0 = dr_data_0_reg;
-        assign complete_pc_0        = complete_pc_0_reg;
-        assign dr_data_1 = dr_data_1_reg;
-        assign complete_pc_1        = complete_pc_1_reg;
-        assign dr_data_2 = dr_data_2_reg;
-        assign complete_pc_2        = complete_pc_2_reg;
-        assign dr_data_3 = dr_data_3_reg;
-        assign complete_pc_3        = complete_pc_3_reg; 
-        assign is_store        = is_store_r;  
-    */ 
-
 endmodule
