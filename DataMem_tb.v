@@ -37,6 +37,7 @@ module dataMem_tb;
     );
 
     initial begin
+        PC = 32'b0;
         #(2*Cycle) begin
             PC = 32'h10;
             address = 32'h4;
