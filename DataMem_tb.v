@@ -1,36 +1,39 @@
-module cache_tb;
+module dataMem_tb;
     parameter ResetValue = 2'b00;
 	parameter HalfCycle = 10;
 	localparam Cycle = 2*HalfCycle;
-    
+
     reg clk;
     reg rstn;
+
     reg [31:0] PC;
     reg [31:0] address;
     reg [31:0] store_data;
+
     reg memRead;
     reg memWrite;
     reg storeSize;
+    reg cacheMiss;
     reg fromLSQ;
+    reg cacheMiss;
+    
+    wire [31:0] lwData;
+    wire [31:0] PC_out;
 
-    wire [31:0] load_data;
-    wire cacheMiss; 
-
-    Cache Cache (
-        // inputs ...
+    dataMemory DataMem (
         .clk(clk),
         .rstn(rstn),
         .PC_in(PC),
-        .address_in(address),
-        .data_sw(store_data),
+        .address(address),
+        .dataSw(store_data),
         .memRead(memRead),
         .memWrite(memWrite),
         .storeSize(storeSize),
+        .cacheMiss(cacheMiss),
         .fromLSQ(fromLSQ),
 
-        // outputs ...
-        .lw_data(load_data),
-        .cacheMiss(cacheMiss)
+        .lwData(lwData),
+        .PC_out(PC_out)
     );
 
     initial begin
@@ -41,6 +44,7 @@ module cache_tb;
             memRead = 0;
             memWrite = 1;
             storeSize = 0;
+            cacheMiss = 1;
             fromLSQ = 0;
         end
         #(2*Cycle) begin
@@ -50,6 +54,7 @@ module cache_tb;
             memRead = 0;
             memWrite = 1;
             storeSize = 0;
+            cacheMiss = 1;
             fromLSQ = 0;
         end
         #(2*Cycle) begin
@@ -59,6 +64,7 @@ module cache_tb;
             memRead = 1;
             memWrite = 0;
             storeSize = 0;
+            cacheMiss = 0;
             fromLSQ = 0;
         end
         #(2*Cycle) begin
@@ -68,6 +74,7 @@ module cache_tb;
             memRead = 1;
             memWrite = 0;
             storeSize = 0;
+            cacheMiss = 1;
             fromLSQ = 0;
         end
         #(5*Cycle) $stop;
