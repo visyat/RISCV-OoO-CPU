@@ -10,7 +10,7 @@ module LSQ_tb;
     reg memRead;
     reg memWrite;
     reg storeSize;
-    reg [31:0] swData;
+    reg [31:0] store_data;
 
     reg [31:0] pcLsu;
     reg [31:0] addressLsu;
@@ -35,7 +35,7 @@ module LSQ_tb;
         .memRead(memRead),
         .memWrite(memWrite),
         .storeSize(storeSize),
-        .swData(swData),
+        .swData(store_data),
 
         .pcLsu(pcLsu),
         .addressLsu(addressLsu),
@@ -66,21 +66,21 @@ module LSQ_tb;
             storeSize = 0;
         end
         #(2*Cycle) begin
-            PC = 32'h14;
+            pcDis = 32'h14;
             store_data = 32'h46;
             memRead = 0;
             memWrite = 1;
             storeSize = 0;
         end
         #(2*Cycle) begin
-            PC = 32'h18;
+            pcDis = 32'h18;
             store_data = 32'h0;
             memRead = 1;
             memWrite = 0;
             storeSize = 0;
         end
         #(2*Cycle) begin
-            PC = 32'h1C;
+            pcDis = 32'h1C;
             store_data = 32'h0;
             memRead = 1;
             memWrite = 0;
@@ -89,20 +89,20 @@ module LSQ_tb;
         end
         
         #(2*Cycle) begin
-            pcDis = 32'h10;
-            address = 32'h4;
+            pcLsu = 32'h10;
+            addressLsu = 32'h4;
         end
         #(2*Cycle) begin
-            PC = 32'h14;
-            address = 32'h8;
+            pcLsu = 32'h14;
+            addressLsu = 32'h8;
         end
         #(2*Cycle) begin
-            PC = 32'h18;
-            address = 32'h4;
+            pcLsu = 32'h18;
+            addressLsu = 32'h4;
         end
         #(2*Cycle) begin
-            PC = 32'h1C;
-            address = 32'h8;
+            pcLsu = 32'h1C;
+            addressLsu = 32'h8;
         end
 
         #(5*Cycle) $stop;
