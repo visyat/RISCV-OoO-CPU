@@ -29,10 +29,17 @@ module reorder_buffer(
     output reg [63:0] retire,
     output reg stall,
     
+    output reg src0_ready,
+    output reg [5:0] src0_reg_ready,
+    output reg [31:0] src0_data_ready,
+    
     output reg src1_ready,
+    output reg [5:0] src1_reg_ready,
+    output reg [31:0] src1_data_ready,
+    
     output reg src2_ready,
-    output reg src1_reg_ready,
-    output reg src2_reg_ready,
+    output reg [5:0] src2_reg_ready,
+    output reg [31:0] src2_data_ready,
     
     
 
@@ -40,7 +47,6 @@ module reorder_buffer(
     output reg [5:0] ARF_data_1,
     output reg [5:0] ARF_reg_2,
     output reg [5:0] ARF_data_2,
-    output reg write_back,
     output reg retire1,
     output reg retire2,
     
@@ -75,8 +81,6 @@ module reorder_buffer(
     
     
     reg [31:0] ROB [63:0] [7:0];
-    reg [31:0] new_dr_data [2:0];
-    reg [31:0] complete_pc [2:0];
     
     reg retire_head;
     reg ROB_head;
@@ -144,6 +148,11 @@ module reorder_buffer(
             
             issue_ready[dr] <= 1'b0;
             
+            for( i=0; i<8; i=i+1) begin
+             $display("%d", ROB[ROB_head][i]);
+             $display("newline");
+            end
+            $display("/////////////////////////////////////////////////////////////////");
             ROB_head= ROB_head+1;
             if(ROB_head > 63) begin
                 stall=1'b0;
@@ -153,43 +162,40 @@ module reorder_buffer(
     
     //COMPLETE AND SET READY FOR ISSUE
     always @(*) begin
-        new_dr_data[0] <= new_dr_data_0;
-        new_dr_data[1] <= new_dr_data_1;
-        new_dr_data[2] <= new_dr_data_2;
-        
-        complete_pc[0] <= complete_pc_0;
-        complete_pc[1] <= complete_pc_1;
-        complete_pc[2] <= complete_pc_2;
+
         
         //SET COMPLETE
         for (j=0; j<64; j=j+1) begin
             if(ROB[j][0] == 1'b1) begin
-                for(k=0; k<4; k=k+1) begin
-                    if( ROB[j][6] == complete_pc[k]) begin
-                        ROB[j][7] <=1'b1; //set complete
-                        ROB[j][3] <= new_dr_data[k]; //write data to rob
-                    end
+                if(ROB[j][6] == complete_pc_0) begin
+                    ROB[j][7] <=1'b1; //set complete
+                    ROB[j][3] <= new_dr_data_0; //write data to rob
+                    src0_ready <= 1'b1;
+                    src0_reg_ready <=ROB[j][1];
+                    src0_data_ready <= ROB[j][3];
                 end
+                
+                if(ROB[j][6] == complete_pc_1) begin
+                    ROB[j][7] <=1'b1; //set complete
+                    ROB[j][3] <= new_dr_data_1; //write data to rob
+                    src1_ready <= 1'b1;
+                    src1_reg_ready <=ROB[j][1];
+                    src1_data_ready <= ROB[j][3];
+                end
+                
+                if(ROB[j][6] == complete_pc_2) begin
+                    ROB[j][7] <=1'b1; //set complete
+                    ROB[j][3] <= new_dr_data_2; //write data to rob
+                    src2_ready <= 1'b1;
+                    src2_reg_ready <=ROB[j][1];
+                    src2_data_ready <= ROB[j][3];
+                end
+                
             end
         end
         
-        //SET SRC1 and SRC2 READY FOR ISSUE
-        if((opcode!=7'b0100011) && (opcode!=7'b0010011) && (opcode!=7'b0110111)) begin //not store or imm or lui
-            if(issue_ready[src1] == 1'b1) begin
-                src1_ready <= 1'b1;
-                src1_reg_ready <=src1;
-            end
-            if(issue_ready[src2] == 1'b1) begin
-                src2_ready <= 1'b1;
-                src2_reg_ready <=src2;
-            end
-        end
-        else begin
-            src2_ready <= 1'b1;
-            if(issue_ready[src1] == 1'b1) begin
-                src1_ready <= 1'b1;
-            end
-        end
+        
+       
         
     end
     
@@ -200,7 +206,6 @@ module reorder_buffer(
         ARF_data_1 = 32'b0;
         ARF_reg_2 = 5'b0;
         ARF_data_2 = 32'b0; 
-        write_back = 1'b0;
         retire1=1'b0;
         retire2=1'b0;
         pc_retire1=1'b0;
@@ -212,7 +217,6 @@ module reorder_buffer(
             if(opcode!=7'b0100011) begin //not store
                 ARF_reg_1 = ROB[retire_head][1];
                 ARF_data_1 = ROB[retire_head][3];
-                write_back <= 1'b1;
                 retire1=1'b1;
                 retire[ROB[retire_head][2]] <= 1'b1;
 
