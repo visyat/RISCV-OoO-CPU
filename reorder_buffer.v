@@ -53,8 +53,8 @@ module reorder_buffer(
 
     reg [31:0] ROB [63:0] [7:0];
     
-    reg retire_head;
-    reg ROB_head;
+    reg [5:0] retire_head;
+    reg [5:0] ROB_head;
     
     integer i;
     integer j;
@@ -123,12 +123,7 @@ module reorder_buffer(
             ROB[ROB_head][7] <= 1'b0; //complete
             
             issue_ready[dr] <= 1'b0;
-            
-            for( i=0; i<8; i=i+1) begin
-             $display("%d", ROB[ROB_head][i]);
-             $display("newline");
-            end
-            $display("/////////////////////////////////////////////////////////////////");
+          
             ROB_head= ROB_head+1;
             if(ROB_head > 63) begin
                 stall=1'b0;
