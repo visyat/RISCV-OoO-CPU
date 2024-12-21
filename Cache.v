@@ -272,6 +272,10 @@ module Cache(
                 lw_data = 'b0;
                 cacheMiss = 'b0;
             end
+            if (memWrite) begin
+                lw_data = 'b0;
+                cacheMiss = 'b1;
+            end 
         end
     end
 endmodule

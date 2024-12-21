@@ -690,6 +690,7 @@ module CPU(
         .ROBNum_issue2_in(ROBNum_issue2_MEM),
 
         .PC_issue_LSQ_in(PC_LSQ_MEM),
+        .loadStore_LSQ_in(loadStore_issue_LSQ_MEM),
         .fromLSQ_in(fromLSQ_MEM), // control signals to determine LW source ...
         .cacheMiss_in(cacheMiss_MEM),
         .lwData_LSQ_in(lwData_LSQ_MEM),
