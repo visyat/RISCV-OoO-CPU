@@ -144,6 +144,11 @@ module reorder_buffer(
                             src0_reg_ready = DESTREG[j];
                             src0_data_ready = new_dr_data_0;
                             issue_ready[DESTREG[j]] = 1'b1;
+                        end else begin
+                            DESTREG_DATA[j] = 'b0;
+                            src0_reg_ready = DESTREG[j];
+                            src0_data_ready = 'b0;
+                            issue_ready[DESTREG[j]] = 1'b1;
                         end
                         // ISSUED[j] = 1'b1;
 
@@ -154,6 +159,11 @@ module reorder_buffer(
 
                             src1_reg_ready = DESTREG[j];
                             src1_data_ready = new_dr_data_1;
+                            issue_ready[DESTREG[j]] = 1'b1;
+                        end else begin
+                            DESTREG_DATA[j] = 'b0;
+                            src1_reg_ready = DESTREG[j];
+                            src1_data_ready = 'b0;
                             issue_ready[DESTREG[j]] = 1'b1;
                         end 
                         // ISSUED[j] = 1'b1;
@@ -166,7 +176,12 @@ module reorder_buffer(
                             src2_reg_ready = DESTREG[j];
                             src2_data_ready = new_dr_data_2;
                             issue_ready[DESTREG[j]] = 1'b1;
-                        end 
+                        end else begin
+                            DESTREG_DATA[j] = 'b0;
+                            src2_reg_ready = DESTREG[j];
+                            src2_data_ready = 'b0;
+                            issue_ready[DESTREG[j]] = 1'b1;
+                        end
                         // ISSUED[j] = 1'b1;
                     end
                 end
