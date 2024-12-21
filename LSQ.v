@@ -71,8 +71,9 @@ module Load_Store_Queue (
     reg [5:0] ROBNUM [15:0];
     reg [5:0] DESTREG [15:0];
 
-    integer i, j, k, m, n;
+    integer i, j, k, m, n, p;
     reg [3:0] index = 0;
+    reg duplicate = 0;
 
     always @(*) begin // initialize LSQ entries, reserve entries on dispatch ...
         if (~rstn) begin // on reset, set all LSQ entries to 0 ...
@@ -91,11 +92,15 @@ module Load_Store_Queue (
             end
         end else begin
             // dispatch logic ... if read/write, reserve space in LSQ
-            if (memRead || memWrite) begin
+            duplicate = 1'b0;
+            for (i=0; i<16; i=i+1) begin
+                if (VALID[i] && PC[i] == pcDis) begin
+                    duplicate = 1'b1;
+                end
+            end
+            if (~duplicate && (memRead || memWrite)) begin
                 for (i=0; i<16; i=i+1) begin
-                    if (VALID[i] && PC[i] == pcDis) begin // dismiss duplicate instructions ...
-                        i=16;
-                    end else if (~VALID[i]) begin // find first vacant entry ...
+                    if (~VALID[i]) begin // find first vacant entry ...
                         VALID[i]=1;
                         PC[i]=pcDis;
                         SIZE[i]=storeSize;
@@ -113,7 +118,7 @@ module Load_Store_Queue (
     // handle broadcasted store data updates from ROB ...
     always @(*) begin
         for (n=0; n<16; n=n+1) begin
-            if (VALID[n]) begin
+            if (VALID[n] && ~ISSUED[n]) begin
                 if (STORE_REGISTER[n] == reg0_ROB_in) begin
                     LSQ_DATA[n] = reg0_data_ROB_in;
                 end
@@ -141,10 +146,9 @@ module Load_Store_Queue (
             end
              // execution logic ... if update address in LSQ entry; if load, scan LSQ to find matching addresses, provide data for latest store
              if (~OP[index]) begin
-                 for (j=15; j>=0; j=j-1) begin
-                     if (ADDRESS[index] == ADDRESS[j] && j != index) begin
+                 for (j=0; j<16; j=j+1) begin
+                     if (VALID[j] && ADDRESS[index] == ADDRESS[j] && OP[j]) begin
                          LSQ_DATA[index] = LSQ_DATA[j]; // populate LW data with the most recent store to the same address
-                         j = -1;
                      end
                  end
              end 
@@ -153,9 +157,9 @@ module Load_Store_Queue (
     always @(*) begin // handle broadcasted retirement instructions ...
         // retirement logic ... deallocate LSQ entry
         for (k=0; k<16; k=k+1) begin
-            if (pcRet1 == PC[k] || pcRet2 == PC[k]) begin
+            if (pcRet1 == PC[k]) begin
                 VALID[k] = 0;
-                PC[k] = 0;
+                PC[k] = 'b0;
                 OP[k] = 0;
                 SIZE[k] = 0;
                 ADDRESS[k] = 32'b0;
@@ -166,6 +170,25 @@ module Load_Store_Queue (
                 STORE_REGISTER[k] = 'b0;
                 ISSUED[k] = 0;
                 k=16;
+            end
+        end
+    end
+    always @(*) begin // handle broadcasted retirement instructions ...
+        // retirement logic ... deallocate LSQ entry
+        for (p=0; p<16; p=p+1) begin
+            if (pcRet2 == PC[p]) begin
+                VALID[p] = 0;
+                PC[p] = 'b0;
+                OP[p] = 0;
+                SIZE[p] = 0;
+                ADDRESS[p] = 32'b0;
+                ADDR_LOADED[p] = 0;
+                ROBNUM[p] = 'b0;
+                DESTREG[p] = 'b0;
+                LSQ_DATA[p] = 32'b0;
+                STORE_REGISTER[p] = 'b0;
+                ISSUED[p] = 0;
+                p=16;
             end
         end
     end
@@ -184,6 +207,14 @@ module Load_Store_Queue (
             complete = 'b0;
         end else begin
             fromLSQ = 'b0;
+                            
+            for (m=0; m<16; m=m+1) begin
+                if (VALID[m]) begin
+                    $display("PC: %0h, Store: %0b, Address: %0d, StoreData: %0d ==> Issued: %0b", PC[m], OP[m], ADDRESS[m], LSQ_DATA[m], ISSUED[m]);
+                end
+            end
+            $display("/////////////////////////////////////////////////////////////////////////////////////////");
+            
             // issue logic ... complete loads if data exists, else issue most recent available instruction 
             for (m=0; m<16; m=m+1) begin
                 if (VALID[m] && ~ISSUED[m] && ~OP[m] && LSQ_DATA[m] != 32'b0 && ADDR_LOADED[m]) begin
