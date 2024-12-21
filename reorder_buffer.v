@@ -63,6 +63,7 @@ module reorder_buffer(
     reg [31:0] DESTREG_DATA [63:0];
     reg [31:0] PC [63:0];
     reg [63:0] COMPLETE; 
+    reg [6:0] OPCODE [63:0];
     
     // group retire registers ...
     reg [1:0] retireSignals;
@@ -95,6 +96,7 @@ module reorder_buffer(
                 OLD_DESTREG[i] = 'b0;
                 DESTREG_DATA[i] = 'b0;
                 PC[i] = 'b0;
+                OPCODE[i] = 'b0;
                 issue_ready[i] = 1'b1;
             end
         end else begin
@@ -105,6 +107,7 @@ module reorder_buffer(
                     OLD_DESTREG[i] = old_dr;
                     retire_rename[OLD_DESTREG[i]] = 1'b0;
                     DESTREG_DATA[i] = 'b0;
+                    OPCODE[i] = opcode;
                     PC[i] = instr_PC;
                     ISSUED[i] = 1'b0;
                     COMPLETE[i] = 1'b0;
@@ -133,31 +136,37 @@ module reorder_buffer(
                 if (VALID[j] && ~COMPLETE[j]) begin
                     if (PC[j] == complete_pc_0) begin
                         COMPLETE[j] = 1'b1;
-                        DESTREG_DATA[j] = new_dr_data_0;
+                        if (OPCODE[j] != 7'b0100011) begin
+                            DESTREG_DATA[j] = new_dr_data_0;
 
-                        // forwarding destReg data and ready signals to UIQ ... can be done separately as well ...
-                        // are the forwarded data ports being overwritten? 
-                        src0_reg_ready = DESTREG[j];
-                        src0_data_ready = new_dr_data_0;
-                        issue_ready[DESTREG[j]] = 1'b1;
+                            // forwarding destReg data and ready signals to UIQ ... can be done separately as well ...
+                            // are the forwarded data ports being overwritten? 
+                            src0_reg_ready = DESTREG[j];
+                            src0_data_ready = new_dr_data_0;
+                            issue_ready[DESTREG[j]] = 1'b1;
+                        end
                         // ISSUED[j] = 1'b1;
 
                     end else if (PC[j] == complete_pc_1) begin
                         COMPLETE[j] = 1'b1;
-                        DESTREG_DATA[j] = new_dr_data_1;
+                        if (OPCODE[j] != 7'b0100011) begin
+                            DESTREG_DATA[j] = new_dr_data_1;
 
-                        src1_reg_ready = DESTREG[j];
-                        src1_data_ready = new_dr_data_1;
-                        issue_ready[DESTREG[j]] = 1'b1;
+                            src1_reg_ready = DESTREG[j];
+                            src1_data_ready = new_dr_data_1;
+                            issue_ready[DESTREG[j]] = 1'b1;
+                        end 
                         // ISSUED[j] = 1'b1;
 
                     end else if (PC[j] == complete_pc_2) begin
                         COMPLETE[j] = 1'b1;
-                        DESTREG_DATA[j] = new_dr_data_2;
+                        if (OPCODE[j] != 7'b0100011) begin
+                            DESTREG_DATA[j] = new_dr_data_2;
 
-                        src2_reg_ready = DESTREG[j];
-                        src2_data_ready = new_dr_data_2;
-                        issue_ready[DESTREG[j]] = 1'b1;
+                            src2_reg_ready = DESTREG[j];
+                            src2_data_ready = new_dr_data_2;
+                            issue_ready[DESTREG[j]] = 1'b1;
+                        end 
                         // ISSUED[j] = 1'b1;
                     end
                 end
