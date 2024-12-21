@@ -54,7 +54,7 @@ module reorder_buffer(
     output reg [31:0] pc_retire2
 );
 
-    reg [31:0] ROB [63:0] [7:0];
+//    reg [31:0] ROB [63:0] [7:0];
 
     reg [63:0] VALID;
     reg [63:0] ISSUED;
@@ -73,6 +73,8 @@ module reorder_buffer(
     integer retire_count = 0;
     
     integer i, j, k;
+    integer ROBHead = 0;
+    integer retireHead = 0;
     
     //THINGS TO DO
     //1. ADD TO ROB: When something is renamed, take that info and put it into ROB
@@ -100,7 +102,7 @@ module reorder_buffer(
                 issue_ready[i] = 1'b1;
             end
         end else begin
-            for (i=0; i<64; i=i+1) begin
+            for (i=ROBHead; i<64; i=i+1) begin
                 if (~VALID[i]) begin
                     VALID[i] = 1'b1;
                     DESTREG[i] = dr;
@@ -112,6 +114,8 @@ module reorder_buffer(
                     ISSUED[i] = 1'b0;
                     COMPLETE[i] = 1'b0;
                     issue_ready[dr] = 1'b0;
+                    
+                    ROBHead = i;
                     i = 65;
                 end
             end
@@ -199,7 +203,7 @@ module reorder_buffer(
                 ARF_reg[k] = 'b0;
             end
         end else begin
-            for (k=0; k<64; k=k+1) begin
+            for (k=retireHead; k<64; k=k+1) begin
                 if (VALID[k] && COMPLETE[k]) begin
                     retireSignals[retire_count] = 1'b1;
                     ARF_reg[retire_count] = DESTREG[k];
@@ -212,10 +216,14 @@ module reorder_buffer(
 
                     retire_count = retire_count+1;
                     if (retire_count == 2) begin
+                        retireHead=k;
                         k=65;
                         retire_count = 0;
                     end
-                end
+                end else if (VALID[k] && ~COMPLETE[k]) begin
+                    retireHead = k;
+                    k=65;
+                end 
             end
         end 
         retire1 = retireSignals[0];
