@@ -5,7 +5,7 @@ module ARF (
     input clk, 
     input rstn,
     
-    input [5:0] ARF_map,
+    input [6:0] ARF_map,
     input [5:0] current_dr,
     
     // can read 2 registers at the same time
@@ -27,7 +27,7 @@ module ARF (
 
     reg [31:0] REGISTER_FILE [63:0];
     reg [6:0] pReg_mapped [31:0];
-    reg [5:0] AtoP [31:0];
+    reg [31:0] AtoP [31:0];
     integer i;
    
     integer p;
@@ -59,15 +59,17 @@ module ARF (
     end
     
     integer a;
+    integer b;
     always @(posedge clk) begin
-      
-        pReg_mapped[ARF_map]=current_dr; //pReg indexed at its proper aReg
-        /*
-        for (a=0; a<32; a=a+1) begin
-            if() begin
-            end
+        if(current_dr !=0) begin
+            pReg_mapped[ARF_map]=current_dr; //pReg indexed at its proper aReg
+        end
+        
+        for (a=0; a<32; a=a+1) begin         
+                AtoP[a]=REGISTER_FILE[pReg_mapped[a]];
         end 
-        */
+       $display("%d, %d", AtoP[10], AtoP[11]);
+    
+        
     end 
-
 endmodule

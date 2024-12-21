@@ -205,7 +205,7 @@ module CPU(
 
     wire [31:0] PC_retire1_ROB_LSQ_C;
     wire [31:0] PC_retire2_ROB_LSQ_C;
-    wire [5:0] ARF_map_R;
+    wire [6:0] ARF_map_R;
 
     always @(posedge clk or negedge rstn) begin
         if(~rstn) begin
