@@ -103,7 +103,7 @@ module reorder_buffer(
                     VALID[i] = 1'b1;
                     DESTREG[i] = dr;
                     OLD_DESTREG[i] = old_dr;
-                    retire_rename[OLD_DESTREG[k]] = 1'b0;
+                    retire_rename[OLD_DESTREG[i]] = 1'b0;
                     DESTREG_DATA[i] = 'b0;
                     PC[i] = instr_PC;
                     ISSUED[i] = 1'b0;

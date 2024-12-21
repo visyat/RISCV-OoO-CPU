@@ -124,15 +124,13 @@ module rename(
                 
                 old_dr=64;
             end
-            
-                if (j == 32) stall <= 1'b1;         // Stall if no free physical register is found
-                else         stall <= 1'b0;
+ 
                
         end
         //$display("sr1P: %b, src2P: %b, destP: %b ", sr1_p, sr2_p, dr_p);
         //$display("finish rename");
     end
-    
+    /*
     integer ret_h;
     integer in_free;
     always @(posedge clk) begin
@@ -147,5 +145,6 @@ module rename(
             end
         end
     end
+    */
 
 endmodule
