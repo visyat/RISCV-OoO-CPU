@@ -72,6 +72,7 @@ module Load_Store_Queue (
     reg [5:0] DESTREG [15:0];
 
     integer i, j, k, m, n, p;
+    integer i2, j2 = 0;
     reg [3:0] index = 0;
     reg duplicate = 0;
 
@@ -144,16 +145,19 @@ module Load_Store_Queue (
                     j = 17;
                 end
             end
-             // execution logic ... if update address in LSQ entry; if load, scan LSQ to find matching addresses, provide data for latest store
-             if (~OP[index]) begin
-                 for (j=0; j<16; j=j+1) begin
-                     if (VALID[j] && ADDRESS[index] == ADDRESS[j] && OP[j]) begin
-                         LSQ_DATA[index] = LSQ_DATA[j]; // populate LW data with the most recent store to the same address
-                     end
-                 end
-             end 
         end
     end
+    always @(*) begin
+        for (i2=0; i2<16; i2=i2+1) begin
+            if (VALID[i2] && ~OP[i2] && ~ISSUED[i2]) begin
+                for (j2=0; j2<16; j2=j2+1) begin
+                    if (OP[j2] && ADDRESS[j2] == ADDRESS[i2]) begin
+                        LSQ_DATA[i2] = LSQ_DATA[j2];
+                    end
+                end
+            end
+        end
+    end 
     always @(*) begin // handle broadcasted retirement instructions ...
         // retirement logic ... deallocate LSQ entry
         for (k=0; k<16; k=k+1) begin
@@ -233,7 +237,7 @@ module Load_Store_Queue (
             end
             if (~fromLSQ) begin
                 for (m=0; m<16; m=m+1) begin
-                    if (VALID[m] && ~ISSUED[m] && ADDR_LOADED[m]) begin
+                    if (VALID[m] && ~ISSUED[m] && ADDR_LOADED[m] && LSQ_DATA[m] != 32'b0) begin
                         pcOut = PC[m];
                         addressOut = ADDRESS[m];
                         ROBNumOut = ROBNUM[m];
