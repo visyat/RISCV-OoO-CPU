@@ -19,7 +19,8 @@ module rename(
     output reg [5 : 0]      dr_p,
     output reg [5 : 0]      old_dr,
     output reg              stall, 
-    output reg [31:0] dr_p_data
+    
+    output reg [6:0] ARF_map
 );
 
     // TODO: 
@@ -53,15 +54,16 @@ module rename(
     // Always block to handle renaming logic
     integer j;
     integer old_index;
+    
 
     always @(*) begin
         if(~rstn) begin
             sr1_p       = 5'd0;
             sr2_p       = 5'd0;
             dr_p        = 5'd0;
-            dr_p_data= 0;
             ROB_num     = 16'd0;   // Default ROB number
             stall       = 1'b0;    // Default no stall
+            ARF_map = 64;
             
             for (i = 0; i < 32; i = i + 1) begin
                 //col0 is if avail, col1 is p-reg 0-31
@@ -80,6 +82,7 @@ module rename(
                 old_regnum[i][2] = 64;    //init as 64 for empty, since p-reg are 0-63
                 old_regnum[i][3] = 64;    //init as 64 for empty, since p-reg are 0-63
                 old_regnum[i][4] = 64;    //init as 64 for empty, since p-reg are 0-63
+                
                 
             end
 
@@ -110,11 +113,11 @@ module rename(
                                 old_index = 5;      // Stop further looping
                             end
                         end
+                        ARF_map=old_regnum[dr][0];
                         // old_regnum: 0 is the oldest, ->4 is the most recent
-                        // ***need to pay attention in the RETIRE STAGE*** (add a pointer to the oldest one??)
-                        // LET'S HOPE NONE OF THE OLD REGISTERS NUMBER WOULD EXTEND OUR SPACES (WHICH IS 5 NOW)
                         old_dr=RAT[dr][1];
                         RAT[dr][1] = dr_p;          // find line in rat with a-reg=dr, set p-reg to dr_p 
+                        
                         j=33;          // Stop further looping
                     end
                 end

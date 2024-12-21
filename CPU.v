@@ -205,10 +205,11 @@ module CPU(
 
     wire [31:0] PC_retire1_ROB_LSQ_C;
     wire [31:0] PC_retire2_ROB_LSQ_C;
+    wire [5:0] ARF_map_R;
 
     always @(posedge clk or negedge rstn) begin
         if(~rstn) begin
-            PC_IF = 32'b0;
+            PC_IF = 32'hFFFFFFFC;
         end
         else begin
             PC_IF = PC_IF+ 4;
@@ -333,7 +334,8 @@ module CPU(
         .dr_p(destReg_p_EX),
         .old_dr(oldDestReg_rename_EX),
         .stall(stall_rename_EX),
-        .dr_p_data(destReg_p_data_EX)
+        .ARF_map(ARF_map_R)
+        
     );
 
     //ROB interface ...
@@ -407,6 +409,9 @@ module CPU(
         .retire2(retire2_ROB_C),
         .write_addr2(destReg2_ROB_C),
         .write_data2(destReg2_data_ROB_C),
+        
+        .ARF_map(ARF_map_R),
+        .current_dr(destReg_p_EX),
 
         // outputs ...
         .read_srcReg1_data(srcReg1_data_ARF_EX),
@@ -596,7 +601,6 @@ module CPU(
         .memRead(memRead_EX),
         .memWrite(memWrite_EX),
         .storeSize(storeSize_EX),
-        .storeRegister(srcReg2_p_EX),
         .swData(srcReg2_data_ARF_EX),
         
         // from LSU ...
@@ -604,16 +608,6 @@ module CPU(
         .addressLsu(aluOutput_issue2_MEM),
         .ROBNumLsu(ROBNum_issue2_MEM),
         .destRegLsu(destReg_issue2_MEM),
-
-        // from ROB ... update store data 
-        .reg0_ROB_in(reg0_ROB_UIQ_EX),
-        .reg0_data_ROB_in(reg0_data_ROB_UIQ_EX),
-        
-        .reg1_ROB_in(reg1_ROB_UIQ_EX),
-        .reg1_data_ROB_in(reg1_data_ROB_UIQ_EX),
-
-        .reg2_ROB_in(reg2_ROB_UIQ_EX),
-        .reg2_data_ROB_in(reg2_data_ROB_UIQ_EX),
 
         // from retirement ...
         .pcRet1(PC_retire1_ROB_LSQ_C), // PENDING FROM ROB ...
