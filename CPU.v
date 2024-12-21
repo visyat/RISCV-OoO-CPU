@@ -596,6 +596,7 @@ module CPU(
         .memRead(memRead_EX),
         .memWrite(memWrite_EX),
         .storeSize(storeSize_EX),
+        .storeRegister(srcReg2_p_EX),
         .swData(srcReg2_data_ARF_EX),
         
         // from LSU ...
@@ -603,6 +604,16 @@ module CPU(
         .addressLsu(aluOutput_issue2_MEM),
         .ROBNumLsu(ROBNum_issue2_MEM),
         .destRegLsu(destReg_issue2_MEM),
+
+        // from ROB ... update store data 
+        .reg0_ROB_in(reg0_ROB_UIQ_EX),
+        .reg0_data_ROB_in(reg0_data_ROB_UIQ_EX),
+        
+        .reg1_ROB_in(reg1_ROB_UIQ_EX),
+        .reg1_data_ROB_in(reg1_data_ROB_UIQ_EX),
+
+        .reg2_ROB_in(reg2_ROB_UIQ_EX),
+        .reg2_data_ROB_in(reg2_data_ROB_UIQ_EX),
 
         // from retirement ...
         .pcRet1(PC_retire1_ROB_LSQ_C), // PENDING FROM ROB ...

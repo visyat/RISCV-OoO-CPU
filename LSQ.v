@@ -21,6 +21,7 @@ module Load_Store_Queue (
     input memRead,
     input memWrite,
     input storeSize,
+    input [5:0] storeRegister,
     input [31:0] swData,
 
     // from LSU ... recieves instruction address (to match) & computed address: rs1+offset
@@ -28,6 +29,16 @@ module Load_Store_Queue (
     input [31:0] addressLsu,
     input [5:0] ROBNumLsu,
     input [5:0] destRegLsu,
+
+    // from ROB ... update store data from written registers 
+    input [5:0] reg0_ROB_in,
+    input [31:0] reg0_data_ROB_in,
+
+    input [5:0] reg1_ROB_in,
+    input [31:0] reg1_data_ROB_in,
+
+    input [5:0] reg2_ROB_in,
+    input [31:0] reg2_data_ROB_in,
 
     // from retirement ... deallocate space in LSQ
     input [31:0] pcRet1,
@@ -53,13 +64,14 @@ module Load_Store_Queue (
     reg [15:0] SIZE; // 0: word, 1: byte
     reg [15:0] ADDR_LOADED;
     reg [31:0] ADDRESS [15:0];
+    reg [5:0]  STORE_REGISTER [15:0];
     reg [31:0] LSQ_DATA [15:0];
     reg [15:0] ISSUED;
 
     reg [5:0] ROBNUM [15:0];
     reg [5:0] DESTREG [15:0];
 
-    integer i, j, k, m;
+    integer i, j, k, m, n;
     reg [3:0] index = 0;
 
     always @(*) begin // initialize LSQ entries, reserve entries on dispatch ...
@@ -72,6 +84,7 @@ module Load_Store_Queue (
             for (i=0; i<16; i=i+1) begin
                 PC[i] = 32'b0;
                 ADDRESS[i] = 32'b0;
+                STORE_REGISTER[i] = 'b0;
                 LSQ_DATA[i] = 32'b0;
                 ROBNUM[i] = 'b0;
                 DESTREG[i] = 'b0;
@@ -89,9 +102,26 @@ module Load_Store_Queue (
                         OP[i] = memWrite; // 0 if load, 1 if store
                         if (memWrite) begin
                             LSQ_DATA[i] = swData;
+                            STORE_REGISTER[i] = storeRegister;
                         end
                         i=16;
                     end
+                end
+            end
+        end
+    end
+    // handle broadcasted store data updates from ROB ...
+    always @(*) begin
+        for (n=0; n<16; n=n+1) begin
+            if (VALID[n]) begin
+                if (STORE_REGISTER[n] == reg0_ROB_in) begin
+                    LSQ_DATA[n] = reg0_data_ROB_in;
+                end
+                if (STORE_REGISTER[n] == reg1_ROB_in) begin
+                    LSQ_DATA[n] = reg1_data_ROB_in;
+                end
+                if (STORE_REGISTER[n] == reg2_ROB_in) begin
+                    LSQ_DATA[n] = reg2_data_ROB_in;
                 end
             end
         end
@@ -133,6 +163,7 @@ module Load_Store_Queue (
                 ROBNUM[k] = 'b0;
                 DESTREG[k] = 'b0;
                 LSQ_DATA[k] = 32'b0;
+                STORE_REGISTER[k] = 'b0;
                 ISSUED[k] = 0;
                 k=16;
             end
