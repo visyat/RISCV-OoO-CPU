@@ -138,7 +138,7 @@ module reorder_buffer(
                         // forwarding destReg data and ready signals to UIQ ... can be done separately as well ...
                         // are the forwarded data ports being overwritten? 
                         src0_reg_ready = DESTREG[j];
-                        src0_data_ready = DESTREG_DATA[j];
+                        src0_data_ready = new_dr_data_0;
                         issue_ready[DESTREG[j]] = 1'b1;
                         // ISSUED[j] = 1'b1;
 
@@ -147,7 +147,7 @@ module reorder_buffer(
                         DESTREG_DATA[j] = new_dr_data_1;
 
                         src1_reg_ready = DESTREG[j];
-                        src1_data_ready = DESTREG_DATA[j];
+                        src1_data_ready = new_dr_data_1;
                         issue_ready[DESTREG[j]] = 1'b1;
                         // ISSUED[j] = 1'b1;
 
@@ -156,7 +156,7 @@ module reorder_buffer(
                         DESTREG_DATA[j] = new_dr_data_2;
 
                         src2_reg_ready = DESTREG[j];
-                        src2_data_ready = DESTREG_DATA[j];
+                        src2_data_ready = new_dr_data_2;
                         issue_ready[DESTREG[j]] = 1'b1;
                         // ISSUED[j] = 1'b1;
                     end

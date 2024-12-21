@@ -80,7 +80,9 @@ module Load_Store_Queue (
             // dispatch logic ... if read/write, reserve space in LSQ
             if (memRead || memWrite) begin
                 for (i=0; i<16; i=i+1) begin
-                    if (~VALID[i]) begin // find first vacant entry ...
+                    if (VALID[i] && PC[i] == pcDis) begin // dismiss duplicate instructions ...
+                        i=16;
+                    end else if (~VALID[i]) begin // find first vacant entry ...
                         VALID[i]=1;
                         PC[i]=pcDis;
                         SIZE[i]=storeSize;

@@ -208,7 +208,7 @@ module CPU(
 
     always @(posedge clk or negedge rstn) begin
         if(~rstn) begin
-            PC_IF = 32'hFFFFFFFC;
+            PC_IF = 32'b0;
         end
         else begin
             PC_IF = PC_IF+ 4;
