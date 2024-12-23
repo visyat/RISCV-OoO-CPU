@@ -20,7 +20,7 @@ To test our processor locally, clone our repository:
 ```
 git clone https://github.com/visyat/RISCV-OoO-CPU.git
 ```
-Import all files `/src/*.v,` `/sim/tb.v`, and `/sim/evaluation-hex.txt` into your Verilog simulator: Modelsim/Questasim (with Quartus) or Xilinx Vivado. Our test bench runs our top-level `CPU` module, loading the following instructions represented in byte-code (little-endian) from `evaluation-hex.txt` into our `Instruction Memory`: 
+Import all files `/src/*.v,` `/sim/tb.v`, and `/sim/evaluation-hex.txt` into your Verilog simulator: Modelsim/Questasim (with Quartus) or Xilinx Vivado. Our test bench runs our top-level `CPU` module, loading the following instructions represented in hex – where each line corresponds to one byte of a 32-bit instruction – (little-endian) from `evaluation-hex.txt` into our `Instruction Memory`: 
 
 ```
 addi x1, x0, 4
@@ -44,7 +44,7 @@ add x11, x3, x5
 
 # a0=8, a1=28676
 ```
-Feel free to load your own instructions into `evaluation-hex.txt` for testing or substitute another bytecode file in `/src/IMFetch.v`. 
+Feel free to load your own instructions into `evaluation-hex.txt` for testing or substitute another hex file in `/src/IMFetch.v`. 
 
 ## Components and Specifications
 1. **Instruction Read-Only Memory (ROM)**: One instruction fetch per cycle
